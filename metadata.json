@@ -1,0 +1,8 @@
+{
+  "name": "Remix Intel Computer \u0026 Electronics",
+  "description": "Nepal\u0027s trusted technology and electronics store - Computers, Laptops, Printers, CCTV, Networking \u0026 Appliances with local service and official warranty.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

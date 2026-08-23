@@ -1,0 +1,84 @@
+{
+  "$schema": "https://firebase.google.com/docs/firestore/blueprint/v1",
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profiles authenticated via Firebase Auth / Google Sign-in",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "orders": {
+      "title": "Orders",
+      "description": "Customer purchase orders and delivery tracking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string" },
+        "shippingAddress": { "type": "object" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "reviews": {
+      "title": "Hardware Reviews",
+      "description": "Verified product hardware reviews and testimonials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "service_requests": {
+      "title": "Service Requests",
+      "description": "Hardware maintenance, repairs, and diagnostics requests",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "deviceDetails": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    },
+    "chat_history": {
+      "title": "Chat History",
+      "description": "Conversations with Gemini AI Assistant",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "messages": { "type": "array" },
+        "role": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "generated_images": {
+      "title": "Generated Images",
+      "description": "User created and edited images via Gemini",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "prompt": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+node_modules/
+.next/
+out/
+build/
+coverage/
+.DS_Store
+Thumbs.db
+*.log
+
+# env & secrets — never commit these
+.env*
+!.env.example
+
+# build artifacts
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# Claude Code local state (worktrees hold unrelated checkouts)
+.claude/worktrees/
+.claude/settings.local.json
+
+# stray empty files (likely shell accidents — safe to delete)
+/0
+/data.status
+/\[row.id

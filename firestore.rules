@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+    }
+    
+    // Reviews collection - anyone can read, authenticated or guest can create
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if request.auth != null || request.resource.data.userId == 'guest' || resource == null;
+    }
+    
+    // Orders collection
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null;
+      allow create: if true;
+    }
+    
+    // Service requests
+    match /service_requests/{requestId} {
+      allow read, write: if request.auth != null;
+      allow create: if true;
+    }
+
+    // Chat history
+    match /chat_history/{chatId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Generated images
+    match /generated_images/{imageId} {
+      allow read, write: if true;
+    }
+
+    // Default match for other collections
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
