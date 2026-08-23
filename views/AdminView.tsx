@@ -1309,23 +1309,17 @@ export const AdminView: React.FC = () => {
                       ))
                     ) : (
                       <div className="py-3 flex items-center gap-3">
-                        <div className="w-[34px] h-[34px] rounded-[9px] bg-[#FDEDF3] text-[#E5477E] flex items-center justify-center flex-shrink-0">
-                          <Boxes className="w-4 h-4" />
+                        <div className="w-[34px] h-[34px] rounded-[9px] bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[13px] font-semibold text-[#12151C]">
-                            RTX 4060 6GB — stock ≤ 3 units
+                            No low-stock alerts
                           </div>
                           <div className="font-mono text-[11px] text-[#9AA1AF]">
-                            INVENTORY · SKU-2231
+                            INVENTORY · all products above the low-stock threshold
                           </div>
                         </div>
-                        <button
-                          onClick={() => { setActiveModule('inventory'); setInventorySubTab('adjustments'); }}
-                          className="font-mono text-[11px] font-semibold text-[#E5477E] px-2.5 py-1.5 rounded-lg border border-[#E6E8EE] hover:bg-[#FDEDF3] hover:border-transparent transition-colors flex-shrink-0 cursor-pointer"
-                        >
-                          Restock
-                        </button>
                       </div>
                     )}
 
