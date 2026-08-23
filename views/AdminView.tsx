@@ -3167,7 +3167,7 @@ export const AdminView: React.FC = () => {
       {/* MODAL 1: STOCK ADJUSTMENT AUDIT MODAL */}
       {/* ========================================================================= */}
       {auditProduct && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-gray-200">
             <div className="flex justify-between items-start border-b pb-3">
               <div>

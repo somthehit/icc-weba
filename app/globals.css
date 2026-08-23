@@ -1,8 +1,16 @@
 @import "tailwindcss";
+/* `animate-in` / `fade-in` / `slide-in-from-top-*` are used by the AI drawer and the
+   search dropdown. Tailwind v4 has no config file to register plugins in, so the
+   package's CSS has to be imported here or those classes generate nothing. */
+@import "tw-animate-css";
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* The design is light-only and the admin forms are built from native
+       `<select>` / `<input>` controls. Without this, a dark-mode OS renders those
+       controls — and the page canvas before the stylesheet arrives — dark. */
+    color-scheme: light;
   }
   body {
     background-color: #ffffff;
@@ -57,3 +65,28 @@
   animation: drawCircuit 2.6s ease forwards 0.4s;
 }
 
+/* Used by the admin modal overlays and the reviews toast. Opacity only — these sit on
+   `fixed inset-0` backdrops, where a transform would drag the whole overlay. */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 180ms ease-out both;
+}
+
+/* Decorative motion only. `animate-spin` and `animate-pulse` are left running because
+   they are loading feedback — freezing a spinner reads as a hung request. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-pulse-dot,
+  .animate-draw-circuit,
+  .animate-fade-in {
+    animation: none;
+  }
+
+  .animate-draw-circuit {
+    stroke-dashoffset: 0;
+  }
+}
