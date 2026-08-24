@@ -63,6 +63,14 @@ export interface QuoteLine {
   lineTotalPaisa: number;
   /** Before the offer — lets the confirmation screen show what was saved. */
   listUnitPricePaisa: number;
+  /**
+   * What the unit cost us, for `order_items.unit_cost_snapshot`.
+   *
+   * `null` when `products.cost_price` is unset — the reports disclose how many
+   * lines that affects rather than reading a missing cost as zero, which would
+   * overstate gross profit.
+   */
+  unitCostPaisa: number | null;
   /** Pre-order lines are sold without stock on hand, so the decrement is unguarded. */
   allowBackorder: boolean;
 }
@@ -152,6 +160,7 @@ type ProductRow = {
   name: string;
   sku: string;
   basePrice: string;
+  costPrice: string | null;
   isActive: boolean;
   status: string;
   stockQuantity: number;
@@ -274,6 +283,7 @@ export async function quoteOrder(client: DbClient, options: QuoteOptions): Promi
       name: products.name,
       sku: products.sku,
       basePrice: products.basePrice,
+      costPrice: products.costPrice,
       isActive: products.isActive,
       status: products.status,
       stockQuantity: products.stockQuantity,
@@ -378,6 +388,10 @@ export async function quoteOrder(client: DbClient, options: QuoteOptions): Promi
       unitPricePaisa,
       lineTotalPaisa,
       listUnitPricePaisa: listPaisa,
+      // Read off the product now, frozen onto the order row by the caller. A
+      // variant's `price_adjustment` moves the sell price but there is no
+      // per-variant cost column, so the product cost stands for both.
+      unitCostPaisa: product.costPrice === null ? null : toPaisa(product.costPrice),
       allowBackorder,
     });
   }

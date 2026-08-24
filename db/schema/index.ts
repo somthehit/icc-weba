@@ -16,6 +16,7 @@
 //   reviews      product reviews (verified-purchase linkable)
 //   content      hero slides, pages, nav menu, announcement bar (Site & Content module)
 //   settings     store profile, VAT/currency, payment method config, notification prefs
+//   accounting   suppliers, expenses, purchase bills — the shop books behind the P&L
 //   audit        audit_logs for accountability across the console
 
 export * from './enums';
@@ -30,5 +31,6 @@ export * from './services';
 export * from './reviews';
 export * from './content';
 export * from './settings';
+export * from './accounting';
 export * from './audit';
 export * from './driver-tracking';

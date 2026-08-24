@@ -25,6 +25,7 @@ import {
   inventory,
   coupons,
   deliveryZones,
+  deliveryPartners,
   orders,
   orderItems,
   orderStatusHistory,
@@ -32,6 +33,11 @@ import {
   storeProfile,
   paymentMethodSettings,
   announcementBar,
+  suppliers,
+  expenseCategories,
+  expenses,
+  purchaseBills,
+  purchaseBillItems,
 } from '@/db/schema';
 import {
   INITIAL_SITE_SETTINGS,
@@ -114,6 +120,60 @@ const orderStatusFor = (s: string): string => trackingToStatus[s] ?? 'pending';
 
 const reviewerEmail = (name: string): string => `${slugify(name)}@example.com`;
 
+// ---------------------------------------------------------------------------
+// Demo cost prices.
+//
+// `initial-data.ts` carries a selling price and an MRP but no purchase cost, and
+// without a cost there is no COGS, so gross profit is not computable and the P&L
+// report has nothing to show. These are *demo* figures, derived rather than
+// recorded — the real ones get typed in through the console.
+//
+// The bands are the gross margins the trade actually runs at, which matters for
+// testing: a flat margin across the catalogue makes "top products by margin" a
+// meaningless ranking. Laptops and prebuilt PCs are thin, accessories are fat.
+const COST_MARGIN_BY_CATEGORY: Record<string, number> = {
+  'computers-laptops': 0.1,
+  'pc-components': 0.14,
+  'printers-scanners': 0.16,
+  'electronics-appliances': 0.15,
+  networking: 0.22,
+  'cctv-security': 0.26,
+  'peripherals-accessories': 0.34,
+};
+const DEFAULT_COST_MARGIN = 0.18;
+
+/** Stable per-slug value in [0,1), so re-seeding does not shuffle the margins. */
+const slugJitter = (slug: string): number => {
+  let h = 2166136261;
+  for (let i = 0; i < slug.length; i += 1) {
+    h ^= slug.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 1000) / 1000;
+};
+
+/** Selling price less a category margin, nudged +/-3 points per product. */
+const seedCostPrice = (p: { category: string; slug: string; sellingPrice: number }): string => {
+  const band = COST_MARGIN_BY_CATEGORY[p.category] ?? DEFAULT_COST_MARGIN;
+  const margin = band + (slugJitter(p.slug) - 0.5) * 0.06;
+  return String(Math.round(p.sellingPrice * (1 - margin)));
+};
+
+/** The months the demo books cover — January to August 2026, matching the orders. */
+const BOOK_MONTHS = ['01', '02', '03', '04', '05', '06', '07', '08'] as const;
+
+/** Day 0 of the next month is the last day of this one — February included. */
+const monthEnd = (mm: string): string =>
+  String(new Date(2026, Number(mm), 0).getDate()).padStart(2, '0');
+
+/**
+ * The 13% Nepal VAT contained *within* an amount, not added on top.
+ *
+ * `expenses.vat_amount` records the reclaimable part of what was actually paid,
+ * so `amount` stays the total that left the till and the P&L cannot double-count.
+ */
+const vatWithin = (amount: number): string => String(Math.round((amount * 13) / 113));
+
 /** Order.customerEmail is optional in the frontend type; users.email is not. */
 const customerEmailFor = (o: { customerEmail?: string; customerName: string }): string =>
   o.customerEmail ?? `${slugify(o.customerName)}@customers.icecomputers.com.np`;
@@ -145,6 +205,12 @@ async function seed() {
     'product_specs',
     'product_images',
     'product_variants',
+    // Bill lines and expenses reference products and users, so they go before both.
+    'purchase_bill_items',
+    'purchase_bills',
+    'expenses',
+    'expense_categories',
+    'suppliers',
     'products',
     'addresses',
     'users',
@@ -153,6 +219,7 @@ async function seed() {
     'warehouses',
     'coupons',
     'delivery_zones',
+    'delivery_partners',
     'store_profile',
     'payment_method_settings',
     'announcement_bar',
@@ -314,6 +381,7 @@ async function seed() {
         shortDescription: trunc(p.shortDescription, 500),
         basePrice: String(p.sellingPrice),
         compareAtPrice: p.mrp != null ? String(p.mrp) : null,
+        costPrice: seedCostPrice(p),
         warrantyMonths: warrantyToMonths(p.warranty),
         warrantyText: trunc(p.warranty, 250),
         subcategory: trunc(p.subcategory, 120),
@@ -353,6 +421,12 @@ async function seed() {
     const frontendIdToSlug = new Map(INITIAL_PRODUCTS.map((p) => [p.id, p.slug]));
     const dbProductId = (frontendId: string): number | undefined =>
       productIdBySlug.get(frontendIdToSlug.get(frontendId) ?? '');
+    // Cost keyed by the DB id, for the order-item snapshots below. Seeded orders
+    // predate the snapshot column, so without this the P&L is empty by
+    // construction — every sold line would read as "cost missing".
+    const costPriceByDbId = new Map(
+      INITIAL_PRODUCTS.map((p) => [productIdBySlug.get(p.slug)!, seedCostPrice(p)]),
+    );
 
     // ---- product images + specs ------------------------------------------
     const imageValues = INITIAL_PRODUCTS.flatMap((p) => {
@@ -420,7 +494,22 @@ async function seed() {
       flatFee: String(z.fee),
       estimatedDays: zoneMeta[z.id]?.days ?? 2,
     }));
-    await tx.insert(deliveryZones).values(zoneValues);
+    const zoneRows = await tx
+      .insert(deliveryZones)
+      .values(zoneValues)
+      .returning({ id: deliveryZones.id, flatFee: deliveryZones.flatFee });
+
+    // ---- delivery partners ------------------------------------------------
+    // The table existed but was never populated, so the console's rider dropdown
+    // read from a hardcoded array. `in_house` first: it is the default for
+    // Dhangadhi-local orders, which is most of them.
+    const partnerValues = [
+      { name: 'ICE In-house Riders', type: 'in_house' as const, contactPhone: '9801234567' },
+      { name: 'Pathao Courier', type: 'courier' as const, contactPhone: '9801112233' },
+      { name: 'Aramex Nepal', type: 'courier' as const, contactPhone: '9802223344' },
+      { name: 'NCM Express', type: 'courier' as const, contactPhone: '9803334455' },
+    ];
+    await tx.insert(deliveryPartners).values(partnerValues);
 
     // ---- orders + items + status history ----------------------------------
     for (const o of INITIAL_ORDERS) {
@@ -444,15 +533,21 @@ async function seed() {
         })
         .returning({ id: orders.id });
 
-      const itemValues = o.items.map((it) => ({
-        orderId: order.id,
-        productId: dbProductId(it.productId) ?? null,
-        productNameSnapshot: trunc(it.productName, 200)!,
-        skuSnapshot: trunc(it.sku, 60)!,
-        quantity: it.quantity,
-        unitPrice: String(it.price),
-        lineTotal: String(it.price * it.quantity),
-      }));
+      const itemValues = o.items.map((it) => {
+        const pid = dbProductId(it.productId) ?? null;
+        return {
+          orderId: order.id,
+          productId: pid,
+          productNameSnapshot: trunc(it.productName, 200)!,
+          skuSnapshot: trunc(it.sku, 60)!,
+          quantity: it.quantity,
+          unitPrice: String(it.price),
+          lineTotal: String(it.price * it.quantity),
+          // null for a line whose product is no longer in the catalogue — the
+          // reports count those instead of assuming a zero cost.
+          unitCostSnapshot: pid === null ? null : costPriceByDbId.get(pid) ?? null,
+        };
+      });
       await tx.insert(orderItems).values(itemValues);
 
       const base = new Date(o.createdAt).getTime();
@@ -464,6 +559,165 @@ async function seed() {
       }));
       if (historyValues.length) await tx.insert(orderStatusHistory).values(historyValues);
     }
+
+    // ---- demo trading history ---------------------------------------------
+    // INITIAL_ORDERS holds exactly two orders, both from August 2026. That is
+    // enough to render an orders table and nothing else: a monthly P&L, a sales
+    // trend or a top-products-by-margin ranking computed over one month of two
+    // orders is arithmetically correct and completely unreadable, so there is no
+    // way to tell a working report from a broken one.
+    //
+    // These fill in January to August so the reports have a series to plot. Same
+    // arithmetic as `quoteOrder`/`quoteTotals` — VAT carved out of an inclusive
+    // price, delivery waived above the free-delivery threshold — so a figure in a
+    // report reconciles the same way whether the order came from here or from a
+    // real checkout.
+    const historyCustomers = [...userIdByEmail.entries()].filter(
+      ([email]) => email.endsWith('@example.com') || email === 'customer@icecomputers.com.np',
+    );
+
+    // Deterministic LCG rather than Math.random, so re-seeding produces the same
+    // books and a figure quoted in a bug report still matches after a re-seed.
+    let rngState = 20260824;
+    const rnd = (): number => {
+      rngState = (rngState * 1103515245 + 12345) % 2147483648;
+      return rngState / 2147483648;
+    };
+    const pick = <T,>(arr: readonly T[]): T => arr[Math.floor(rnd() * arr.length)];
+    const between = (lo: number, hi: number): number => lo + Math.floor(rnd() * (hi - lo + 1));
+
+    const sellable = INITIAL_PRODUCTS.map((p) => ({
+      dbId: productIdBySlug.get(p.slug)!,
+      name: trunc(p.name, 200)!,
+      sku: (p.sku ?? p.slug.toUpperCase()).slice(0, 60),
+      price: p.sellingPrice,
+      cost: seedCostPrice(p),
+    }));
+
+    // Weighted so most of the history is completed business, with a realistic
+    // tail of cancellations and returns — the reports must exclude those from
+    // revenue, and with none seeded that exclusion would go untested.
+    const outcomes = [
+      ...Array<string>(22).fill('delivered'),
+      'out_for_delivery',
+      'dispatched',
+      'processing',
+      'confirmed',
+      'cancelled',
+      'returned',
+      'refunded',
+    ];
+    const paymentStatusFor = (status: string): string => {
+      if (status === 'delivered') return 'paid';
+      if (status === 'refunded' || status === 'returned') return 'refunded';
+      return 'pending';
+    };
+
+    const vatRate = 0.13;
+    const freeDeliveryThreshold = 50000;
+    // A growing shop, ~1-2 orders a day. Volume matters for more than realism: the
+    // seeded fixed costs run to roughly NPR 300k a month, and at 5-9 orders a
+    // month the gross margin cannot cover them, so every month of the demo P&L
+    // comes out negative and a net-profit card can only ever be tested against a
+    // loss. This is the order book a shop with those overheads would need.
+    const ordersPerMonth = [34, 31, 38, 42, 40, 47, 52, 38];
+
+    // Built in memory and inserted in three statements rather than three per
+    // order: at this volume the round trips, not the rows, are the cost.
+    type PlannedOrder = {
+      values: typeof orders.$inferInsert;
+      lines: { item: (typeof sellable)[number]; quantity: number }[];
+      status: string;
+      createdAt: Date;
+    };
+    const planned: PlannedOrder[] = [];
+
+    for (const [mi, mm] of BOOK_MONTHS.entries()) {
+      const lastDay = Number(monthEnd(mm));
+      for (let n = 0; n < ordersPerMonth[mi]; n += 1) {
+        // August is the current month (today is the 24th), so keep those orders in
+        // the past rather than dating them into next week.
+        const day = mm === '08' ? between(1, 20) : between(1, lastDay);
+        const createdAt = new Date(
+          Date.UTC(2026, Number(mm) - 1, day, between(9, 19), between(0, 59)),
+        );
+
+        const lineCount = between(1, 3);
+        const chosen = new Map<number, { item: (typeof sellable)[number]; quantity: number }>();
+        for (let l = 0; l < lineCount; l += 1) {
+          const item = pick(sellable);
+          const existing = chosen.get(item.dbId);
+          const quantity = item.price > 60000 ? 1 : between(1, 3);
+          if (existing) existing.quantity += quantity;
+          else chosen.set(item.dbId, { item, quantity });
+        }
+
+        const lines = [...chosen.values()];
+        const subtotal = lines.reduce((sum, l) => sum + l.item.price * l.quantity, 0);
+        const zone = pick(zoneRows);
+        const zoneFee = Number(zone.flatFee);
+        const deliveryFee = subtotal >= freeDeliveryThreshold ? 0 : zoneFee;
+        // Inclusive pricing: VAT is the part of the price above net, not 13% on top.
+        const vatAmount = subtotal - Math.round(subtotal / (1 + vatRate));
+        const status = pick(outcomes);
+        const [customerEmail, customerUserId] = pick(historyCustomers);
+
+        planned.push({
+          status,
+          createdAt,
+          lines,
+          values: {
+            // 4-digit block below the ICE-2026-88xx pair in INITIAL_ORDERS, so the
+            // unique index cannot collide with them.
+            orderNumber: `ICE-2026-${String(1000 + planned.length).padStart(4, '0')}`,
+            userId: customerUserId,
+            status: status as never,
+            subtotal: String(subtotal),
+            vatAmount: String(vatAmount),
+            deliveryFee: String(deliveryFee),
+            discountAmount: '0',
+            totalAmount: String(subtotal + deliveryFee),
+            shippingAddressId: addressIdByEmail.get(customerEmail) ?? null,
+            deliveryZoneId: zone.id,
+            paymentMethod: (rnd() < 0.72 ? 'cod' : 'bank_transfer') as never,
+            paymentStatus: paymentStatusFor(status) as never,
+            createdAt,
+          },
+        });
+      }
+    }
+
+    const generatedOrderRows = await tx
+      .insert(orders)
+      .values(planned.map((p) => p.values))
+      .returning({ id: orders.id });
+
+    await tx.insert(orderItems).values(
+      planned.flatMap((p, i) =>
+        p.lines.map((l) => ({
+          orderId: generatedOrderRows[i].id,
+          productId: l.item.dbId,
+          productNameSnapshot: l.item.name,
+          skuSnapshot: l.item.sku,
+          quantity: l.quantity,
+          unitPrice: String(l.item.price),
+          lineTotal: String(l.item.price * l.quantity),
+          unitCostSnapshot: l.item.cost,
+        })),
+      ),
+    );
+
+    await tx.insert(orderStatusHistory).values(
+      planned.map((p, i) => ({
+        orderId: generatedOrderRows[i].id,
+        status: p.status as never,
+        note: 'Seeded demo history',
+        createdAt: p.createdAt,
+      })),
+    );
+
+    const generatedOrders = planned.length;
+    const generatedItems = planned.reduce((sum, p) => sum + p.lines.length, 0);
 
     // ---- reviews ----------------------------------------------------------
     const reviewValues = SAMPLE_REVIEWS.map((r) => {
@@ -511,6 +765,287 @@ async function seed() {
       where agg.product_id = p.id
     `);
 
+    // ---- shop books: suppliers, expenses, purchase bills -------------------
+    // Demo figures, but arithmetically consistent ones: the P&L, the VAT summary
+    // and the payables ageing all read from these rows, so they need real dates
+    // spanning the same months as the seeded orders (2026-01 .. 2026-08) rather
+    // than a single lump that makes every month but one look profitless.
+    const adminUserId = userIdByEmail.get('admin@icecomputers.com.np') ?? null;
+
+    const insertedSuppliers = await tx
+      .insert(suppliers)
+      .values([
+        {
+          name: 'Neoteric Nepal Pvt. Ltd.',
+          contactPerson: 'Rajesh Shrestha',
+          phone: '9851012345',
+          email: 'sales@neoteric.com.np',
+          address: 'Teku, Kathmandu',
+          vatPanNo: '301234567',
+        },
+        {
+          name: 'CG Electronics Distribution',
+          contactPerson: 'Anita Karki',
+          phone: '9851023456',
+          email: 'orders@cgelectronics.com.np',
+          address: 'Naxal, Kathmandu',
+          vatPanNo: '302345678',
+        },
+        {
+          name: 'Him Electronics Pvt. Ltd.',
+          contactPerson: 'Bikash Thapa',
+          phone: '9851034567',
+          email: 'trade@himelectronics.com',
+          address: 'Kalimati, Kathmandu',
+          vatPanNo: '303456789',
+        },
+        {
+          name: 'Kailali Stationery & Packaging',
+          contactPerson: 'Suresh Joshi',
+          phone: '9858012345',
+          address: 'Main Road, Dhangadhi',
+          vatPanNo: '304567890',
+        },
+      ])
+      .returning({ id: suppliers.id, name: suppliers.name });
+    const supplierIdByName = new Map(insertedSuppliers.map((s) => [s.name, s.id]));
+
+    const insertedExpenseCategories = await tx
+      .insert(expenseCategories)
+      .values([
+        { name: 'Shop Rent', description: 'Monthly rent for the Dhangadhi showroom and workshop' },
+        { name: 'Staff Salaries', description: 'Sales, technician and support staff wages' },
+        { name: 'Electricity & Water', description: 'Utility bills including generator fuel' },
+        { name: 'Internet & Phone', description: 'Broadband, landline and staff mobile top-ups' },
+        { name: 'Marketing & Advertising', description: 'Facebook ads, hoardings, local FM spots' },
+        { name: 'Transport & Freight', description: 'Inbound freight from Kathmandu suppliers' },
+        { name: 'Repairs & Maintenance', description: 'Shop fittings, tools, workshop equipment' },
+        { name: 'Office Supplies', description: 'Stationery, packaging, consumables' },
+        { name: 'Bank Charges & Fees', description: 'Transaction fees, cheque charges, QR settlement' },
+      ])
+      .returning({ id: expenseCategories.id, name: expenseCategories.name });
+    const expenseCategoryIdByName = new Map(
+      insertedExpenseCategories.map((c) => [c.name, c.id]),
+    );
+
+    // Months the seeded orders span, so every month with revenue also has costs.
+    const expenseValues: (typeof expenses.$inferInsert)[] = [];
+    for (const [i, mm] of BOOK_MONTHS.entries()) {
+      const cat = (name: string) => expenseCategoryIdByName.get(name)!;
+      // Rent from an individual landlord: no VAT bill, so nothing to reclaim.
+      expenseValues.push({
+        categoryId: cat('Shop Rent'),
+        description: `Showroom rent — 2026-${mm}`,
+        amount: '45000',
+        vatAmount: '0',
+        expenseDate: `2026-${mm}-05`,
+        paymentMethod: 'bank_transfer',
+        referenceNo: `RENT-2026${mm}`,
+        recordedBy: adminUserId,
+      });
+      expenseValues.push({
+        categoryId: cat('Staff Salaries'),
+        description: `Staff salaries — 2026-${mm}`,
+        amount: String(186000 + i * 4000),
+        vatAmount: '0',
+        expenseDate: `2026-${mm}-28`,
+        paymentMethod: 'bank_transfer',
+        referenceNo: `SAL-2026${mm}`,
+        recordedBy: adminUserId,
+      });
+      const power = 14200 + ((i * 1700) % 5200);
+      expenseValues.push({
+        categoryId: cat('Electricity & Water'),
+        description: `NEA bill and water charges — 2026-${mm}`,
+        amount: String(power),
+        vatAmount: vatWithin(power),
+        expenseDate: `2026-${mm}-12`,
+        paymentMethod: 'cash',
+        recordedBy: adminUserId,
+      });
+      expenseValues.push({
+        categoryId: cat('Internet & Phone'),
+        description: `Broadband and staff mobile — 2026-${mm}`,
+        amount: '7900',
+        vatAmount: vatWithin(7900),
+        expenseDate: `2026-${mm}-08`,
+        paymentMethod: 'bank_transfer',
+        recordedBy: adminUserId,
+      });
+      const ads = 9000 + ((i * 5500) % 22000);
+      expenseValues.push({
+        categoryId: cat('Marketing & Advertising'),
+        description: `Facebook and local FM promotion — 2026-${mm}`,
+        amount: String(ads),
+        vatAmount: vatWithin(ads),
+        expenseDate: `2026-${mm}-18`,
+        paymentMethod: 'digital_wallet',
+        recordedBy: adminUserId,
+      });
+      const freight = 6500 + ((i * 2300) % 9000);
+      expenseValues.push({
+        categoryId: cat('Transport & Freight'),
+        description: `Inbound freight from Kathmandu — 2026-${mm}`,
+        amount: String(freight),
+        vatAmount: vatWithin(freight),
+        expenseDate: `2026-${mm}-22`,
+        paymentMethod: 'cash',
+        supplierId: supplierIdByName.get('Neoteric Nepal Pvt. Ltd.') ?? null,
+        recordedBy: adminUserId,
+      });
+      expenseValues.push({
+        categoryId: cat('Bank Charges & Fees'),
+        description: `Fonepay settlement and cheque charges — 2026-${mm}`,
+        amount: String(1200 + ((i * 310) % 900)),
+        vatAmount: '0',
+        expenseDate: `2026-${mm}-${monthEnd(mm)}`,
+        paymentMethod: 'bank_transfer',
+        recordedBy: adminUserId,
+      });
+    }
+    // Irregular, so the monthly expense line is not a flat staircase.
+    expenseValues.push(
+      {
+        categoryId: expenseCategoryIdByName.get('Repairs & Maintenance')!,
+        description: 'Workshop bench rebuild and new soldering station',
+        amount: '38500',
+        vatAmount: vatWithin(38500),
+        expenseDate: '2026-03-14',
+        paymentMethod: 'cash',
+        recordedBy: adminUserId,
+      },
+      {
+        categoryId: expenseCategoryIdByName.get('Office Supplies')!,
+        description: 'Packaging cartons, bubble wrap, invoice books (quarterly)',
+        amount: '11800',
+        vatAmount: vatWithin(11800),
+        expenseDate: '2026-04-02',
+        paymentMethod: 'cash',
+        supplierId: supplierIdByName.get('Kailali Stationery & Packaging') ?? null,
+        recordedBy: adminUserId,
+      },
+      {
+        categoryId: expenseCategoryIdByName.get('Marketing & Advertising')!,
+        description: 'Dashain–Tihar hoarding board, Ratopul junction',
+        amount: '65000',
+        vatAmount: vatWithin(65000),
+        expenseDate: '2026-06-20',
+        paymentMethod: 'bank_transfer',
+        recordedBy: adminUserId,
+      },
+      {
+        categoryId: expenseCategoryIdByName.get('Repairs & Maintenance')!,
+        description: 'Showroom AC servicing and CCTV re-cabling',
+        amount: '22400',
+        vatAmount: vatWithin(22400),
+        expenseDate: '2026-07-09',
+        paymentMethod: 'cash',
+        recordedBy: adminUserId,
+      },
+      {
+        categoryId: expenseCategoryIdByName.get('Office Supplies')!,
+        description: 'Packaging and consumables restock',
+        amount: '13600',
+        vatAmount: vatWithin(13600),
+        expenseDate: '2026-08-04',
+        paymentMethod: 'cash',
+        supplierId: supplierIdByName.get('Kailali Stationery & Packaging') ?? null,
+        recordedBy: adminUserId,
+      },
+    );
+    await tx.insert(expenses).values(expenseValues);
+
+    // Purchase bills — mixed settlement states so accounts payable has something
+    // in every ageing bucket, including one already overdue against today.
+    const billSpecs = [
+      {
+        supplier: 'Neoteric Nepal Pvt. Ltd.',
+        billNumber: 'NEO/2026/0418',
+        billDate: '2026-05-18',
+        dueDate: '2026-06-17',
+        status: 'paid' as const,
+        paidRatio: 1,
+        lines: [
+          { description: 'Lenovo LOQ 15 gaming laptops', quantity: 4, unitCost: 118000 },
+          { description: 'Kingston Fury 16GB DDR5 kits', quantity: 12, unitCost: 8900 },
+        ],
+      },
+      {
+        supplier: 'CG Electronics Distribution',
+        billNumber: 'CGE-2026-1102',
+        billDate: '2026-06-26',
+        dueDate: '2026-07-26',
+        status: 'paid' as const,
+        paidRatio: 1,
+        lines: [
+          { description: 'Samsung 27" QHD monitors', quantity: 8, unitCost: 27500 },
+          { description: 'HDMI 2.1 cables (bulk)', quantity: 40, unitCost: 620 },
+        ],
+      },
+      {
+        supplier: 'Him Electronics Pvt. Ltd.',
+        billNumber: 'HIM/PO/2026/0731',
+        billDate: '2026-07-31',
+        dueDate: '2026-08-15',
+        // Due date has passed and it is not settled — this is the row that puts
+        // something in the overdue bucket of the payables report.
+        status: 'partial' as const,
+        paidRatio: 0.4,
+        lines: [
+          { description: 'Hikvision 4-channel NVR kits', quantity: 6, unitCost: 21500 },
+          { description: 'Hikvision ColorVu bullet cameras', quantity: 24, unitCost: 5400 },
+        ],
+      },
+      {
+        supplier: 'Neoteric Nepal Pvt. Ltd.',
+        billNumber: 'NEO/2026/0812',
+        billDate: '2026-08-12',
+        dueDate: '2026-09-11',
+        status: 'unpaid' as const,
+        paidRatio: 0,
+        lines: [
+          { description: 'WD Blue SN580 1TB NVMe SSDs', quantity: 20, unitCost: 9100 },
+          { description: 'ASUS TUF B650 motherboards', quantity: 5, unitCost: 24800 },
+          { description: 'TP-Link Archer AX55 routers', quantity: 15, unitCost: 6300 },
+        ],
+      },
+    ];
+
+    let billItemCount = 0;
+    for (const spec of billSpecs) {
+      const subtotal = spec.lines.reduce((sum, l) => sum + l.quantity * l.unitCost, 0);
+      // Trade bills quote net and add VAT on top, unlike the retail prices in this
+      // app which include it. That is why this is a multiply, not an extraction.
+      const vat = Math.round(subtotal * 0.13);
+      const total = subtotal + vat;
+      const [bill] = await tx
+        .insert(purchaseBills)
+        .values({
+          supplierId: supplierIdByName.get(spec.supplier)!,
+          billNumber: spec.billNumber,
+          billDate: spec.billDate,
+          dueDate: spec.dueDate,
+          subtotal: String(subtotal),
+          vatAmount: String(vat),
+          totalAmount: String(total),
+          amountPaid: String(Math.round(total * spec.paidRatio)),
+          status: spec.status,
+          recordedBy: adminUserId,
+        })
+        .returning({ id: purchaseBills.id });
+
+      await tx.insert(purchaseBillItems).values(
+        spec.lines.map((l) => ({
+          billId: bill.id,
+          description: l.description,
+          quantity: l.quantity,
+          unitCost: String(l.unitCost),
+          lineTotal: String(l.quantity * l.unitCost),
+        })),
+      );
+      billItemCount += spec.lines.length;
+    }
+
     // ---- store settings ---------------------------------------------------
     await tx.insert(storeProfile).values({
       storeName: 'ICE Computers & Electronics',
@@ -545,7 +1080,16 @@ async function seed() {
     console.log('   ✓ images:', imageValues.length, '| specs:', specValues.length);
     console.log('   ✓ inventory rows:', inventoryValues.length);
     console.log('   ✓ coupons:', couponValues.length, '| delivery zones:', zoneValues.length);
-    console.log('   ✓ orders:', INITIAL_ORDERS.length, '| reviews:', reviewValues.length);
+    console.log('   ✓ delivery partners:', partnerValues.length);
+    console.log('   ✓ orders:', INITIAL_ORDERS.length + generatedOrders,
+      `(${INITIAL_ORDERS.length} from initial-data + ${generatedOrders} generated history,`,
+      `${generatedItems} generated items)`, '| reviews:', reviewValues.length);
+    console.log(
+      '   ✓ suppliers:', insertedSuppliers.length,
+      '| expense categories:', insertedExpenseCategories.length,
+      '| expenses:', expenseValues.length,
+    );
+    console.log('   ✓ purchase bills:', billSpecs.length, '| bill items:', billItemCount);
   });
 
   console.log(`✅ Seed complete. Demo login password for all seeded accounts: ${DEMO_PASSWORD}`);

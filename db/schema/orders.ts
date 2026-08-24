@@ -89,6 +89,13 @@ export const orderItems = pgTable(
     quantity: integer('quantity').notNull(),
     unitPrice: numeric('unit_price', { precision: 12, scale: 2 }).notNull(),
     lineTotal: numeric('line_total', { precision: 12, scale: 2 }).notNull(),
+    // What the item cost us, frozen at the moment of sale. Without this a P&L
+    // computed from the live `products.cost_price` changes retroactively: correct a
+    // purchase price today and last quarter's profit moves. Nullable because orders
+    // placed before the column existed have no cost to record — the reports count
+    // and disclose those rather than reading a missing cost as zero, which would
+    // overstate gross profit.
+    unitCostSnapshot: numeric('unit_cost_snapshot', { precision: 12, scale: 2 }),
   },
   (t) => ({
     orderIdx: index('order_items_order_idx').on(t.orderId),

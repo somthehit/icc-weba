@@ -4,6 +4,7 @@ import {
   varchar,
   text,
   integer,
+  numeric,
   timestamp,
   index,
   uniqueIndex,
@@ -26,6 +27,10 @@ export const serviceTickets = pgTable(
     status: ticketStatusEnum('status').notNull().default('open'),
     priority: ticketPriorityEnum('priority').notNull().default('normal'),
     assignedTo: integer('assigned_to').references(() => users.id, { onDelete: 'set null' }),
+    // What the customer was billed for the job. The table previously had no
+    // monetary column at all, which is why the console's service-revenue figure had
+    // no data source. Nullable: a warranty claim or a site survey may be free.
+    chargedAmount: numeric('charged_amount', { precision: 12, scale: 2 }),
     resolvedAt: timestamp('resolved_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),

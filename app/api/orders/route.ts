@@ -319,6 +319,11 @@ export const POST = withAuth(async (request, { user }) => {
             quantity: line.quantity,
             unitPrice: toRupees(line.unitPricePaisa),
             lineTotal: toRupees(line.lineTotalPaisa),
+            // Freeze the cost alongside the price. Without it, a P&L built from the
+            // live `products.cost_price` shifts every time someone corrects a
+            // purchase price — last quarter's profit moves because of an edit today.
+            unitCostSnapshot:
+              line.unitCostPaisa === null ? null : toRupees(line.unitCostPaisa),
           })),
         )
         .returning();
