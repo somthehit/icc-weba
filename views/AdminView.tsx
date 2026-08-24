@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { SKU_MAX_LENGTH, buildSku, uniqueSku, validateSku } from '@/lib/catalog/sku';
+import { fetchProductRow, type ProductWriteInput } from '@/lib/api/storefront';
 import { 
   Product, 
   OrderStatus, 
@@ -90,11 +91,286 @@ import {
   RotateCcw,
   Filter,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Image as ImageIcon,
+  Star,
+  Percent,
+  Loader2,
+  ArrowUp,
+  ArrowDown,
+  Info
 } from 'lucide-react';
 
 let uniqueIdSeq = 1;
 const genAdminId = (prefix: string) => `${prefix}-${uniqueIdSeq++}`;
+
+/* ========================================================================== */
+/* PRODUCT FORM                                                               */
+/* ========================================================================== */
+
+/**
+ * The panels of the add/edit product form.
+ *
+ * A product row plus its gallery, spec sheet and SEO metadata is far too much to
+ * put in one scroll — the previous single-column modal only exposed nine of the
+ * ~35 writable columns, so everything else silently kept its default.
+ */
+const PRODUCT_TABS = [
+  { id: 'basic', label: 'Basic Info' },
+  { id: 'images', label: 'Images' },
+  { id: 'pricing', label: 'Pricing & Stock' },
+  { id: 'specs', label: 'Specifications' },
+  { id: 'content', label: 'Description & Warranty' },
+  { id: 'seo', label: 'SEO' },
+] as const;
+
+type ProductTab = (typeof PRODUCT_TABS)[number]['id'];
+
+/**
+ * A row in the gallery or spec-sheet repeater.
+ *
+ * `key` exists only so React can keep inputs stable while rows are inserted and
+ * removed above them — it is never sent to the server.
+ */
+interface ImageDraft {
+  key: string;
+  url: string;
+  altText: string;
+}
+
+interface SpecDraft {
+  key: string;
+  specKey: string;
+  specValue: string;
+}
+
+/** `products.warranty_type`, which is a free varchar but only ever holds these. */
+const WARRANTY_TYPES = [
+  { value: 'official_np', label: 'Official Nepal warranty' },
+  { value: 'international', label: 'International warranty' },
+  { value: 'seller', label: 'Seller / shop warranty' },
+  { value: 'none', label: 'No warranty' },
+] as const;
+
+/** The two states the form authors in; `inactive`/`discontinued` are only ever loaded. */
+const PUBLISH_STATES = [
+  { value: 'draft', label: 'Draft', hint: 'Saved to the catalog but hidden from the storefront' },
+  { value: 'active', label: 'Published', hint: 'Live on the storefront and orderable' },
+] as const;
+
+const LOADED_ONLY_STATES: Record<string, { label: string; hint: string }> = {
+  inactive: { label: 'Paused', hint: 'Hidden from the storefront without being retired' },
+  discontinued: { label: 'Archived', hint: 'Retired — kept only so past orders still resolve' },
+};
+
+type PublishState = 'draft' | 'active' | 'inactive' | 'discontinued';
+
+/** URL-safe, matching the `^[a-z0-9]+(?:-[a-z0-9]+)*$` the API enforces. */
+const slugify = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 220);
+
+/** One item per line, blanks dropped — how the form edits `tags`/`features`/`whats_in_the_box`. */
+const linesToList = (value: string): string[] =>
+  value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+const listToLines = (value: string[] | null | undefined): string =>
+  Array.isArray(value) ? value.join('\n') : '';
+
+/**
+ * Numerics arrive from postgres as strings (`"84999.00"`). An empty optional
+ * column reads back as null and must stay empty in the form rather than becoming
+ * a literal 0 the operator never typed.
+ */
+const decimalToInput = (value: string | number | null | undefined): string =>
+  value === null || value === undefined || value === '' ? '' : String(Number(value));
+
+const PRODUCT_FORM_DEFAULTS = {
+  name: '',
+  brandSlug: '',
+  categorySlug: '',
+  subcategory: '',
+  sku: '',
+  slug: '',
+  /** `compare_at_price` — the struck-through list price. */
+  mrp: '',
+  /** `base_price` — what the customer actually pays. */
+  sellingPrice: '',
+  /** `cost_price` — internal only; drives the margin readout and nothing else. */
+  costPrice: '',
+  stockQuantity: '0',
+  lowStockThreshold: '5',
+  shortDescription: '',
+  description: '',
+  warrantyMonths: '12',
+  warrantyType: 'official_np',
+  warrantyText: '',
+  featuresText: '',
+  boxContentsText: '',
+  tags: [] as string[],
+  metaTitle: '',
+  metaDescription: '',
+  status: 'draft' as PublishState,
+  isFeatured: false,
+  isNewArrival: true,
+  isBestSeller: false,
+  isTrending: false,
+  isDealOfDay: false,
+};
+
+type ProductFormState = typeof PRODUCT_FORM_DEFAULTS;
+
+const emptyProductForm = (): ProductFormState => ({ ...PRODUCT_FORM_DEFAULTS, tags: [] });
+
+/** Numbers live in the form as strings so a cleared field stays cleared instead of snapping to 0. */
+const toNumber = (value: string, fallback = 0): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const npr = (value: number): string => `NPR ${Math.round(value).toLocaleString('en-IN')}`;
+
+/**
+ * Spec rows seeded from a product already in local state.
+ *
+ * `Product.specifications` is either the ordered array the API returns or the
+ * plain object the older seed data used, so both shapes have to be accepted.
+ */
+const specsFromProduct = (product: Product): SpecDraft[] => {
+  const spec = product.specifications;
+  const entries: Array<[string, string]> = Array.isArray(spec)
+    ? spec.map((row) => [row.key, row.value])
+    : spec
+      ? Object.entries(spec).map(([key, value]) => [key, String(value)])
+      : [];
+  if (entries.length === 0) return [{ key: genAdminId('spec'), specKey: '', specValue: '' }];
+  return entries.map(([specKey, specValue]) => ({
+    key: genAdminId('spec'),
+    specKey,
+    specValue,
+  }));
+};
+
+/** Offered as one-tap chips in the spec repeater — the keys a hardware sheet almost always has. */
+const COMMON_SPEC_KEYS = [
+  'Processor',
+  'RAM',
+  'Storage',
+  'Graphics',
+  'Display',
+  'Battery',
+  'Ports',
+  'Operating System',
+  'Weight',
+] as const;
+
+/**
+ * Which panel each validation error belongs to, so a refused save can open the
+ * tab holding the problem instead of leaving the operator to hunt for it.
+ */
+const FIELD_TAB: Record<string, ProductTab> = {
+  name: 'basic',
+  brandSlug: 'basic',
+  categorySlug: 'basic',
+  subcategory: 'basic',
+  sku: 'basic',
+  images: 'images',
+  sellingPrice: 'pricing',
+  mrp: 'pricing',
+  costPrice: 'pricing',
+  stockQuantity: 'pricing',
+  lowStockThreshold: 'pricing',
+  warrantyMonths: 'content',
+  slug: 'seo',
+  metaTitle: 'seo',
+  metaDescription: 'seo',
+};
+
+/** Repeater rows are keyed `image:<key>` / `spec:<key>`, so they are matched by prefix. */
+const tabForField = (field: string): ProductTab =>
+  field.startsWith('image:')
+    ? 'images'
+    : field.startsWith('spec:')
+      ? 'specs'
+      : (FIELD_TAB[field] ?? 'basic');
+
+const inputClass = (hasError?: boolean): string =>
+  `w-full p-2.5 border rounded-xl bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#0056b3]/25 ${
+    hasError ? 'border-rose-400 bg-rose-50/40' : 'border-gray-200 focus:border-[#0056b3]'
+  }`;
+
+/**
+ * Label + control + one line of either help text or an error.
+ *
+ * Defined at module scope rather than inside AdminView: a component declared in
+ * a render body is a new type on every keystroke, which remounts the input under
+ * it and loses the caret.
+ */
+const FormField: React.FC<{
+  label: string;
+  htmlFor?: string;
+  required?: boolean;
+  hint?: React.ReactNode;
+  error?: string;
+  className?: string;
+  children: React.ReactNode;
+}> = ({ label, htmlFor, required, hint, error, className = '', children }) => (
+  <div className={className}>
+    <label htmlFor={htmlFor} className="block font-bold mb-1 text-gray-700">
+      {label}
+      {required && <span className="text-rose-500"> *</span>}
+    </label>
+    {children}
+    {error ? (
+      <p role="alert" className="text-[11px] text-rose-600 font-bold mt-1">
+        {error}
+      </p>
+    ) : hint ? (
+      <p className="text-[11px] text-gray-500 mt-1">{hint}</p>
+    ) : null}
+  </div>
+);
+
+const ToggleRow: React.FC<{
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}> = ({ label, description, checked, onChange }) => (
+  <label
+    className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-colors ${
+      checked ? 'border-blue-200 bg-blue-50/50' : 'border-gray-200 hover:bg-gray-50'
+    }`}
+  >
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
+      className="mt-0.5 w-4 h-4 accent-[#0056b3]"
+    />
+    <span className="min-w-0">
+      <span className="block font-bold text-gray-800">{label}</span>
+      <span className="block text-[11px] text-gray-500 leading-snug">{description}</span>
+    </span>
+  </label>
+);
+
+/** A remaining-characters counter for the columns with a real varchar limit. */
+const CharCount: React.FC<{ value: string; max: number }> = ({ value, max }) => (
+  <span
+    className={`font-mono text-[10px] ${
+      value.length > max * 0.9 ? 'text-amber-600 font-bold' : 'text-gray-400'
+    }`}
+  >
+    {value.length}/{max}
+  </span>
+);
 
 const SparklineChart: React.FC<{
   data: number[];
@@ -162,22 +438,30 @@ const SparklineChart: React.FC<{
 };
 
 export const AdminView: React.FC = () => {
-  const { 
-    products, 
-    orders, 
-    serviceRequests, 
-    coupons, 
+  const {
+    products,
+    orders,
+    serviceRequests,
+    coupons,
     siteSettings,
     updateSiteSettings,
-    addProduct, 
-    updateProduct, 
-    deleteProduct, 
-    updateOrderStatus, 
+    // Brands and categories come from the database (`/api/brands`,
+    // `/api/categories`) and publish their slug as `id` — which is exactly what
+    // the product form has to send back.
+    brands,
+    categories,
+    isCatalogLoading,
+    // `saveProduct` / `archiveProduct` persist; `updateProduct` only moves local
+    // state and is still what the stock-audit modal wants.
+    saveProduct,
+    archiveProduct,
+    updateProduct,
+    updateOrderStatus,
     updateOrderStatusExtended,
     addStaffNoteToOrder,
     updateOrder,
-    updateServiceStatus, 
-    navigateTo 
+    updateServiceStatus,
+    navigateTo
   } = useStore();
 
   // Top Module Tab State (11 Modules)
@@ -229,29 +513,28 @@ export const AdminView: React.FC = () => {
   const [waybillOrder, setWaybillOrder] = useState<Order | null>(null);
 
   // New Product Form
-  const [prodForm, setProdForm] = useState({
-    name: '',
-    brand: 'Dell',
-    sku: '',
-    category: 'computers-laptops' as any,
-    mrp: 100000,
-    sellingPrice: 85000,
-    stockQuantity: 10,
-    shortDescription: '',
-    image: 'https://picsum.photos/seed/intel-laptop1/600/400',
-    offerToggle: true,
-    discountType: 'percentage' as 'percentage' | 'fixed',
-    discountValue: 15,
-    offerStart: '',
-    offerEnd: '',
-    flashSaleBadge: false,
-    stackableWithCoupons: false,
-    isNewArrival: true,
-    isFeatured: false,
-    isBestSeller: false,
-    isTrending: false,
-    tags: ['Core i5', '16GB RAM', 'Business laptop'],
-  });
+  const [prodForm, setProdForm] = useState<ProductFormState>(emptyProductForm);
+  /** Gallery and spec-sheet repeaters — separate arrays because they are row lists, not fields. */
+  const [imageRows, setImageRows] = useState<ImageDraft[]>([]);
+  const [specRows, setSpecRows] = useState<SpecDraft[]>([]);
+  /**
+   * Which gallery row the storefront should use as the thumbnail.
+   *
+   * Held as the row's key rather than its index: rows get added, removed and
+   * reordered, and an index would silently start pointing at a different image.
+   */
+  const [primaryImageKey, setPrimaryImageKey] = useState<string | null>(null);
+  const [activeProductTab, setActiveProductTab] = useState<ProductTab>('basic');
+  /** Per-field messages, keyed by form field. Cleared on every save attempt. */
+  const [productFieldErrors, setProductFieldErrors] = useState<Record<string, string>>({});
+  /** Whatever the API said when a save was refused. */
+  const [productSaveError, setProductSaveError] = useState<string | null>(null);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  /** True while the full row is being fetched for an edit — see `handleOpenEditProduct`. */
+  const [isLoadingProductRow, setIsLoadingProductRow] = useState(false);
+
+  const patchProdForm = (changes: Partial<ProductFormState>) =>
+    setProdForm((prev) => ({ ...prev, ...changes }));
 
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
@@ -264,7 +547,6 @@ export const AdminView: React.FC = () => {
 
   /** True once the SKU has been typed in by hand — stops the suggestion overwriting it. */
   const [isSkuEdited, setIsSkuEdited] = useState(false);
-  const [skuError, setSkuError] = useState<string | null>(null);
 
   /**
    * Every SKU in the catalogue apart from the product being edited.
@@ -282,6 +564,17 @@ export const AdminView: React.FC = () => {
   );
 
   /**
+   * The brand the SKU suggestion and the live preview should use.
+   *
+   * The form stores the slug — that is what `PUT /api/products/:id` resolves —
+   * but `buildSku` and the preview card want the display name.
+   */
+  const selectedBrandName = useMemo(
+    () => brands.find((b) => b.id === prodForm.brandSlug)?.name ?? '',
+    [brands, prodForm.brandSlug],
+  );
+
+  /**
    * The SKU a new product would get from its current brand and title.
    *
    * Only offered while creating. An existing product's SKU is printed on order
@@ -290,31 +583,141 @@ export const AdminView: React.FC = () => {
    */
   const suggestedSku = useMemo(() => {
     if (editingProduct) return '';
-    const base = buildSku(prodForm.brand, prodForm.name);
+    const base = buildSku(selectedBrandName, prodForm.name);
     return base ? uniqueSku(base, otherSkus) : '';
-  }, [editingProduct, prodForm.brand, prodForm.name, otherSkus]);
+  }, [editingProduct, selectedBrandName, prodForm.name, otherSkus]);
 
   /** What the field shows: the typed value, or the live suggestion. */
   const skuValue = isSkuEdited ? prodForm.sku : suggestedSku || prodForm.sku;
 
-  // Categories list
-  const categoriesList = [
-    { id: 'computers-laptops', name: 'Computers & Laptops', slug: 'computers-laptops', parent: 'None', count: products.filter(p => p.category === 'computers-laptops').length },
-    { id: 'pc-components', name: 'PC Components', slug: 'pc-components', parent: 'None', count: products.filter(p => p.category === 'pc-components').length },
-    { id: 'peripherals-accessories', name: 'Peripherals & Accessories', slug: 'peripherals-accessories', parent: 'None', count: products.filter(p => p.category === 'peripherals-accessories').length },
-    { id: 'printers-scanners', name: 'Printers & Scanners', slug: 'printers-scanners', parent: 'None', count: products.filter(p => p.category === 'printers-scanners').length },
-    { id: 'cctv-security', name: 'CCTV & Security Systems', slug: 'cctv-security', parent: 'None', count: products.filter(p => p.category === 'cctv-security').length },
-    { id: 'networking', name: 'Networking Equipment', slug: 'networking', parent: 'None', count: products.filter(p => p.category === 'networking').length },
+  // ----------------------------------------------------------------- slug
+  //
+  // `products.slug` is the storefront product URL and is unique, so it gets the
+  // same treatment as the SKU: derived from the title until someone types over
+  // it, and never re-derived for a product that is already published under it.
+
+  const [isSlugEdited, setIsSlugEdited] = useState(false);
+
+  const otherSlugs = useMemo(
+    () => products.filter((p) => p.id !== editingProduct?.id).map((p) => p.slug),
+    [products, editingProduct?.id],
+  );
+
+  const suggestedSlug = useMemo(() => {
+    const base = slugify(prodForm.name);
+    if (!base) return '';
+    if (!otherSlugs.includes(base)) return base;
+    // The server would also de-duplicate, but showing `-2` here means the URL in
+    // the SEO tab is the URL the product actually gets.
+    for (let n = 2; n < 100; n += 1) {
+      const candidate = `${base}-${n}`;
+      if (!otherSlugs.includes(candidate)) return candidate;
+    }
+    return base;
+  }, [prodForm.name, otherSlugs]);
+
+  const slugValue = isSlugEdited ? prodForm.slug : suggestedSlug || prodForm.slug;
+
+  // ------------------------------------------------------- derived pricing
+  const sellingPriceNum = toNumber(prodForm.sellingPrice);
+  const mrpNum = toNumber(prodForm.mrp);
+  const costPriceNum = toNumber(prodForm.costPrice);
+  const stockQuantityNum = toNumber(prodForm.stockQuantity);
+  const lowStockThresholdNum = toNumber(prodForm.lowStockThreshold, 5);
+
+  /** What the storefront will print as "-N% OFF" — same arithmetic as `mapDbProductToProduct`. */
+  const discountPercent =
+    mrpNum > sellingPriceNum && mrpNum > 0
+      ? Math.round(((mrpNum - sellingPriceNum) / mrpNum) * 100)
+      : 0;
+
+  /** Gross margin on the selling price. Never leaves this modal. */
+  const marginPercent =
+    costPriceNum > 0 && sellingPriceNum > 0
+      ? Math.round(((sellingPriceNum - costPriceNum) / sellingPriceNum) * 100)
+      : null;
+
+  /** Mirrors `deriveStockStatus` on the server so the preview badge matches what gets saved. */
+  const stockStatusLabel =
+    stockQuantityNum <= 0
+      ? { text: 'Out of stock', tone: 'bg-rose-100 text-rose-700 border-rose-200' }
+      : stockQuantityNum <= lowStockThresholdNum
+        ? { text: `Low stock · ${stockQuantityNum} left`, tone: 'bg-amber-100 text-amber-800 border-amber-200' }
+        : { text: `In stock · ${stockQuantityNum} units`, tone: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+
+  /** Rows the operator has actually filled in — blank repeater rows are ignored, not sent. */
+  const filledImageRows = imageRows.filter((row) => row.url.trim());
+  const filledSpecRows = specRows.filter((row) => row.specKey.trim() || row.specValue.trim());
+
+  /**
+   * The row that will be saved with `isPrimary: true`.
+   *
+   * Falls back to the first filled row, matching `replaceImages` on the server —
+   * it promotes the first image when nothing is flagged, so "no selection" and
+   * "first selected" have to mean the same thing here too.
+   */
+  const primaryImageRow =
+    filledImageRows.find((row) => row.key === primaryImageKey) ?? filledImageRows[0];
+
+  const previewImage = primaryImageRow?.url ?? '';
+
+  /**
+   * The states offered in the header toggle.
+   *
+   * `inactive` and `discontinued` are appended only when the product already has
+   * one: the form does not author them (Pause lives in the catalogue row menu,
+   * Archive in the delete action), but showing "Published" for an archived
+   * product would misreport what the row says.
+   */
+  const publishStates: Array<{ value: PublishState; label: string; hint: string }> = [
+    ...PUBLISH_STATES.map((state) => ({ ...state, value: state.value as PublishState })),
+    ...(LOADED_ONLY_STATES[prodForm.status]
+      ? [{ value: prodForm.status, ...LOADED_ONLY_STATES[prodForm.status] }]
+      : []),
   ];
 
-  // Brands list
-  const brandsList = [
-    { id: 'dell', name: 'Dell', slug: 'dell', logo: 'https://picsum.photos/seed/dell-logo/120/60', count: products.filter(p => p.brand.toLowerCase() === 'dell').length },
-    { id: 'hp', name: 'HP', slug: 'hp', logo: 'https://picsum.photos/seed/hp-logo/120/60', count: products.filter(p => p.brand.toLowerCase() === 'hp').length },
-    { id: 'lenovo', name: 'Lenovo', slug: 'lenovo', logo: 'https://picsum.photos/seed/lenovo-logo/120/60', count: products.filter(p => p.brand.toLowerCase() === 'lenovo').length },
-    { id: 'epson', name: 'Epson', slug: 'epson', logo: 'https://picsum.photos/seed/epson-logo/120/60', count: products.filter(p => p.brand.toLowerCase() === 'epson').length },
-    { id: 'hikvision', name: 'Hikvision', slug: 'hikvision', logo: 'https://picsum.photos/seed/hikvision-logo/120/60', count: products.filter(p => p.brand.toLowerCase() === 'hikvision').length },
-  ];
+  /** The chosen category's own subcategory list, offered as a datalist rather than forced. */
+  const subcategoryOptions = useMemo(
+    () => categories.find((cat) => cat.id === prodForm.categorySlug)?.subcategories ?? [],
+    [categories, prodForm.categorySlug],
+  );
+
+  /** Which tabs currently hold a validation error, for the badges on the tab strip. */
+  const tabsWithErrors = useMemo(() => {
+    const set = new Set<ProductTab>();
+    Object.keys(productFieldErrors).forEach((field) => set.add(tabForField(field)));
+    return set;
+  }, [productFieldErrors]);
+
+  // Categories list — from the database, not a hardcoded copy. `CategoryItem.id`
+  // is the slug (see `mapDbCategoryToCategoryItem`), which is what the product
+  // rows carry, so the counts line up without a join.
+  const categoriesList = useMemo(
+    () =>
+      categories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.id,
+        parent: 'None',
+        count: products.filter((p) => p.category === cat.id).length,
+      })),
+    [categories, products],
+  );
+
+  // Brands list — likewise from `/api/brands`, where `Brand.id` is the slug.
+  // Products only carry the brand *name*, so the count matches on that.
+  const brandsList = useMemo(
+    () =>
+      brands.map((brand) => ({
+        id: brand.id,
+        name: brand.name,
+        slug: brand.id,
+        logo: brand.logo,
+        isPartner: brand.isPartner,
+        count: products.filter((p) => p.brand.toLowerCase() === brand.name.toLowerCase()).length,
+      })),
+    [brands, products],
+  );
 
   // Calculated Metrics
   const totalRevenue = orders.reduce((acc, o) => acc + o.totalAmount, 0);
@@ -598,164 +1001,428 @@ export const AdminView: React.FC = () => {
     logAuditAction('Sales', 'Export CSV', 'Exported sales orders list to CSV.');
   };
 
-  // Handle Save Product
-  const handleSaveProductModal = (e: React.FormEvent) => {
-    e.preventDefault();
+  /* ------------------------------------------------- product form: repeaters */
 
-    // Checked here rather than only in the markup: `products_sku_idx` is a unique
-    // index, so a duplicate that slipped through would come back as an opaque
-    // constraint violation instead of something the operator can act on.
-    const sku = skuValue.trim();
-    const skuProblem = validateSku(sku, otherSkus);
-    if (skuProblem) {
-      setSkuError(skuProblem);
-      return;
-    }
-    setSkuError(null);
+  const addImageRow = () =>
+    setImageRows((rows) => [...rows, { key: genAdminId('img'), url: '', altText: '' }]);
 
-    if (editingProduct && editingProduct.id) {
-      // Edit existing
-      const updated: Product = {
-        ...(editingProduct as Product),
-        name: prodForm.name,
-        brand: prodForm.brand,
-        sku,
-        category: prodForm.category,
-        mrp: prodForm.mrp,
-        sellingPrice: prodForm.sellingPrice,
-        stockQuantity: prodForm.stockQuantity,
-        inStock: prodForm.stockQuantity > 0,
-        shortDescription: prodForm.shortDescription,
-        images: [prodForm.image],
-        offerToggle: prodForm.offerToggle,
-        discountType: prodForm.discountType,
-        discountValue: prodForm.discountValue,
-        offerStart: prodForm.offerStart,
-        offerEnd: prodForm.offerEnd,
-        flashSaleBadge: prodForm.flashSaleBadge,
-        stackableWithCoupons: prodForm.stackableWithCoupons,
-        isNewArrival: prodForm.isNewArrival,
-        isFeatured: prodForm.isFeatured,
-        isBestSeller: prodForm.isBestSeller,
-        isTrending: prodForm.isTrending,
-        tags: prodForm.tags,
-      };
-      updateProduct(updated);
-      logAuditAction('Catalog', 'Update Product', `Updated product: ${updated.name} (SKU ${sku})`);
-    } else {
-      // Create new
-      const newProd: Product = {
-        id: genAdminId('p'),
-        slug: prodForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        name: prodForm.name,
-        brand: prodForm.brand,
-        sku,
-        category: prodForm.category,
-        mrp: prodForm.mrp,
-        sellingPrice: prodForm.sellingPrice,
-        stockQuantity: prodForm.stockQuantity,
-        inStock: prodForm.stockQuantity > 0,
-        rating: 5,
-        reviewCount: 0,
-        shortDescription: prodForm.shortDescription,
-        fullDescription: prodForm.shortDescription,
-        specifications: { 'Warranty': '1 Year Official Nepal Warranty' },
-        features: ['Official Warranty', 'Genuine Import'],
-        images: [prodForm.image],
-        isNewArrival: prodForm.isNewArrival,
-        isFeatured: prodForm.isFeatured,
-        isBestSeller: prodForm.isBestSeller,
-        isTrending: prodForm.isTrending,
-        tags: prodForm.tags,
-        warrantyMonths: 12,
-        offerToggle: prodForm.offerToggle,
-        discountType: prodForm.discountType,
-        discountValue: prodForm.discountValue,
-        offerStart: prodForm.offerStart,
-        offerEnd: prodForm.offerEnd,
-        flashSaleBadge: prodForm.flashSaleBadge,
-        stackableWithCoupons: prodForm.stackableWithCoupons,
-        status: 'active',
-      };
-      addProduct(newProd);
-      logAuditAction('Catalog', 'Create Product', `Created new product: ${newProd.name} (SKU ${sku})`);
+  const removeImageRow = (key: string) =>
+    setImageRows((rows) => rows.filter((row) => row.key !== key));
+
+  const patchImageRow = (key: string, changes: Partial<ImageDraft>) =>
+    setImageRows((rows) => rows.map((row) => (row.key === key ? { ...row, ...changes } : row)));
+
+  /** Row order is the gallery order, so moving a row is how `displayOrder` gets set. */
+  const moveImageRow = (key: string, direction: -1 | 1) =>
+    setImageRows((rows) => {
+      const index = rows.findIndex((row) => row.key === key);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= rows.length) return rows;
+      const next = [...rows];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+
+  const addSpecRow = (specKey = '') =>
+    setSpecRows((rows) => [...rows, { key: genAdminId('spec'), specKey, specValue: '' }]);
+
+  const removeSpecRow = (key: string) =>
+    setSpecRows((rows) => rows.filter((row) => row.key !== key));
+
+  const patchSpecRow = (key: string, changes: Partial<SpecDraft>) =>
+    setSpecRows((rows) => rows.map((row) => (row.key === key ? { ...row, ...changes } : row)));
+
+  const clearProductFieldError = (field: string) =>
+    setProductFieldErrors((errors) => {
+      if (!(field in errors)) return errors;
+      const { [field]: _removed, ...rest } = errors;
+      return rest;
+    });
+
+  /* ------------------------------------------------ product form: validation */
+
+  /**
+   * Everything the API would refuse, checked before the request goes out.
+   *
+   * The form is split across panels, and a browser does not run `required` on an
+   * input that is not currently in the DOM — so pressing Publish from the SEO tab
+   * with an empty title would otherwise fail server-side naming a field the
+   * operator cannot even see. Each problem records which tab to open.
+   */
+  const validateProductForm = (): {
+    errors: Record<string, string>;
+    firstTab: ProductTab | null;
+  } => {
+    const errors: Record<string, string> = {};
+    // The owning tab is looked up from the field name rather than passed in, so
+    // the error badges on the tab strip and the tab this jumps to can never
+    // disagree about where a problem lives.
+    const fail = (field: string, message: string) => {
+      if (errors[field]) return;
+      errors[field] = message;
+    };
+
+    if (prodForm.name.trim().length < 2) {
+      fail('name', 'Give the product a title of at least 2 characters.');
     }
 
+    if (!prodForm.brandSlug) {
+      fail(
+        'brandSlug',
+        brands.length === 0
+          ? 'No brands have loaded from the database yet — reload before adding a product.'
+          : 'Choose the brand this product is sold under.',
+      );
+    }
+
+    if (!prodForm.categorySlug) {
+      fail(
+        'categorySlug',
+        categories.length === 0
+          ? 'No categories have loaded from the database yet — reload before adding a product.'
+          : 'Choose a category, or the product will not appear under any shop filter.',
+      );
+    }
+
+    const skuProblem = validateSku(skuValue.trim(), otherSkus);
+    if (skuProblem) fail('sku', skuProblem);
+
+    const slug = slugValue.trim();
+    if (slug.length < 2 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      fail('slug', 'Use lowercase words separated by single hyphens, e.g. legion-pro-5.');
+    } else if (otherSlugs.includes(slug)) {
+      fail('slug', 'Another product already uses this URL.');
+    }
+
+    if (!(sellingPriceNum > 0)) {
+      fail('sellingPrice', 'The selling price is what the customer is charged — it cannot be zero.');
+    }
+
+    if (mrpNum > 0 && mrpNum < sellingPriceNum) {
+      fail('mrp', 'The MRP is the struck-through price, so it cannot be below the selling price.');
+    }
+
+    if (prodForm.costPrice.trim() && !(costPriceNum >= 0)) {
+      fail('costPrice', 'Cost price must be a number, or left blank.');
+    }
+
+    if (!Number.isInteger(stockQuantityNum) || stockQuantityNum < 0) {
+      fail('stockQuantity', 'Stock must be a whole number of units, zero or more.');
+    }
+
+    if (!Number.isInteger(lowStockThresholdNum) || lowStockThresholdNum < 0) {
+      fail('lowStockThreshold', 'The low-stock alert level must be a whole number.');
+    }
+
+    // `product_images.url` is validated as a URL server-side; catching it here
+    // means the operator is told which row is wrong rather than just "invalid".
+    filledImageRows.forEach((row) => {
+      let parsed: URL | null = null;
+      try {
+        parsed = new URL(row.url.trim());
+      } catch {
+        parsed = null;
+      }
+      if (!parsed || !/^https?:$/.test(parsed.protocol)) {
+        fail(`image:${row.key}`, 'Needs a full http(s) image URL.');
+      }
+    });
+
+    if (filledImageRows.length === 0) {
+      fail(
+        'images',
+        'Add at least one image — the shop grid and product page both render the primary image.',
+      );
+    }
+
+    filledSpecRows.forEach((row) => {
+      if (!row.specKey.trim() || !row.specValue.trim()) {
+        fail(`spec:${row.key}`, 'Fill in both the name and the value, or delete the row.');
+      }
+    });
+
+    const warrantyMonths = toNumber(prodForm.warrantyMonths);
+    if (!Number.isInteger(warrantyMonths) || warrantyMonths < 0 || warrantyMonths > 240) {
+      fail('warrantyMonths', 'Warranty length must be between 0 and 240 months.');
+    }
+
+    const order = PRODUCT_TABS.map((tab) => tab.id);
+    const firstTab =
+      Object.keys(errors)
+        .map(tabForField)
+        .sort((a, b) => order.indexOf(a) - order.indexOf(b))[0] ?? null;
+
+    return { errors, firstTab };
+  };
+
+  /* ---------------------------------------------------- product form: saving */
+
+  const closeProductModal = () => {
     setIsProductModalOpen(false);
     setEditingProduct(null);
     setIsSkuEdited(false);
-    setSkuError(null);
+    setIsSlugEdited(false);
+    setProductFieldErrors({});
+    setProductSaveError(null);
+    setActiveProductTab('basic');
   };
 
-  const handleOpenEditProduct = (p: Product) => {
+  /**
+   * Persists the product and pulls the catalogue back in.
+   *
+   * `status` is passed rather than read from the form so the footer's two buttons
+   * — Save as Draft and Publish — can each mean what they say without the
+   * operator also having to flip the toggle in the header.
+   */
+  const submitProduct = async (status: PublishState) => {
+    setProductSaveError(null);
+
+    const { errors, firstTab } = validateProductForm();
+    setProductFieldErrors(errors);
+    if (firstTab) {
+      setActiveProductTab(firstTab);
+      return;
+    }
+
+    const sku = skuValue.trim();
+    const primaryKey = primaryImageRow?.key;
+
+    // Keep the header toggle honest about what is being written — the footer
+    // buttons name the state explicitly, and a toggle still reading "Draft"
+    // after Publish was pressed would contradict the row.
+    patchProdForm({ status });
+
+    const input: ProductWriteInput = {
+      sku,
+      name: prodForm.name.trim(),
+      slug: slugValue.trim(),
+      brandSlug: prodForm.brandSlug,
+      categorySlug: prodForm.categorySlug,
+      subcategory: prodForm.subcategory.trim() || undefined,
+      basePrice: sellingPriceNum,
+      compareAtPrice: mrpNum > 0 ? mrpNum : undefined,
+      costPrice: prodForm.costPrice.trim() ? costPriceNum : undefined,
+      stockQuantity: stockQuantityNum,
+      lowStockThreshold: lowStockThresholdNum,
+      warrantyMonths: toNumber(prodForm.warrantyMonths),
+      warrantyType: prodForm.warrantyType,
+      warrantyText: prodForm.warrantyText.trim() || undefined,
+      shortDescription: prodForm.shortDescription.trim() || undefined,
+      description: prodForm.description.trim() || undefined,
+      tags: prodForm.tags,
+      features: linesToList(prodForm.featuresText),
+      whatsInTheBox: linesToList(prodForm.boxContentsText),
+      metaTitle: prodForm.metaTitle.trim() || undefined,
+      metaDescription: prodForm.metaDescription.trim() || undefined,
+      status,
+      // One switch, not two. `lib/pricing/quote.ts` refuses to sell anything whose
+      // `isActive` is false *or* whose status is not `active`, so a draft left
+      // `isActive: true` would be a product the storefront hides and the order
+      // endpoint happily sells.
+      isActive: status === 'active',
+      isFeatured: prodForm.isFeatured,
+      isNewArrival: prodForm.isNewArrival,
+      isBestSeller: prodForm.isBestSeller,
+      isTrending: prodForm.isTrending,
+      isDealOfDay: prodForm.isDealOfDay,
+      // Row order is display order; both lists replace what is in the database.
+      specs: filledSpecRows.map((row, index) => ({
+        specKey: row.specKey.trim(),
+        specValue: row.specValue.trim(),
+        displayOrder: index,
+      })),
+      images: filledImageRows.map((row, index) => ({
+        url: row.url.trim(),
+        altText: row.altText.trim() || undefined,
+        displayOrder: index,
+        isPrimary: row.key === primaryKey,
+      })),
+    };
+
+    setIsSavingProduct(true);
+    const result = await saveProduct(input, editingProduct?.id);
+    setIsSavingProduct(false);
+
+    if (!result.ok) {
+      // Kept open with the message the API gave: a rejected save that closed the
+      // modal would look like it had worked.
+      setProductSaveError(result.error);
+      return;
+    }
+
+    const verb = editingProduct?.id ? 'Update Product' : 'Create Product';
+    logAuditAction(
+      'Catalog',
+      verb,
+      `${editingProduct?.id ? 'Updated' : 'Created'} ${result.product.name} (SKU ${sku}) — saved as ${
+        status === 'active' ? 'published' : status
+      }`,
+    );
+
+    closeProductModal();
+  };
+
+  const handleSaveProductModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Enter inside a field saves with whatever the header toggle says.
+    void submitProduct(prodForm.status);
+  };
+
+  /**
+   * Opens the form on an existing product.
+   *
+   * Seeded from the catalogue list first so the modal opens without a wait, then
+   * replaced with the real `products` row. The mapped `Product` the storefront
+   * uses cannot carry cost price, meta tags, per-image alt text, the warranty type
+   * or the draft/paused distinction — editing from it alone would blank all of
+   * that out on the next save.
+   */
+  const handleOpenEditProduct = async (p: Product) => {
     setEditingProduct(p);
     // An existing product's SKU is already on its order lines and stock
-    // adjustments, so it is shown as-is and never re-derived from the title.
+    // adjustments, and its slug is already a published URL, so neither is
+    // re-derived from the title.
     setIsSkuEdited(true);
-    setSkuError(null);
+    setIsSlugEdited(true);
+    setProductFieldErrors({});
+    setProductSaveError(null);
+    setActiveProductTab('basic');
+
     setProdForm({
+      ...emptyProductForm(),
       name: p.name,
-      brand: p.brand,
-      sku: p.sku || '',
-      category: p.category,
-      mrp: p.mrp,
-      sellingPrice: p.sellingPrice,
-      stockQuantity: p.stockQuantity,
-      shortDescription: p.shortDescription || '',
-      image: p.images[0] || 'https://picsum.photos/seed/intel-laptop1/600/400',
-      offerToggle: p.offerToggle || false,
-      discountType: p.discountType || 'percentage',
-      discountValue: p.discountValue || 10,
-      offerStart: p.offerStart || '',
-      offerEnd: p.offerEnd || '',
-      flashSaleBadge: p.flashSaleBadge || false,
-      stackableWithCoupons: p.stackableWithCoupons || false,
-      isNewArrival: p.isNewArrival || false,
-      isFeatured: p.isFeatured || false,
-      isBestSeller: p.isBestSeller || false,
-      isTrending: p.isTrending || false,
-      tags: p.tags || [],
+      // Products carry the brand *name*; the form and the API work in slugs.
+      brandSlug: brands.find((b) => b.name.toLowerCase() === p.brand.toLowerCase())?.id ?? '',
+      categorySlug: p.category,
+      subcategory: p.subcategory ?? '',
+      sku: p.sku ?? '',
+      slug: p.slug,
+      mrp: p.mrp > p.sellingPrice ? String(p.mrp) : '',
+      sellingPrice: String(p.sellingPrice),
+      stockQuantity: String(p.stockQuantity),
+      lowStockThreshold: String(p.lowStockThreshold ?? 5),
+      shortDescription: p.shortDescription ?? '',
+      description: p.longDescription ?? p.fullDescription ?? '',
+      warrantyMonths: String(p.warrantyMonths ?? 12),
+      warrantyText: p.warranty ?? '',
+      featuresText: listToLines(p.features),
+      boxContentsText: listToLines(p.whatsInTheBox),
+      tags: p.tags ?? [],
+      status: p.status ?? 'active',
+      isFeatured: Boolean(p.isFeatured),
+      isNewArrival: Boolean(p.isNewArrival),
+      isBestSeller: Boolean(p.isBestSeller),
+      isTrending: Boolean(p.isTrending),
+      isDealOfDay: Boolean(p.isDealOfDay),
     });
+    setImageRows(
+      (p.images.length > 0 ? p.images : ['']).map((url) => ({
+        key: genAdminId('img'),
+        url,
+        altText: '',
+      })),
+    );
+    setSpecRows(specsFromProduct(p));
+    setPrimaryImageKey(null);
     setIsProductModalOpen(true);
+
+    const numericId = Number(p.id);
+    // Products created locally before the API existed have ids like `p-3`; there
+    // is no row to fetch, so the seeded values are all there is.
+    if (!Number.isInteger(numericId) || numericId <= 0) return;
+
+    setIsLoadingProductRow(true);
+    const result = await fetchProductRow(numericId);
+    setIsLoadingProductRow(false);
+
+    if (!result.ok) {
+      setProductSaveError(
+        `Showing only what the catalogue list holds — the full record could not be loaded (${result.error}). Cost price and SEO fields may look empty; saving now would leave them untouched.`,
+      );
+      return;
+    }
+
+    const row = result.data;
+    setProdForm({
+      name: row.name,
+      brandSlug: row.brandSlug ?? '',
+      categorySlug: row.categorySlug ?? '',
+      subcategory: row.subcategory ?? '',
+      sku: row.sku,
+      slug: row.slug,
+      mrp: decimalToInput(row.compareAtPrice),
+      sellingPrice: decimalToInput(row.basePrice),
+      costPrice: decimalToInput(row.costPrice),
+      stockQuantity: String(row.stockQuantity),
+      lowStockThreshold: String(row.lowStockThreshold),
+      shortDescription: row.shortDescription ?? '',
+      description: row.description ?? '',
+      warrantyMonths: String(row.warrantyMonths ?? 0),
+      warrantyType: row.warrantyType ?? 'official_np',
+      warrantyText: row.warrantyText ?? '',
+      featuresText: listToLines(row.features),
+      boxContentsText: listToLines(row.whatsInTheBox),
+      tags: row.tags ?? [],
+      metaTitle: row.metaTitle ?? '',
+      metaDescription: row.metaDescription ?? '',
+      status: row.status,
+      isFeatured: row.isFeatured,
+      isNewArrival: row.isNewArrival,
+      isBestSeller: row.isBestSeller,
+      isTrending: row.isTrending,
+      isDealOfDay: row.isDealOfDay,
+    });
+
+    const loadedImages: ImageDraft[] =
+      row.images.length > 0
+        ? row.images.map((image) => ({
+            key: genAdminId('img'),
+            url: image.url,
+            altText: image.altText ?? '',
+          }))
+        : [{ key: genAdminId('img'), url: '', altText: '' }];
+    setImageRows(loadedImages);
+    setPrimaryImageKey(
+      loadedImages[row.images.findIndex((image) => image.isPrimary)]?.key ?? null,
+    );
+    setSpecRows(
+      row.specs.map((spec) => ({
+        key: genAdminId('spec'),
+        specKey: spec.specKey,
+        specValue: spec.specValue,
+      })),
+    );
   };
 
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
-    // Back to suggesting from brand + title.
+    // Back to suggesting the SKU and the URL from brand + title.
     setIsSkuEdited(false);
-    setSkuError(null);
-    setProdForm({
-      name: '',
-      brand: 'Dell',
-      sku: '',
-      category: 'computers-laptops',
-      mrp: 100000,
-      sellingPrice: 85000,
-      stockQuantity: 10,
-      shortDescription: '',
-      image: 'https://picsum.photos/seed/intel-laptop1/600/400',
-      offerToggle: false,
-      discountType: 'percentage',
-      discountValue: 10,
-      offerStart: '',
-      offerEnd: '',
-      flashSaleBadge: false,
-      stackableWithCoupons: false,
-      isNewArrival: true,
-      isFeatured: false,
-      isBestSeller: false,
-      isTrending: false,
-      tags: ['Official Warranty'],
-    });
+    setIsSlugEdited(false);
+    setProductFieldErrors({});
+    setProductSaveError(null);
+    setActiveProductTab('basic');
+    // Brand and category are left unset on purpose. Defaulting to whichever row
+    // happens to come back first from the API is how a catalogue ends up full of
+    // Dell printers.
+    setProdForm(emptyProductForm());
+    setImageRows([{ key: genAdminId('img'), url: '', altText: '' }]);
+    setSpecRows([{ key: genAdminId('spec'), specKey: '', specValue: '' }]);
+    setPrimaryImageKey(null);
     setIsProductModalOpen(true);
   };
 
   // Soft delete product handler
-  const handleSoftDeleteProduct = (prodId: string, prodName: string) => {
-    if (confirm(`Set product status to discontinued for "${prodName}"? Past order history will be preserved.`)) {
-      deleteProduct(prodId);
-      logAuditAction('Catalog', 'Soft Delete Product', `Discontinued product SKU: ${prodName}`);
+  const handleSoftDeleteProduct = async (prodId: string, prodName: string) => {
+    if (!confirm(`Set product status to discontinued for "${prodName}"? Past order history will be preserved.`)) {
+      return;
     }
+    const result = await archiveProduct(prodId);
+    if (!result.ok) {
+      alert(`Could not discontinue "${prodName}": ${result.error}`);
+      return;
+    }
+    logAuditAction('Catalog', 'Soft Delete Product', `Discontinued product SKU: ${prodName}`);
   };
 
   return (

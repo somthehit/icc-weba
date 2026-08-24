@@ -33,12 +33,16 @@ import { computeProductEffectivePrice } from '@/lib/offers/offerUtils';
 import { DB_STATUS, orderRowIds, toUiOrder, type DbOrderDetail } from '@/lib/adapters/orders';
 import {
   addCartLine,
+  archiveProductRequest,
+  createProductRequest,
   deleteCartLine,
   fetchCart,
   fetchOrders,
   fetchQuote,
   placeOrderRequest,
   setCartLineQuantity,
+  updateProductRequest,
+  type ProductWriteInput,
   type QuoteRequest,
   type ServerCartRow,
 } from '@/lib/api/storefront';
@@ -209,6 +213,17 @@ interface StoreContextType {
   addProduct: (product: Product) => void;
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
+  /**
+   * Write a product to the database — create when `productId` is omitted, update
+   * when it is given — and pull the catalogue back in. Unlike `addProduct` /
+   * `updateProduct`, which only move local state, this one persists.
+   */
+  saveProduct: (
+    input: ProductWriteInput,
+    productId?: string,
+  ) => Promise<{ ok: true; product: Product } | { ok: false; error: string }>;
+  /** Retire a product in the database (`status = 'discontinued'`). */
+  archiveProduct: (productId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   updateSiteSettings: (newSettings: Partial<SiteSettings>) => void;
 }
 
@@ -1338,6 +1353,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts((prev) => prev.filter((p) => p.id !== productId));
   };
 
+  /**
+   * The catalogue form's save path.
+   *
+   * Everything the storefront shows about a product — price, stock, spec sheet,
+   * gallery — is read from the database, so a product that only ever reached
+   * `setProducts` would vanish on the next refresh. The endpoint validates and
+   * writes; we replace the local row with what came back rather than with what we
+   * sent, because the server assigns the id and recomputes the discount.
+   */
+  const saveProduct = async (
+    input: ProductWriteInput,
+    productId?: string,
+  ): Promise<{ ok: true; product: Product } | { ok: false; error: string }> => {
+    if (productId !== undefined) {
+      const numericId = Number(productId);
+      if (!Number.isInteger(numericId) || numericId <= 0) {
+        return { ok: false, error: 'This product has no database id yet, so it cannot be updated.' };
+      }
+      const result = await updateProductRequest(numericId, input);
+      if (!result.ok) return result;
+      const saved = result.data.product;
+      setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
+      return { ok: true, product: saved };
+    }
+
+    const result = await createProductRequest(input);
+    if (!result.ok) return result;
+    const saved = result.data.product;
+    setProducts((prev) => [saved, ...prev]);
+    return { ok: true, product: saved };
+  };
+
+  const archiveProduct = async (
+    productId: string,
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const numericId = Number(productId);
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+      return { ok: false, error: 'This product has no database id yet, so it cannot be retired.' };
+    }
+    const result = await archiveProductRequest(numericId);
+    if (!result.ok) return result;
+    // The row still exists — it is discontinued, not deleted — so reflect the new
+    // status instead of dropping it out of the admin list.
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, status: 'discontinued' as const } : p)),
+    );
+    return { ok: true };
+  };
+
   const updateSiteSettings = (newSettings: Partial<SiteSettings>) => {
     setSiteSettings((prev) => ({
       ...prev,
@@ -1432,6 +1496,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addProduct,
         updateProduct,
         deleteProduct,
+        saveProduct,
+        archiveProduct,
         updateSiteSettings,
       }}
     >

@@ -16,6 +16,7 @@ import type {
   CartQuote,
   DeliveryZoneOption,
   PaymentMethod,
+  Product,
   SavedAddress,
 } from '@/types';
 import type { DbOrderDetail } from '@/lib/adapters/orders';
@@ -315,3 +316,130 @@ export const fetchOrder = (id: number) => request<DbOrderDetail>(`/api/orders?id
 /** The same, by the human order number the customer quotes (`ICE-2026-00042`). */
 export const fetchOrderByNumber = (orderNumber: string) =>
   request<DbOrderDetail>(`/api/orders?orderNumber=${encodeURIComponent(orderNumber)}`);
+
+/* --------------------------------------------------------- catalog (admin) */
+
+/**
+ * What the admin product form sends.
+ *
+ * Brand and category travel as slugs because that is what `/api/brands` and
+ * `/api/categories` publish as their id — the numeric keys never reach the
+ * browser. The route resolves them and reports an unknown slug as a 400.
+ *
+ * `specs` and `images` are replace-in-full: sending them overwrites the
+ * product's rows, omitting them leaves those tables untouched.
+ */
+export interface ProductWriteInput {
+  sku: string;
+  name: string;
+  slug: string;
+  brandSlug?: string;
+  categorySlug?: string;
+  subcategory?: string;
+  description?: string;
+  shortDescription?: string;
+  basePrice: number;
+  compareAtPrice?: number;
+  costPrice?: number;
+  stockQuantity?: number;
+  lowStockThreshold?: number;
+  warrantyMonths?: number;
+  warrantyType?: string;
+  warrantyText?: string;
+  tags?: string[];
+  features?: string[];
+  whatsInTheBox?: string[];
+  metaTitle?: string;
+  metaDescription?: string;
+  status?: 'draft' | 'active' | 'inactive' | 'discontinued';
+  isActive?: boolean;
+  isFeatured?: boolean;
+  isDealOfDay?: boolean;
+  isNewArrival?: boolean;
+  isBestSeller?: boolean;
+  isTrending?: boolean;
+  specs?: Array<{ specKey: string; specValue: string; displayOrder?: number }>;
+  images?: Array<{ url: string; altText?: string; displayOrder?: number; isPrimary?: boolean }>;
+}
+
+/**
+ * Create a catalog product. Returns the product mapped to the frontend contract,
+ * so the caller can drop it straight into state without re-fetching.
+ */
+export const createProductRequest = (input: ProductWriteInput) =>
+  request<{ success: true; product: Product }>('/api/products', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+/** Update a catalog product. Every field is optional — send only what changed. */
+export const updateProductRequest = (id: number, input: Partial<ProductWriteInput>) =>
+  request<{ success: true; product: Product }>(`/api/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+
+/**
+ * Retire a product.
+ *
+ * The endpoint sets `status = 'discontinued'` rather than deleting the row: a
+ * hard delete would cascade into `order_items` and rewrite the history of orders
+ * that have already been paid for.
+ */
+export const archiveProductRequest = (id: number) =>
+  request<{ success: true; product: { id: number; status: string } }>(`/api/products/${id}`, {
+    method: 'DELETE',
+  });
+
+/**
+ * The full `products` row plus its gallery and spec sheet, as the admin form
+ * needs it.
+ *
+ * The mapped `Product` the storefront works with deliberately drops a lot of
+ * this — cost price, meta tags, the draft/paused distinction, per-image alt text
+ * — so an edit form built only from it would blank out every field it could not
+ * see. Staff-only, since `costPrice` is what the shop paid its supplier.
+ */
+export interface AdminProductRow {
+  id: number;
+  sku: string;
+  name: string;
+  slug: string;
+  brandSlug: string | null;
+  categorySlug: string | null;
+  subcategory: string | null;
+  description: string | null;
+  shortDescription: string | null;
+  basePrice: string | number;
+  compareAtPrice: string | number | null;
+  costPrice: string | number | null;
+  stockQuantity: number;
+  lowStockThreshold: number;
+  stockStatus: string;
+  warrantyMonths: number | null;
+  warrantyType: string | null;
+  warrantyText: string | null;
+  tags: string[] | null;
+  features: string[] | null;
+  whatsInTheBox: string[] | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  status: 'draft' | 'active' | 'inactive' | 'discontinued';
+  isActive: boolean;
+  isFeatured: boolean;
+  isDealOfDay: boolean;
+  isNewArrival: boolean;
+  isBestSeller: boolean;
+  isTrending: boolean;
+  images: Array<{
+    id: number;
+    url: string;
+    altText: string | null;
+    displayOrder: number;
+    isPrimary: boolean;
+  }>;
+  specs: Array<{ id: number; specKey: string; specValue: string; displayOrder: number }>;
+}
+
+export const fetchProductRow = (id: number) =>
+  request<AdminProductRow>(`/api/products/${id}`);

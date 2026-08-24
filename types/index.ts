@@ -54,7 +54,14 @@ export interface Product {
   features?: string[];
   tags: string[];
   whatsInTheBox?: string[];
-  status?: 'active' | 'discontinued';
+  /**
+   * Lifecycle state, straight from `products.status`.
+   *
+   * The storefront only ever shows `active` rows, but the admin catalogue needs
+   * to tell a draft from a paused listing from a retired one — collapsing them
+   * meant a product saved as a draft read back as "Active".
+   */
+  status?: 'draft' | 'active' | 'inactive' | 'discontinued';
   createdAt?: string; // ISO date string (e.g. "2026-03-15T08:00:00.000Z")
   releaseDate?: string; // Release date or added date (e.g. "2026-01-10", "2025-11-20")
   offerToggle?: boolean;

@@ -101,6 +101,9 @@ const mapSpecs = (row: DbProductRow): ProductSpecification[] | undefined => {
   return row.specs.map((s) => ({ key: s.specKey, value: s.specValue }));
 };
 
+/** `product_status` values, so an unrecognised string falls back rather than leaking through. */
+const PRODUCT_STATUSES = ['draft', 'active', 'inactive', 'discontinued'] as const;
+
 export function mapDbProductToProduct(row: DbProductRow): Product {
   const sellingPrice = num(row.basePrice);
   // compare_at_price is the strike-through MRP; fall back to the selling price so
@@ -142,9 +145,11 @@ export function mapDbProductToProduct(row: DbProductRow): Product {
     features: row.features ? list(row.features) : undefined,
     tags: list(row.tags),
     whatsInTheBox: row.whatsInTheBox ? list(row.whatsInTheBox) : undefined,
-    // The DB has draft/active/inactive/discontinued; the storefront only cares
-    // whether a product is still sold.
-    status: row.status === 'discontinued' ? 'discontinued' : 'active',
+    // Passed through rather than collapsed to active/discontinued: the admin
+    // catalogue has to be able to show that a product is still a draft.
+    status: PRODUCT_STATUSES.includes(row.status as Product['status'] & string)
+      ? (row.status as Product['status'])
+      : 'active',
     createdAt: iso(row.createdAt),
     releaseDate: str(row.releaseDate),
   };

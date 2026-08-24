@@ -167,10 +167,57 @@ const productFields = {
 const productObject = z.object(productFields);
 
 /**
+ * The admin form knows brands and categories by slug, because that is what the
+ * `/api/brands` and `/api/categories` payloads expose as their id (see
+ * `mapDbBrandToBrand`). Accept either: a slug is resolved to its row id by the
+ * route, an explicit `brandId`/`categoryId` still works for API callers.
+ */
+const slugRef = z
+  .string()
+  .trim()
+  .min(1)
+  .max(140)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase words separated by hyphens');
+
+/**
+ * Spec-sheet rows sent alongside the product. Writing these is all-or-nothing:
+ * the route replaces the product's existing rows with whatever the form sends,
+ * so an omitted `specs` key means "leave them alone" and `[]` means "clear them".
+ */
+const specRows = z
+  .array(
+    z.object({
+      specKey: z.string().trim().min(1, 'Spec name is required').max(60),
+      specValue: z.string().trim().min(1, 'Spec value is required').max(200),
+      displayOrder: z.coerce.number().int().min(0).max(500).optional(),
+    }),
+  )
+  .max(60, 'A product can carry at most 60 spec rows');
+
+const imageRows = z
+  .array(
+    z.object({
+      url: z.string().trim().url('Each image needs a valid URL').max(500),
+      altText: z.string().trim().max(200).optional(),
+      displayOrder: z.coerce.number().int().min(0).max(500).optional(),
+      isPrimary: z.boolean().optional(),
+    }),
+  )
+  .max(20, 'A product can carry at most 20 images');
+
+const productRelations = {
+  brandSlug: slugRef.optional(),
+  categorySlug: slugRef.optional(),
+  specs: specRows.optional(),
+  images: imageRows.optional(),
+};
+
+/**
  * Creating a product: identity and price are required, everything else falls
  * back to the column default.
  */
 export const createProductSchema = productObject.extend({
+  ...productRelations,
   stockQuantity: count.default(0),
   lowStockThreshold: count.default(5),
   warrantyMonths: z.coerce.number().int().min(0).max(240).default(0),
@@ -195,12 +242,14 @@ export const createProductSchema = productObject.extend({
 export const updateProductSchema = productObject
   .partial()
   .extend({
+    ...productRelations,
     seoTitle: z.string().trim().max(200).optional(),
     seoDescription: z.string().trim().max(500).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'Provide at least one field to update',
   });
+
 
 /* ---------------------------------------------------------------- inventory */
 

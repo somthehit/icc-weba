@@ -6,6 +6,7 @@ import { mapDbProductToProduct } from '@/lib/adapters/catalog';
 import { queryProduct, queryProducts } from '@/lib/queries/catalog';
 import { parseJson } from '@/lib/validation/parse';
 import { createProductSchema } from '@/lib/validation/commerce';
+import { deriveStockStatus, replaceImages, replaceSpecs, resolveCatalogRefs } from '@/lib/catalog/write';
 import { isForeignKeyViolation, isUniqueViolation } from '@/lib/db/errors';
 
 const intParam = (v: string | null): number | undefined => {
@@ -68,18 +69,44 @@ export const POST = withRole(['admin', 'sales', 'inventory_manager'], async (req
   try {
     const parsed = await parseJson(request, createProductSchema);
     if (!parsed.ok) return parsed.response;
-    const { seoTitle, seoDescription, ...fields } = parsed.data;
+    const { seoTitle, seoDescription, brandSlug, categorySlug, specs, images, ...fields } =
+      parsed.data;
 
-    const [product] = await db
-      .insert(products)
-      .values({
-        ...fields,
-        metaTitle: fields.metaTitle ?? seoTitle,
-        metaDescription: fields.metaDescription ?? seoDescription,
-      })
-      .returning();
+    const refs = await resolveCatalogRefs({ brandSlug, categorySlug });
+    if (!refs.ok) return NextResponse.json({ error: refs.error }, { status: 400 });
 
-    return NextResponse.json({ success: true, product }, { status: 201 });
+    // The spec sheet and the gallery live in their own tables, so a half-written
+    // product — row saved, images lost — is the failure mode to avoid.
+    const created = await db.transaction(async (tx) => {
+      const [product] = await tx
+        .insert(products)
+        .values({
+          ...fields,
+          ...(refs.brandId !== undefined ? { brandId: refs.brandId } : {}),
+          ...(refs.categoryId !== undefined ? { categoryId: refs.categoryId } : {}),
+          // The form sends a quantity, not a shelf state. Deriving it here keeps a
+          // product stocked at 0 from being listed as `in_stock`.
+          stockStatus: deriveStockStatus(fields.stockQuantity, fields.lowStockThreshold),
+          metaTitle: fields.metaTitle ?? seoTitle,
+          metaDescription: fields.metaDescription ?? seoDescription,
+        })
+        .returning();
+
+      if (specs) await replaceSpecs(tx, product.id, specs);
+      if (images) await replaceImages(tx, product.id, images);
+
+      return product;
+    });
+
+    // Re-read through the same query the storefront uses, so the caller gets the
+    // product with its brand name, category slug, images and specs attached
+    // rather than the bare row it just inserted.
+    const row = await queryProduct({ id: created.id });
+
+    return NextResponse.json(
+      { success: true, product: row ? mapDbProductToProduct(row) : created },
+      { status: 201 },
+    );
   } catch (error) {
     // `sku` and `slug` are unique; a clash is the caller's mistake, not a fault.
     if (isUniqueViolation(error)) {
