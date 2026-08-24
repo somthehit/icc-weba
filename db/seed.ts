@@ -38,6 +38,7 @@ import {
   expenses,
   purchaseBills,
   purchaseBillItems,
+  serviceTickets,
 } from '@/db/schema';
 import {
   INITIAL_SITE_SETTINGS,
@@ -211,6 +212,9 @@ async function seed() {
     'expenses',
     'expense_categories',
     'suppliers',
+    // Tickets reference products (product_id) and users twice (customer_id,
+    // assigned_to), so they truncate ahead of both.
+    'service_tickets',
     'products',
     'addresses',
     'users',
@@ -1046,6 +1050,89 @@ async function seed() {
       billItemCount += spec.lines.length;
     }
 
+    // ---- service tickets ----------------------------------------------------
+    //
+    // The repairs bench is a real revenue stream for this shop and the console
+    // showed it as a flat `NPR 18,500` — against a table that had no money column
+    // at all until migration 0006 added `charged_amount`. These rows are what make
+    // that figure computable.
+    //
+    // Deliberately mixed: paid jobs, free warranty claims (charge left null), and
+    // tickets still open. A report that only ever sees billed-and-closed work
+    // never exercises the "resolved but unbilled" caption, which is the number the
+    // service lead actually needs to chase.
+    const technicianId = userIdByEmail.get('service@icecomputers.com.np') ?? null;
+
+    const jobs = [
+      { type: 'repair' as const, subject: 'Laptop will not power on after load-shedding surge', lo: 2500, hi: 6500 },
+      { type: 'repair' as const, subject: 'Overheating and shutdown under load — thermal repaste', lo: 1800, hi: 3500 },
+      { type: 'repair' as const, subject: 'Cracked laptop screen replacement', lo: 7500, hi: 16000 },
+      { type: 'repair' as const, subject: 'Windows reinstall and data recovery', lo: 2000, hi: 4500 },
+      { type: 'repair' as const, subject: 'Printer paper-feed jam and roller replacement', lo: 1500, hi: 3800 },
+      { type: 'installation' as const, subject: 'Office workstation setup and network configuration', lo: 4500, hi: 12000 },
+      { type: 'installation' as const, subject: 'CCTV 4-camera installation with NVR mounting', lo: 8500, hi: 22000 },
+      { type: 'installation' as const, subject: 'Router and mesh access point installation', lo: 2500, hi: 6000 },
+      { type: 'cctv_survey' as const, subject: 'Site survey for shop-front camera coverage', lo: 1500, hi: 4000 },
+      { type: 'cctv_survey' as const, subject: 'Warehouse coverage survey and cabling estimate', lo: 2500, hi: 5500 },
+      // Warranty work bills nothing. `charged_amount` stays null rather than 0 so
+      // the average-ticket figure is not dragged down by jobs that were never
+      // priced — an average over free work reports a price the shop never charged.
+      { type: 'warranty_claim' as const, subject: 'In-warranty SSD failure — replacement under RMA', lo: 0, hi: 0 },
+      { type: 'warranty_claim' as const, subject: 'Monitor dead pixels within warranty window', lo: 0, hi: 0 },
+      { type: 'other' as const, subject: 'Bulk data migration for office handover', lo: 3500, hi: 9000 },
+    ];
+
+    const ticketValues: Array<typeof serviceTickets.$inferInsert> = [];
+    let ticketSeq = 200;
+
+    // Today, so no ticket is opened or resolved into the future. A job the report
+    // counts as done before it was logged is not a rounding quibble — it is a lie.
+    const today = new Date(2026, 7, 24, 18, 0);
+
+    for (const mm of BOOK_MONTHS) {
+      // Four or five jobs a month, which is the order of magnitude a two-person
+      // bench in Dhangadhi actually turns over.
+      for (let n = 0; n < between(4, 5); n += 1) {
+        const job = pick(jobs);
+        // Leave room before month-end for the resolve to land in the same window;
+        // August stops well short of the 24th so opened+resolve stays in the past.
+        const lastOpenDay = mm === '08' ? 13 : Number(monthEnd(mm)) - 10;
+        const day = between(2, Math.max(2, lastOpenDay));
+        const opened = new Date(2026, Number(mm) - 1, day, between(9, 17), between(0, 59));
+        // Most jobs close within the week; a few run on. Never past today.
+        const resolvedAt = new Date(opened);
+        resolvedAt.setDate(resolvedAt.getDate() + between(1, 9));
+        if (resolvedAt > today) resolvedAt.setTime(today.getTime());
+
+        const stillOpen = rnd() < 0.12;
+        const billable = job.hi > 0;
+        const product = pick(sellable);
+        const [, customerId] = pick(historyCustomers);
+
+        ticketSeq += 1;
+        ticketValues.push({
+          ticketNumber: `SVC-2026-${String(ticketSeq).padStart(4, '0')}`,
+          customerId,
+          type: job.type,
+          subject: job.subject,
+          description: `${job.subject}. Logged at the Dhangadhi service counter.`,
+          productId: product.dbId,
+          status: stillOpen ? pick(['open', 'assigned', 'in_progress'] as const) : 'resolved',
+          priority: pick(['low', 'normal', 'normal', 'high'] as const),
+          assignedTo: technicianId,
+          // Open tickets carry neither a charge nor a resolved date: the job is not
+          // finished, so there is nothing to bill and nothing for the revenue
+          // report to count. Anything else would book income the shop has not earned.
+          chargedAmount: stillOpen || !billable ? null : String(between(job.lo, job.hi)),
+          resolvedAt: stillOpen ? null : resolvedAt,
+          createdAt: opened,
+          updatedAt: stillOpen ? opened : resolvedAt,
+        });
+      }
+    }
+
+    await tx.insert(serviceTickets).values(ticketValues);
+
     // ---- store settings ---------------------------------------------------
     await tx.insert(storeProfile).values({
       storeName: 'ICE Computers & Electronics',
@@ -1090,6 +1177,12 @@ async function seed() {
       '| expenses:', expenseValues.length,
     );
     console.log('   ✓ purchase bills:', billSpecs.length, '| bill items:', billItemCount);
+    console.log(
+      '   ✓ service tickets:', ticketValues.length,
+      `(${ticketValues.filter((t) => t.chargedAmount != null).length} billed,`,
+      `${ticketValues.filter((t) => t.resolvedAt != null && t.chargedAmount == null).length} resolved unbilled,`,
+      `${ticketValues.filter((t) => t.resolvedAt == null).length} still open)`,
+    );
   });
 
   console.log(`✅ Seed complete. Demo login password for all seeded accounts: ${DEMO_PASSWORD}`);
