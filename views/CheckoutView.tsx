@@ -3,15 +3,21 @@
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { ShippingAddress, PaymentMethod, Order } from '@/types';
-import { 
-  CheckCircle2, 
-  Truck, 
-  CreditCard, 
-  MapPin, 
-  Phone, 
-  User, 
-  ArrowRight, 
-  ShieldCheck, 
+import { PROVINCE_LABELS } from '@/lib/nepal/provinces';
+import {
+  SERVICED_PROVINCE_CODES,
+  SUDURPASHCHIM_CONFIG,
+  SUDURPASHCHIM_DISTRICTS,
+} from '@/config/regional';
+import {
+  CheckCircle2,
+  Truck,
+  CreditCard,
+  MapPin,
+  Phone,
+  User,
+  ArrowRight,
+  ShieldCheck,
   FileText,
   Copy,
   Printer
@@ -31,12 +37,15 @@ export const CheckoutView: React.FC = () => {
     fullName: 'Anish Thapa',
     phone: '9851084291',
     email: 'anish@example.com',
-    province: 'Bagmati Province',
-    district: 'Kathmandu',
-    municipality: 'Kathmandu Metropolitan City',
-    ward: '10',
-    addressLine: 'New Baneshwor, Near Everest Hotel',
-    landmark: 'Opposite Civil Bank',
+    // Prefilled inside the served region. This used to default to Bagmati
+    // Province with a Kailali district — an address that exists nowhere, and one
+    // that no active delivery zone covers, so the quote came back with no zone.
+    province: PROVINCE_LABELS.sudurpashchim,
+    district: SUDURPASHCHIM_CONFIG.headquartersDistrict,
+    municipality: 'Dhangadhi Sub-Metropolitan City',
+    ward: '5',
+    addressLine: 'Main Road, Near Campus Chowk',
+    landmark: 'Opposite Nepal Bank',
   });
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
@@ -61,33 +70,22 @@ export const CheckoutView: React.FC = () => {
     );
   }
 
-  const handleCompleteOrder = (e: React.FormEvent) => {
+  const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const order = placeOrder({
-      customerName,
-      customerPhone,
-      customerEmail,
-      shippingAddress: address,
+    const response = await placeOrder({
+      shippingAddressId: undefined, // Needs proper address ID if used
+      deliveryZoneId: undefined, // Needs proper zone ID if used
       paymentMethod,
-      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
-      items: cart.map((i) => ({
-        productId: i.product.id,
-        productName: i.product.name,
-        productImage: i.product.images[0],
-        price: i.product.sellingPrice,
-        quantity: i.quantity,
-        sku: i.product.sku || 'ICE-SKU',
-      })),
-      subtotal,
-      discountAmount: discount,
-      shippingFee,
-      taxAmount: 0,
-      totalAmount: total,
+      customerNote: undefined,
     });
 
-    setCompletedOrder(order);
-    setStep(4);
+    if (response.ok) {
+      setCompletedOrder(response.order);
+      setStep(4);
+    } else {
+      alert(response.error);
+    }
   };
 
   return (
@@ -121,7 +119,7 @@ export const CheckoutView: React.FC = () => {
             </div>
             <h1 className="text-2xl font-black text-slate-900">Order Confirmed!</h1>
             <p className="text-slate-500">
-              Thank you for choosing Intel Computer & Electronics. Your order reference number is:
+              Thank you for choosing Intel Computer Center. Your order reference number is:
             </p>
             <div className="inline-block bg-blue-50 text-blue-700 font-extrabold text-lg px-4 py-1.5 rounded-xl border border-blue-200 font-mono">
               {completedOrder.id}
@@ -260,14 +258,25 @@ export const CheckoutView: React.FC = () => {
                       onChange={(e) => setAddress({ ...address, province: e.target.value })}
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold"
                     >
-                      <option value="Bagmati Province">Bagmati Province</option>
-                      <option value="Gandaki Province">Gandaki Province</option>
-                      <option value="Koshi Province">Koshi Province</option>
-                      <option value="Lumbini Province">Lumbini Province</option>
-                      <option value="Madhesh Province">Madhesh Province</option>
-                      <option value="Karnali Province">Karnali Province</option>
-                      <option value="Sudurpashchim Province">Sudurpashchim Province</option>
+                      {/*
+                        Only the provinces we actually ship to. Offering all seven
+                        while every active delivery zone is `sudurpashchim` meant a
+                        customer could complete this form and then find no zone
+                        covered them — the quote returned no fee and the order
+                        could not be priced.
+                      */}
+                      {SERVICED_PROVINCE_CODES.map((code) => (
+                        <option key={code} value={PROVINCE_LABELS[code]}>
+                          {PROVINCE_LABELS[code]}
+                        </option>
+                      ))}
                     </select>
+                    {SERVICED_PROVINCE_CODES.length === 1 && (
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        We currently deliver within {PROVINCE_LABELS.sudurpashchim} only. Nepal-wide
+                        delivery is coming soon.
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -275,11 +284,17 @@ export const CheckoutView: React.FC = () => {
                     <input
                       type="text"
                       required
+                      list="serviced-districts"
                       value={address.district}
                       onChange={(e) => setAddress({ ...address, district: e.target.value })}
-                      placeholder="e.g. Kathmandu, Lalitpur, Pokhara"
+                      placeholder={`e.g. ${SUDURPASHCHIM_DISTRICTS.slice(0, 3).join(', ')}`}
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5"
                     />
+                    <datalist id="serviced-districts">
+                      {SUDURPASHCHIM_DISTRICTS.map((district) => (
+                        <option key={district} value={district} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
 
@@ -360,15 +375,14 @@ export const CheckoutView: React.FC = () => {
                   {/* COD */}
                   <label
                     onClick={() => setPaymentMethod('cod')}
-                    className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                      paymentMethod === 'cod' ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-200 bg-slate-50'
-                    }`}
+                    className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-200 bg-slate-50'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <input type="radio" checked={paymentMethod === 'cod'} readOnly />
                       <div>
                         <div className="font-bold text-slate-900">Cash on Delivery (COD)</div>
-                        <div className="text-[11px] text-slate-500">Pay cash upon inspecting delivery in Kathmandu / major cities</div>
+                        <div className="text-[11px] text-slate-500">Pay cash upon inspecting delivery in Kailali / major cities</div>
                       </div>
                     </div>
                     <span className="font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-[10px]">
@@ -379,9 +393,8 @@ export const CheckoutView: React.FC = () => {
                   {/* eSewa */}
                   <label
                     onClick={() => setPaymentMethod('esewa')}
-                    className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                      paymentMethod === 'esewa' ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/20' : 'border-slate-200 bg-slate-50'
-                    }`}
+                    className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'esewa' ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/20' : 'border-slate-200 bg-slate-50'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <input type="radio" checked={paymentMethod === 'esewa'} readOnly />
@@ -398,9 +411,8 @@ export const CheckoutView: React.FC = () => {
                   {/* Khalti */}
                   <label
                     onClick={() => setPaymentMethod('khalti')}
-                    className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                      paymentMethod === 'khalti' ? 'border-purple-600 bg-purple-50/50 ring-2 ring-purple-600/20' : 'border-slate-200 bg-slate-50'
-                    }`}
+                    className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'khalti' ? 'border-purple-600 bg-purple-50/50 ring-2 ring-purple-600/20' : 'border-slate-200 bg-slate-50'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <input type="radio" checked={paymentMethod === 'khalti'} readOnly />
@@ -417,9 +429,8 @@ export const CheckoutView: React.FC = () => {
                   {/* Bank Wire */}
                   <label
                     onClick={() => setPaymentMethod('bank_transfer')}
-                    className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                      paymentMethod === 'bank_transfer' ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-200 bg-slate-50'
-                    }`}
+                    className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'bank_transfer' ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-200 bg-slate-50'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <input type="radio" checked={paymentMethod === 'bank_transfer'} readOnly />
@@ -435,7 +446,7 @@ export const CheckoutView: React.FC = () => {
                   <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-[11px] space-y-1">
                     <p className="font-bold text-blue-900">Bank Details for Transfer:</p>
                     <p>Bank: Nabil Bank Ltd, New Road Branch</p>
-                    <p>Account Name: Intel Computer & Electronics</p>
+                    <p>Account Name: Intel Computer Center</p>
                     <p>Account Number: 01901017500129</p>
                   </div>
                 )}

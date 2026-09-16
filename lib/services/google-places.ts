@@ -51,7 +51,7 @@ const memoryCache: CacheStore = {
 
 const DEFAULT_FALLBACK_PROFILE: GooglePlaceProfile = {
   placeId: 'ChIJ-intel-computer-dhangadhi',
-  placeName: 'Intel Computer & Electronics',
+  placeName: 'Intel Computer Center',
   address: 'Main Road, Near Campus Chowk, Dhangadhi 10900, Nepal',
   rating: 4.9,
   userRatingsTotal: 248,
@@ -67,7 +67,7 @@ const DEFAULT_FALLBACK_PROFILE: GooglePlaceProfile = {
       rating: 5,
       relativeTime: '2 days ago',
       categoryTag: 'Laptops',
-      reviewText: 'Best computer shop in Dhangadhi! Bought a Dell Vostro laptop for my office work. Price was very fair compared to Kathmandu market and they gave me genuine bill with official brand warranty. Excellent service by Mr. Intel team.',
+      reviewText: 'Best computer shop in Dhangadhi! Bought a Dell Vostro laptop for my office work. Price was very fair compared to Kailali market and they gave me genuine bill with official brand warranty. Excellent service by Mr. Intel team.',
       likedAspects: ['Genuine Products', 'Official Warranty', 'Good Pricing'],
       verifiedCustomer: true,
       ownerResponse: {
@@ -196,7 +196,7 @@ export async function getGoogleBusinessProfile(options?: {
         const placeData = await newApiResponse.json();
         const profile: GooglePlaceProfile = {
           placeId,
-          placeName: placeData.displayName?.text || 'Intel Computer & Electronics',
+          placeName: placeData.displayName?.text || 'Intel Computer Center',
           address: placeData.formattedAddress || 'Main Road, Dhangadhi, Nepal',
           rating: placeData.rating || 4.9,
           userRatingsTotal: placeData.userRatingCount || 248,
@@ -247,7 +247,7 @@ export async function getGoogleBusinessProfile(options?: {
         const place = legacyData.result;
         const profile: GooglePlaceProfile = {
           placeId,
-          placeName: place.name || 'Intel Computer & Electronics',
+          placeName: place.name || 'Intel Computer Center',
           address: place.formatted_address || 'Main Road, Dhangadhi, Nepal',
           rating: place.rating || 4.9,
           userRatingsTotal: place.user_ratings_total || 248,

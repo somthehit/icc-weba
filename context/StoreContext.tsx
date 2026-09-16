@@ -125,7 +125,7 @@ interface StoreContextType {
    * a returning user to the login page before their session has been read.
    */
   authStatus: 'loading' | 'authenticated' | 'anonymous';
-  currentUser: { id?: number; name: string; email: string; phone?: string; role?: string } | null;
+  currentUser: { id?: number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (isOpen: boolean) => void;
   logoutUser: () => void;
@@ -301,6 +301,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
    */
   const cartSyncedForRef = useRef<number | null>(null);
 
+  useEffect(() => {
+    const loadStoreProfile = () => fetch('/api/settings?type=profile')
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        const profile = data?.profile;
+        if (!profile) return;
+        setSiteSettings((current) => ({
+          ...current,
+          storeName: profile.storeName || current.storeName,
+          tagline: profile.tagline || current.tagline,
+          logoUrl: profile.logoUrl || current.logoUrl,
+          phone: profile.contactPhone || current.phone,
+          email: profile.contactEmail || current.email,
+          address: profile.address || current.address,
+          openingHours: profile.openingHours || current.openingHours,
+          announcementText: profile.announcementText || current.announcementText,
+          announcementEnabled: profile.announcementEnabled ?? current.announcementEnabled,
+        }));
+      })
+      .catch(() => undefined);
+    loadStoreProfile();
+    window.addEventListener('store-settings-updated', loadStoreProfile);
+    return () => window.removeEventListener('store-settings-updated', loadStoreProfile);
+  }, []);
+
   const saveGeneratedImage = async (img: { url: string; prompt: string; originalPrompt?: string; aspectRatio?: string }) => {
     const newImg = {
       id: `img-${Date.now()}`,
@@ -421,11 +446,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // cache of who /api/auth/me says we are.
   const [isUserLoggedIn, setIsUserLoggedIn] = useState<boolean>(false);
   const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'anonymous'>('loading');
-  const [currentUser, setCurrentUser] = useState<{ id?: number; name: string; email: string; phone?: string; role?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id?: number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
   /** Applies a signed-in user to both the customer and the staff view of state. */
-  const adoptSession = (user: { id?: number; name: string; email: string; phone?: string; role?: string }) => {
+  const adoptSession = (user: { id?: number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string }) => {
     setIsUserLoggedIn(true);
     setAuthStatus('authenticated');
     setCurrentUser(user);
@@ -576,7 +601,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } else {
           setCurrentPage(hash);
         }
+        return;
       }
+
+      /**
+       * No hash — fall back to the path.
+       *
+       * The views are hash-routed, but the sitemap and every canonical tag
+       * advertise real paths (`/shop`, `/product/<slug>`). `next.config.ts`
+       * rewrites those onto this single route, so without reading the pathname a
+       * visitor arriving from a search result would land on the homepage instead
+       * of the page Google indexed — and the canonical would be a lie.
+       */
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      if (!path) {
+        setCurrentPage('home');
+        setSelectedProductSlug(null);
+        return;
+      }
+      if (path.startsWith('product/')) {
+        setCurrentPage('product-detail');
+        setSelectedProductSlug(path.slice('product/'.length));
+        return;
+      }
+      setCurrentPage(path);
+      setSelectedProductSlug(null);
     };
 
     handleHashChange();

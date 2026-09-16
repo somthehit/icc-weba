@@ -1,0 +1,7 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { and, desc, eq, ilike, or, type SQL } from 'drizzle-orm';
+import { db } from '@/db';
+import { contactInquiries, users } from '@/db/schema';
+import { withRole } from '@/lib/auth/middleware';
+
+export const GET = withRole(['admin', 'sales', 'service_technician'], async (request: NextRequest) => { const params = new URL(request.url).searchParams; const conditions: SQL[] = []; const status = params.get('status'); const subject = params.get('subject'); const search = params.get('search'); if (status) conditions.push(eq(contactInquiries.status, status)); if (subject) conditions.push(eq(contactInquiries.subject, subject)); if (search) conditions.push(or(ilike(contactInquiries.fullName, `%${search}%`), ilike(contactInquiries.phone, `%${search}%`), ilike(contactInquiries.inquiryNumber, `%${search}%`))!); const inquiries = await db.select({ id: contactInquiries.id, inquiryNumber: contactInquiries.inquiryNumber, fullName: contactInquiries.fullName, phone: contactInquiries.phone, email: contactInquiries.email, subject: contactInquiries.subject, message: contactInquiries.message, status: contactInquiries.status, assignedStaffId: contactInquiries.assignedStaffId, assignedStaffName: users.name, createdAt: contactInquiries.createdAt }).from(contactInquiries).leftJoin(users, eq(users.id, contactInquiries.assignedStaffId)).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(contactInquiries.createdAt)).limit(200); return NextResponse.json({ inquiries }); });

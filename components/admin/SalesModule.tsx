@@ -109,15 +109,15 @@ export const SalesModule: React.FC<SalesModuleProps> = ({
       // District / City Filter
       if (orderDistrictFilter !== 'all') {
         const dist = (o.shippingAddress.district || o.shippingAddress.municipality || '').toLowerCase();
-        if (orderDistrictFilter === 'kathmandu' && !dist.includes('kathmandu') && !dist.includes('lalitpur') && !dist.includes('bhaktapur')) {
+        if (orderDistrictFilter === 'Kailali' && !dist.includes('Kailali') && !dist.includes('lalitpur') && !dist.includes('bhaktapur')) {
           return false;
-        } else if (orderDistrictFilter === 'pokhara' && !dist.includes('pokhara') && !dist.includes('kaski')) {
+        } else if (orderDistrictFilter === 'Dhangadhi' && !dist.includes('Dhangadhi') && !dist.includes('kaski')) {
           return false;
         } else if (orderDistrictFilter === 'butwal' && !dist.includes('butwal') && !dist.includes('rupandehi')) {
           return false;
         } else if (orderDistrictFilter === 'dhangadhi' && !dist.includes('dhangadhi') && !dist.includes('kailali')) {
           return false;
-        } else if (orderDistrictFilter === 'outstation' && (dist.includes('kathmandu') || dist.includes('lalitpur') || dist.includes('bhaktapur'))) {
+        } else if (orderDistrictFilter === 'outstation' && (dist.includes('Kailali') || dist.includes('lalitpur') || dist.includes('bhaktapur'))) {
           return false;
         }
       }
@@ -162,41 +162,36 @@ export const SalesModule: React.FC<SalesModuleProps> = ({
       <div className="flex gap-2 border-b border-gray-200 pb-3 font-bold text-xs overflow-x-auto">
         <button
           onClick={() => setSalesSubTab('orders')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            salesSubTab === 'orders' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
-          }`}
+          className={`px-4 py-2 rounded-xl border transition-colors ${salesSubTab === 'orders' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
+            }`}
         >
           Sales Orders List ({orders.length})
         </button>
         <button
           onClick={() => setSalesSubTab('phone-order')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            salesSubTab === 'phone-order' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
-          }`}
+          className={`px-4 py-2 rounded-xl border transition-colors ${salesSubTab === 'phone-order' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
+            }`}
         >
           Manual Phone Order Entry
         </button>
         <button
           onClick={() => setSalesSubTab('returns')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            salesSubTab === 'returns' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
-          }`}
+          className={`px-4 py-2 rounded-xl border transition-colors ${salesSubTab === 'returns' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
+            }`}
         >
           Returns &amp; Exchanges
         </button>
         <button
           onClick={() => setSalesSubTab('offers')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            salesSubTab === 'offers' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
-          }`}
+          className={`px-4 py-2 rounded-xl border transition-colors ${salesSubTab === 'offers' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
+            }`}
         >
           Offers &amp; Flash Sales
         </button>
         <button
           onClick={() => setSalesSubTab('coupons')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            salesSubTab === 'coupons' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
-          }`}
+          className={`px-4 py-2 rounded-xl border transition-colors ${salesSubTab === 'coupons' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200'
+            }`}
         >
           Coupons ({coupons.length})
         </button>
@@ -233,91 +228,82 @@ export const SalesModule: React.FC<SalesModuleProps> = ({
               <span className="font-bold text-gray-500 text-[11px] whitespace-nowrap mr-1">Quick Status:</span>
               <button
                 onClick={() => setOrderStatusFilter('all')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'all'
-                    ? 'bg-[#0056b3] text-white border-[#0056b3] shadow-xs'
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'all'
+                  ? 'bg-[#0056b3] text-white border-[#0056b3] shadow-xs'
+                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                  }`}
               >
                 All ({orders.length})
               </button>
               <button
                 onClick={() => setOrderStatusFilter('placed')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'placed'
-                    ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                    : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'placed'
+                  ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                  : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                  }`}
               >
                 Placed ({orders.filter(o => o.status === 'placed').length})
               </button>
               <button
                 onClick={() => setOrderStatusFilter('confirmed')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'confirmed'
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'confirmed'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                  : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
+                  }`}
               >
                 Confirmed ({orders.filter(o => o.status === 'confirmed').length})
               </button>
               <button
                 onClick={() => setOrderStatusFilter('processing')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'processing'
-                    ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                    : 'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'processing'
+                  ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                  : 'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100'
+                  }`}
               >
                 Processing ({orders.filter(o => o.status === 'processing').length})
               </button>
               <button
                 onClick={() => setOrderStatusFilter('packed')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'packed'
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                    : 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'packed'
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                  : 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
+                  }`}
               >
                 Packed ({orders.filter(o => o.status === 'packed').length})
               </button>
               <button
                 onClick={() => setOrderStatusFilter('shipped')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'shipped'
-                    ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                    : 'bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'shipped'
+                  ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                  : 'bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100'
+                  }`}
               >
                 Shipped ({orders.filter(o => o.status === 'shipped').length})
               </button>
               <button
                 onClick={() => setOrderStatusFilter('out_for_delivery')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'out_for_delivery'
-                    ? 'bg-blue-700 text-white border-blue-700 shadow-xs'
-                    : 'bg-blue-100 text-blue-900 border-blue-300 hover:bg-blue-200'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'out_for_delivery'
+                  ? 'bg-blue-700 text-white border-blue-700 shadow-xs'
+                  : 'bg-blue-100 text-blue-900 border-blue-300 hover:bg-blue-200'
+                  }`}
               >
                 Out for Delivery ({orders.filter(o => o.status === 'out_for_delivery').length})
               </button>
               <button
                 onClick={() => setOrderStatusFilter('delivered')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'delivered'
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                    : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'delivered'
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                  }`}
               >
                 Delivered ({orders.filter(o => o.status === 'delivered').length})
               </button>
               <button
                 onClick={() => setOrderStatusFilter('cancelled')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${
-                  orderStatusFilter === 'cancelled'
-                    ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                    : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
-                }`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs border ${orderStatusFilter === 'cancelled'
+                  ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                  : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
+                  }`}
               >
                 Cancelled ({orders.filter(o => o.status === 'cancelled').length})
               </button>
@@ -387,11 +373,11 @@ export const SalesModule: React.FC<SalesModuleProps> = ({
                   className="w-full p-2 rounded-xl border border-gray-200 bg-gray-50/50 font-medium focus:outline-none focus:border-[#0056b3]"
                 >
                   <option value="all">All Delivery Regions</option>
-                  <option value="kathmandu">Kathmandu Valley (KTM/LAL/BKT)</option>
-                  <option value="pokhara">Pokhara &amp; Kaski</option>
+                  <option value="Kailali">Kailali Valley (KTM/LAL/BKT)</option>
+                  <option value="Dhangadhi">Dhangadhi &amp; Kaski</option>
                   <option value="butwal">Butwal &amp; Rupandehi</option>
                   <option value="dhangadhi">Dhangadhi &amp; Kailali</option>
-                  <option value="outstation">Outside Kathmandu Valley</option>
+                  <option value="outstation">Outside Kailali Valley</option>
                 </select>
               </div>
 
@@ -564,11 +550,10 @@ export const SalesModule: React.FC<SalesModuleProps> = ({
                               <span className="uppercase text-[9px] font-extrabold px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded border">
                                 {ord.paymentMethod}
                               </span>
-                              <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
-                                ord.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' :
+                              <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase ${ord.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' :
                                 ord.paymentStatus === 'verified' ? 'bg-blue-100 text-blue-800' :
-                                'bg-amber-100 text-amber-800'
-                              }`}>
+                                  'bg-amber-100 text-amber-800'
+                                }`}>
                                 {ord.paymentStatus}
                               </span>
                             </div>
@@ -588,16 +573,15 @@ export const SalesModule: React.FC<SalesModuleProps> = ({
 
                           {/* Order Status */}
                           <td className="py-3.5 px-3">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                              ord.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${ord.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
                               ord.status === 'out_for_delivery' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                              ord.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
-                              ord.status === 'packed' ? 'bg-indigo-100 text-indigo-800' :
-                              ord.status === 'processing' ? 'bg-sky-100 text-sky-800' :
-                              ord.status === 'confirmed' ? 'bg-blue-50 text-blue-800' :
-                              ord.status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
-                              'bg-amber-100 text-amber-800'
-                            }`}>
+                                ord.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                                  ord.status === 'packed' ? 'bg-indigo-100 text-indigo-800' :
+                                    ord.status === 'processing' ? 'bg-sky-100 text-sky-800' :
+                                      ord.status === 'confirmed' ? 'bg-blue-50 text-blue-800' :
+                                        ord.status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
+                                          'bg-amber-100 text-amber-800'
+                              }`}>
                               {ord.status.replace(/_/g, ' ')}
                             </span>
                           </td>
@@ -630,7 +614,7 @@ export const SalesModule: React.FC<SalesModuleProps> = ({
                                   onClick={() => {
                                     updateOrderStatusExtended(ord.id, nextStatus, {
                                       note: `Quick advanced status to ${nextStatus.replace(/_/g, ' ')}`,
-                                      location: ord.shippingAddress.district ? `${ord.shippingAddress.district} Hub` : 'Intel Kathmandu Showroom Hub'
+                                      location: ord.shippingAddress.district ? `${ord.shippingAddress.district} Hub` : 'Intel Kailali Showroom Hub'
                                     });
                                     logAuditAction('Sales/Orders', 'Quick Status Advance', `Advanced Order #${ord.id} to ${nextStatus}`);
                                   }}
@@ -686,7 +670,7 @@ export const SalesModule: React.FC<SalesModuleProps> = ({
               </div>
               <div>
                 <label className="block font-bold mb-1">Delivery City</label>
-                <input type="text" placeholder="Kathmandu / Pokhara..." required className="w-full p-2.5 border rounded-xl" />
+                <input type="text" placeholder="Kailali / Dhangadhi..." required className="w-full p-2.5 border rounded-xl" />
               </div>
             </div>
             <button type="submit" className="bg-[#0056b3] text-white font-bold py-2.5 px-6 rounded-xl text-xs">

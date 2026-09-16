@@ -101,7 +101,7 @@ export const CompareView: React.FC = () => {
               <td className="p-4 font-bold text-slate-800 bg-slate-50/50">Stock Availability</td>
               {comparedProducts.map((p) => (
                 <td key={p.id} className="p-4 text-center font-bold text-emerald-700">
-                  {p.inStock ? `${p.stockQuantity} in Kathmandu` : 'Out of Stock'}
+                  {p.inStock ? `${p.stockQuantity} in Kailali` : 'Out of Stock'}
                 </td>
               ))}
             </tr>

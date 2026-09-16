@@ -19,9 +19,23 @@ import {
 export const ShopView: React.FC = () => {
   const { products, categories, brands, searchQuery, setSearchQuery, navigateTo } = useStore();
 
+  /**
+   * The category from `?category=<slug>`, read once at mount.
+   *
+   * `app/sitemap.ts` submits `/shop?category=<slug>` for every active category —
+   * those are the local-intent landing pages ("cctv-security" in Dhangadhi). If
+   * the view ignored the parameter, each of those URLs would render an identical
+   * unfiltered catalogue and Google would see a dozen duplicates of `/shop`.
+   */
+  const initialCategory = ((): ProductCategory | 'all' => {
+    if (typeof window === 'undefined') return 'all';
+    const slug = new URLSearchParams(window.location.search).get('category');
+    return slug ? (slug as ProductCategory) : 'all';
+  })();
+
   const [filterState, setFilterState] = useState<FilterState>({
     searchQuery: searchQuery || '',
-    category: 'all',
+    category: initialCategory,
     subcategory: 'all',
     brands: [],
     minPrice: 0,

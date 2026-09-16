@@ -27,13 +27,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const userPrompt = query || `Locate electronics stores, computer repair labs, and tech markets around New Road, Bishal Bazar, and Kathmandu Valley Nepal. Mention exact landmarks, approximate distances, and contact guidelines.`;
+    const userPrompt = query || `Locate electronics stores, computer repair labs, and tech markets around New Road, Bishal Bazar, and Kailali Valley Nepal. Mention exact landmarks, approximate distances, and contact guidelines.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.5-flash',
       contents: userPrompt,
       config: {
-        systemInstruction: `You are the Official Geospatial & Local Directory Assistant for Intel Computer & Electronics (Remix Intel), located at New Road Plaza, Opposite Bishal Bazar, New Road, Kathmandu, Nepal. Provide accurate location details, directions, landmarks, nearby parking areas, and transit routes across Kathmandu Valley and Nepal. When mentioning places, be precise.`,
+        systemInstruction: `You are the Official Geospatial & Local Directory Assistant for Intel Computer Center (Remix Intel), located at New Road Plaza, Opposite Bishal Bazar, New Road, Kailali, Nepal. Provide accurate location details, directions, landmarks, nearby parking areas, and transit routes across Kailali Valley and Nepal. When mentioning places, be precise.`,
         tools: [{ googleMaps: {} }],
         toolConfig: {
           retrievalConfig: {
@@ -47,12 +47,12 @@ export async function POST(req: NextRequest) {
     });
 
     const text = response.text || '';
-    
+
     // Extract Grounding Chunks & Map Links
     const candidate = response.candidates?.[0];
     const groundingMetadata = candidate?.groundingMetadata;
     const groundingChunks = groundingMetadata?.groundingChunks || [];
-    
+
     const places: Array<{
       title: string;
       uri: string;

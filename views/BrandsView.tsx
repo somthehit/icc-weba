@@ -20,7 +20,7 @@ export const BrandsView: React.FC = () => {
         </div>
         <h1 className="text-2xl md:text-3xl font-black text-slate-900">Official Partner Brands in Nepal</h1>
         <p className="text-xs text-slate-500">
-          Intel Computer & Electronics partners directly with official brand importers to deliver authentic products with local warranty.
+          Intel Computer Center partners directly with official brand importers to deliver authentic products with local warranty.
         </p>
       </div>
 

@@ -24,3 +24,13 @@ next-env.d.ts
 /0
 /data.status
 /\[row.id
+
+# kiro spec files
+.kiro/
+.kiro-local/
+.kiro-local.json
+
+.kiro
+.claude
+.claude-local
+

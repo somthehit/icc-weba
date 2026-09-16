@@ -3,18 +3,19 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { Product, Review } from '@/types';
-import { 
-  Star, 
-  CheckCircle2, 
-  ThumbsUp, 
-  Flame, 
-  Cpu, 
-  ShieldCheck, 
-  Volume2, 
-  CircleDollarSign, 
-  Filter, 
-  Search, 
-  PenLine, 
+import { UploadButton } from '@/components/admin/ImageUploadField';
+import {
+  Star,
+  CheckCircle2,
+  ThumbsUp,
+  Flame,
+  Cpu,
+  ShieldCheck,
+  Volume2,
+  CircleDollarSign,
+  Filter,
+  Search,
+  PenLine,
   SlidersHorizontal,
   X,
   Sparkles,
@@ -40,7 +41,7 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
 
   // Form state
   const [formName, setFormName] = useState('');
-  const [formCity, setFormCity] = useState('Kathmandu');
+  const [formCity, setFormCity] = useState('Kailali');
   const [formRating, setFormRating] = useState(5);
   const [formTitle, setFormTitle] = useState('');
   const [formSetup, setFormSetup] = useState('');
@@ -53,6 +54,7 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
   const [formPros, setFormPros] = useState('');
   const [formCons, setFormCons] = useState('');
   const [formComment, setFormComment] = useState('');
+  const [formImages, setFormImages] = useState<string[]>([]);
 
   // Get reviews for current product
   const productReviews = useMemo(() => {
@@ -194,7 +196,7 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
     addReview({
       productId: product.id,
       userName: formName.trim(),
-      userCity: formCity.trim() || 'Kathmandu',
+      userCity: formCity.trim() || 'Kailali',
       rating: formRating,
       title: formTitle.trim() || undefined,
       comment: formComment.trim(),
@@ -211,6 +213,7 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
       pros: prosList.length > 0 ? prosList : undefined,
       cons: consList.length > 0 ? consList : undefined,
       helpfulCount: 0,
+      images: formImages.map((url) => ({ url })),
     });
 
     setIsWriteModalOpen(false);
@@ -224,6 +227,7 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
     setFormComment('');
     setFormPros('');
     setFormCons('');
+    setFormImages([]);
   };
 
   return (
@@ -257,11 +261,10 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    className={`w-5 h-5 ${
-                      stats.average !== null && star <= Math.round(stats.average)
-                        ? 'fill-amber-400 text-amber-400'
-                        : 'text-slate-300 fill-slate-100'
-                    }`}
+                    className={`w-5 h-5 ${stats.average !== null && star <= Math.round(stats.average)
+                      ? 'fill-amber-400 text-amber-400'
+                      : 'text-slate-300 fill-slate-100'
+                      }`}
                   />
                 ))}
               </div>
@@ -295,9 +298,8 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                 <button
                   key={stars}
                   onClick={() => setRatingFilter(ratingFilter === stars ? 'all' : stars)}
-                  className={`w-full flex items-center gap-3 text-left py-1 px-2 rounded-lg transition-colors ${
-                    ratingFilter === stars ? 'bg-blue-100/70 text-blue-900 font-bold' : 'hover:bg-slate-200/50 text-slate-600'
-                  }`}
+                  className={`w-full flex items-center gap-3 text-left py-1 px-2 rounded-lg transition-colors ${ratingFilter === stars ? 'bg-blue-100/70 text-blue-900 font-bold' : 'hover:bg-slate-200/50 text-slate-600'
+                    }`}
                 >
                   <span className="w-12 font-semibold flex items-center gap-1">
                     {stars} <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline" />
@@ -352,8 +354,8 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                 <span className="font-extrabold text-slate-900 font-mono">{aspectLabel(stats.aspectAverages.thermals)}</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full" 
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full"
                   style={{ width: `${aspectWidth(stats.aspectAverages.thermals)}%` }}
                 />
               </div>
@@ -372,8 +374,8 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                 <span className="font-extrabold text-slate-900 font-mono">{aspectLabel(stats.aspectAverages.performance)}</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full" 
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
                   style={{ width: `${aspectWidth(stats.aspectAverages.performance)}%` }}
                 />
               </div>
@@ -392,8 +394,8 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                 <span className="font-extrabold text-slate-900 font-mono">{aspectLabel(stats.aspectAverages.buildQuality)}</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full" 
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"
                   style={{ width: `${aspectWidth(stats.aspectAverages.buildQuality)}%` }}
                 />
               </div>
@@ -412,8 +414,8 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                 <span className="font-extrabold text-slate-900 font-mono">{aspectLabel(stats.aspectAverages.acoustics)}</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-600 rounded-full" 
+                <div
+                  className="h-full bg-gradient-to-r from-purple-500 to-pink-600 rounded-full"
                   style={{ width: `${aspectWidth(stats.aspectAverages.acoustics)}%` }}
                 />
               </div>
@@ -432,8 +434,8 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                 <span className="font-extrabold text-slate-900 font-mono">{aspectLabel(stats.aspectAverages.value)}</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-amber-400 to-emerald-500 rounded-full" 
+                <div
+                  className="h-full bg-gradient-to-r from-amber-400 to-emerald-500 rounded-full"
                   style={{ width: `${aspectWidth(stats.aspectAverages.value)}%` }}
                 />
               </div>
@@ -526,11 +528,10 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
           </span>
           <button
             onClick={() => setRatingFilter('all')}
-            className={`px-3 py-1 rounded-full font-bold transition-colors whitespace-nowrap ${
-              ratingFilter === 'all'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+            className={`px-3 py-1 rounded-full font-bold transition-colors whitespace-nowrap ${ratingFilter === 'all'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
           >
             All Ratings ({productReviews.length})
           </button>
@@ -538,11 +539,10 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
             <button
               key={star}
               onClick={() => setRatingFilter(ratingFilter === star ? 'all' : star)}
-              className={`px-3 py-1 rounded-full font-bold transition-colors flex items-center gap-1 whitespace-nowrap ${
-                ratingFilter === star
-                  ? 'bg-amber-500 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
+              className={`px-3 py-1 rounded-full font-bold transition-colors flex items-center gap-1 whitespace-nowrap ${ratingFilter === star
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
             >
               <span>{star}</span>
               <Star className="w-3 h-3 fill-current" />
@@ -600,7 +600,7 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                         )}
                       </div>
                       <div className="text-[11px] text-slate-400 flex items-center gap-2">
-                        <span>{rev.userCity || 'Kathmandu, Nepal'}</span>
+                        <span>{rev.userCity || 'Kailali, Nepal'}</span>
                         <span>•</span>
                         <span>{rev.date}</span>
                       </div>
@@ -613,9 +613,8 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                       {[1, 2, 3, 4, 5].map((s) => (
                         <Star
                           key={s}
-                          className={`w-4 h-4 ${
-                            s <= rev.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200 fill-slate-100'
-                          }`}
+                          className={`w-4 h-4 ${s <= rev.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200 fill-slate-100'
+                            }`}
                         />
                       ))}
                     </div>
@@ -680,6 +679,10 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                   {rev.comment}
                 </p>
 
+                {rev.images && rev.images.length > 0 && <div className="flex flex-wrap gap-2">{rev.images.map((image, index) => <a key={index} href={image.url} target="_blank" rel="noreferrer"><img src={image.url} alt={image.caption || 'Customer review photo'} className="h-20 w-20 rounded-xl border border-slate-200 object-cover" /></a>)}</div>}
+
+                {rev.adminResponse && <div className="rounded-xl border-l-4 border-blue-600 bg-blue-50 p-3 text-xs text-slate-700"><strong>Store response:</strong> {rev.adminResponse}</div>}
+
                 {/* Pros and Cons */}
                 {(rev.pros || rev.cons) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
@@ -728,11 +731,10 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
 
                   <button
                     onClick={() => upvoteReview(rev.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                      rev.userUpvoted
-                        ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                        : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
-                    }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${rev.userUpvoted
+                      ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}
                   >
                     <ThumbsUp className={`w-3.5 h-3.5 ${rev.userUpvoted ? 'fill-blue-600 text-blue-600' : ''}`} />
                     <span>Helpful ({rev.helpfulCount || 0})</span>
@@ -792,11 +794,10 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                       className="p-1.5 rounded-lg hover:scale-110 transition-transform"
                     >
                       <Star
-                        className={`w-7 h-7 ${
-                          star <= formRating
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'text-slate-300 fill-slate-100'
-                        }`}
+                        className={`w-7 h-7 ${star <= formRating
+                          ? 'fill-amber-400 text-amber-400'
+                          : 'text-slate-300 fill-slate-100'
+                          }`}
                       />
                     </button>
                   ))}
@@ -826,7 +827,7 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                     required
                     value={formCity}
                     onChange={(e) => setFormCity(e.target.value)}
-                    placeholder="e.g. Kathmandu, Pokhara, Dhangadhi"
+                    placeholder="e.g. Kailali, Dhangadhi"
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -970,6 +971,8 @@ export const HardwareReviewsSection: React.FC<HardwareReviewsSectionProps> = ({ 
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs leading-relaxed focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
+              <div className="space-y-2"><label className="block font-bold text-slate-700">Customer photos (up to 8)</label><UploadButton purpose="review" multiple title="Upload review photos" onUploaded={(urls) => setFormImages((current) => [...current, ...urls].slice(0, 8))} className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-bold text-slate-700"><span>Upload product photos</span></UploadButton>{formImages.length > 0 && <div className="flex flex-wrap gap-2">{formImages.map((url, index) => <div key={url} className="relative"><img src={url} alt="Review upload preview" className="h-20 w-20 rounded-xl border border-slate-200 object-cover" /><button type="button" onClick={() => setFormImages(formImages.filter((_, i) => i !== index))} className="absolute -right-1 -top-1 rounded-full bg-rose-600 p-1 text-white"><X className="h-3 w-3" /></button></div>)}</div>}</div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button

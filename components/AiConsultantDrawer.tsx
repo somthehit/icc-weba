@@ -2,19 +2,19 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { 
-  X, 
-  Sparkles, 
-  Send, 
-  Bot, 
-  User, 
-  Loader2, 
-  Cpu, 
-  ShieldCheck, 
-  HelpCircle, 
-  MapPin, 
-  Copy, 
-  Check, 
+import {
+  X,
+  Sparkles,
+  Send,
+  Bot,
+  User,
+  Loader2,
+  Cpu,
+  ShieldCheck,
+  HelpCircle,
+  MapPin,
+  Copy,
+  Check,
   RotateCcw,
   Sliders,
   ExternalLink,
@@ -52,7 +52,7 @@ export const AiConsultantDrawer: React.FC = () => {
     {
       id: 'welcome',
       sender: 'assistant',
-      text: `Namaste! I am Intel AI, your technical consultant for Intel Computer & Electronics in New Road, Kathmandu.
+      text: `Namaste! I am Intel AI, your technical consultant for Intel Computer Center in New Road, Kailali.
 
 How can I assist you today?
 • 💻 **Laptops & Monitors:** Recommendation for office, gaming, or coding in Nepal.
@@ -151,7 +151,7 @@ How can I assist you today?
         {
           id: generateMsgId('err'),
           sender: 'assistant',
-          text: 'I apologize, but I encountered a network issue. You can also reach our Kathmandu store directly at **+977-1-4261890** or WhatsApp **+977-9851034291**.',
+          text: 'I apologize, but I encountered a network issue. You can also reach our Kailali store directly at **+977-1-4261890** or WhatsApp **+977-9851034291**.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -164,13 +164,13 @@ How can I assist you today?
     'Recommend a laptop under NPR 120,000 for college and programming',
     'Custom PC specs with RTX 4070 Ti for 4K video rendering',
     'Compare Epson L3210 vs Canon G3010 ink tank printers',
-    'Where is Intel Computer located in New Road Kathmandu?',
+    'Where is Intel Computer located in New Road Kailali?',
   ];
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex justify-end animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-xl h-full flex flex-col shadow-2xl border-l border-slate-200">
-        
+
         {/* Header */}
         <div className="p-4 bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-950 text-white flex flex-col gap-3 border-b border-blue-900/60">
           <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ How can I assist you today?
                     {selectedModel}
                   </span>
                 </h3>
-                <p className="text-[11px] text-blue-200/80">Kathmandu Retail, Engineering & Maps Grounded</p>
+                <p className="text-[11px] text-blue-200/80">Kailali Retail, Engineering & Maps Grounded</p>
               </div>
             </div>
 
@@ -226,11 +226,10 @@ How can I assist you today?
                   <button
                     type="button"
                     onClick={() => setSelectedModel('gemini-3.5-flash')}
-                    className={`p-2 rounded-xl text-left border transition-all ${
-                      selectedModel === 'gemini-3.5-flash'
-                        ? 'bg-blue-600 text-white border-blue-400 font-bold shadow-sm'
-                        : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
-                    }`}
+                    className={`p-2 rounded-xl text-left border transition-all ${selectedModel === 'gemini-3.5-flash'
+                      ? 'bg-blue-600 text-white border-blue-400 font-bold shadow-sm'
+                      : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      }`}
                   >
                     <div className="text-[11px] font-bold">gemini-3.5-flash</div>
                     <div className="text-[9px] opacity-80">General Tasks & Maps</div>
@@ -239,11 +238,10 @@ How can I assist you today?
                   <button
                     type="button"
                     onClick={() => setSelectedModel('gemini-3.1-pro-preview')}
-                    className={`p-2 rounded-xl text-left border transition-all ${
-                      selectedModel === 'gemini-3.1-pro-preview'
-                        ? 'bg-blue-600 text-white border-blue-400 font-bold shadow-sm'
-                        : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
-                    }`}
+                    className={`p-2 rounded-xl text-left border transition-all ${selectedModel === 'gemini-3.1-pro-preview'
+                      ? 'bg-blue-600 text-white border-blue-400 font-bold shadow-sm'
+                      : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      }`}
                   >
                     <div className="text-[11px] font-bold">3.1-pro-preview</div>
                     <div className="text-[9px] opacity-80">Complex Engineering</div>
@@ -252,11 +250,10 @@ How can I assist you today?
                   <button
                     type="button"
                     onClick={() => setSelectedModel('gemini-3.1-flash-lite')}
-                    className={`p-2 rounded-xl text-left border transition-all ${
-                      selectedModel === 'gemini-3.1-flash-lite'
-                        ? 'bg-blue-600 text-white border-blue-400 font-bold shadow-sm'
-                        : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
-                    }`}
+                    className={`p-2 rounded-xl text-left border transition-all ${selectedModel === 'gemini-3.1-flash-lite'
+                      ? 'bg-blue-600 text-white border-blue-400 font-bold shadow-sm'
+                      : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      }`}
                   >
                     <div className="text-[11px] font-bold">3.1-flash-lite</div>
                     <div className="text-[9px] opacity-80">Ultra-Fast Instant</div>
@@ -273,11 +270,10 @@ How can I assist you today?
                   <button
                     type="button"
                     onClick={() => setSelectedRole('store_specialist')}
-                    className={`p-2 rounded-xl text-left border transition-all ${
-                      selectedRole === 'store_specialist'
-                        ? 'bg-indigo-600 text-white border-indigo-400 font-bold'
-                        : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
-                    }`}
+                    className={`p-2 rounded-xl text-left border transition-all ${selectedRole === 'store_specialist'
+                      ? 'bg-indigo-600 text-white border-indigo-400 font-bold'
+                      : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      }`}
                   >
                     <div className="font-bold">Store Specialist</div>
                     <div className="text-[9px] opacity-80">Laptops, Deals & Specs</div>
@@ -286,11 +282,10 @@ How can I assist you today?
                   <button
                     type="button"
                     onClick={() => setSelectedRole('pc_architect')}
-                    className={`p-2 rounded-xl text-left border transition-all ${
-                      selectedRole === 'pc_architect'
-                        ? 'bg-indigo-600 text-white border-indigo-400 font-bold'
-                        : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
-                    }`}
+                    className={`p-2 rounded-xl text-left border transition-all ${selectedRole === 'pc_architect'
+                      ? 'bg-indigo-600 text-white border-indigo-400 font-bold'
+                      : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      }`}
                   >
                     <div className="font-bold">PC Architect</div>
                     <div className="text-[9px] opacity-80">Gaming Rigs & Overclocking</div>
@@ -299,11 +294,10 @@ How can I assist you today?
                   <button
                     type="button"
                     onClick={() => setSelectedRole('repair_cctv_tech')}
-                    className={`p-2 rounded-xl text-left border transition-all ${
-                      selectedRole === 'repair_cctv_tech'
-                        ? 'bg-indigo-600 text-white border-indigo-400 font-bold'
-                        : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
-                    }`}
+                    className={`p-2 rounded-xl text-left border transition-all ${selectedRole === 'repair_cctv_tech'
+                      ? 'bg-indigo-600 text-white border-indigo-400 font-bold'
+                      : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      }`}
                   >
                     <div className="font-bold">Repair & CCTV Tech</div>
                     <div className="text-[9px] opacity-80">NVR, Printers & Lab</div>
@@ -312,13 +306,12 @@ How can I assist you today?
                   <button
                     type="button"
                     onClick={() => setSelectedRole('local_guide')}
-                    className={`p-2 rounded-xl text-left border transition-all ${
-                      selectedRole === 'local_guide'
-                        ? 'bg-indigo-600 text-white border-indigo-400 font-bold'
-                        : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
-                    }`}
+                    className={`p-2 rounded-xl text-left border transition-all ${selectedRole === 'local_guide'
+                      ? 'bg-indigo-600 text-white border-indigo-400 font-bold'
+                      : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      }`}
                   >
-                    <div className="font-bold">Kathmandu Guide</div>
+                    <div className="font-bold">Kailali Guide</div>
                     <div className="text-[9px] opacity-80">New Road & Delivery</div>
                   </button>
                 </div>
@@ -332,11 +325,10 @@ How can I assist you today?
                 <button
                   type="button"
                   onClick={() => setEnableMapsGrounding(!enableMapsGrounding)}
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${
-                    enableMapsGrounding 
-                      ? 'bg-emerald-500 text-white' 
-                      : 'bg-slate-800 text-slate-400 border border-slate-700'
-                  }`}
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${enableMapsGrounding
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    }`}
                 >
                   {enableMapsGrounding ? 'Enabled (3.5-flash)' : 'Disabled'}
                 </button>
@@ -360,11 +352,10 @@ How can I assist you today?
 
               <div className={`max-w-[85%] space-y-2`}>
                 <div
-                  className={`rounded-2xl p-4 text-xs shadow-sm leading-relaxed relative group ${
-                    msg.sender === 'user'
-                      ? 'bg-[#0056b3] text-white font-medium rounded-tr-none'
-                      : 'bg-white text-slate-800 border border-slate-200/90 rounded-tl-none whitespace-pre-wrap'
-                  }`}
+                  className={`rounded-2xl p-4 text-xs shadow-sm leading-relaxed relative group ${msg.sender === 'user'
+                    ? 'bg-[#0056b3] text-white font-medium rounded-tr-none'
+                    : 'bg-white text-slate-800 border border-slate-200/90 rounded-tl-none whitespace-pre-wrap'
+                    }`}
                 >
                   <div>{msg.text}</div>
 
@@ -435,7 +426,7 @@ How can I assist you today?
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-3.5 shadow-sm flex items-center gap-2.5 text-xs text-slate-600">
                 <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                <span>Intel AI ({selectedModel}) is analyzing Kathmandu inventory & technical schemas...</span>
+                <span>Intel AI ({selectedModel}) is analyzing Kailali inventory & technical schemas...</span>
               </div>
             </div>
           )}

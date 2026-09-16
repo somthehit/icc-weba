@@ -7,9 +7,10 @@ import {
   integer,
   index,
   uniqueIndex,
+  text,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { userRoleEnum, provinceEnum } from './enums';
+import { userRoleEnum, provinceEnum, staffRoleEnum, shiftStatusEnum } from './enums';
 
 export const users = pgTable(
   'users',
@@ -58,8 +59,32 @@ export const addresses = pgTable(
   }),
 );
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const staffProfiles = pgTable(
+  'staff_profiles',
+  {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+    staffRole: staffRoleEnum('staff_role').notNull(),
+    department: varchar('department', { length: 120 }),
+    skills: text('skills').array().notNull().default([]),
+    specialization: varchar('specialization', { length: 180 }),
+    vehicleNumber: varchar('vehicle_number', { length: 40 }),
+    drivingLicenseNo: varchar('driving_license_no', { length: 60 }),
+    shiftStatus: shiftStatusEnum('shift_status').notNull().default('OFF_DUTY'),
+    assignedCount: integer('assigned_count').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => ({ roleIdx: index('staff_profiles_role_idx').on(t.staffRole) }),
+);
+
+export const usersRelations = relations(users, ({ many, one }) => ({
   addresses: many(addresses),
+  staffProfile: one(staffProfiles, { fields: [users.id], references: [staffProfiles.userId] }),
+}));
+
+export const staffProfilesRelations = relations(staffProfiles, ({ one }) => ({
+  user: one(users, { fields: [staffProfiles.userId], references: [users.id] }),
 }));
 
 export const addressesRelations = relations(addresses, ({ one }) => ({

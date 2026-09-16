@@ -6,6 +6,7 @@ import { and, desc, eq, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-o
 import { db } from '@/db';
 import {
   addresses,
+  deliveryZones,
   coupons,
   orderItems,
   orderStatusHistory,
@@ -16,9 +17,10 @@ import {
   type ShippingAddressSnapshot,
 } from '@/db/schema';
 import { STAFF_ROLES, withAuth } from '@/lib/auth/middleware';
-import { decrementStock } from '@/lib/orders/stock';
+import { decrementStock, recordSaleMovements } from '@/lib/orders/stock';
 import { clearCart, loadCartLines, quoteOrder, quoteTotals, toRupees } from '@/lib/pricing/quote';
 import { parseJson, parseQuery } from '@/lib/validation/parse';
+import { zoneCoversAddress } from '@/lib/delivery/coverage';
 import { createOrderSchema, orderListQuerySchema } from '@/lib/validation/commerce';
 
 const orderListColumns = {
@@ -241,6 +243,18 @@ export const POST = withAuth(async (request, { user }) => {
       }
 
       addressSnapshot = address;
+
+      if (deliveryZoneId !== undefined) {
+        const [zone] = await db
+          .select({ provinces: deliveryZones.provinces, districts: deliveryZones.districts, municipalities: deliveryZones.municipalities })
+          .from(deliveryZones)
+          .where(eq(deliveryZones.id, deliveryZoneId))
+          .limit(1);
+        const coveredAddress = Boolean(zone && zoneCoversAddress(zone, address));
+        if (!coveredAddress) {
+          return NextResponse.json({ error: 'The selected delivery zone does not cover this address.' }, { status: 422 });
+        }
+      }
     }
 
     const created = await db.transaction(async (tx) => {
@@ -333,6 +347,18 @@ export const POST = withAuth(async (request, { user }) => {
         status: 'pending',
         note: 'Order placed',
         changedBy: user.userId,
+      });
+
+      // The units came off the shelf before the order existed, so that a sold-out
+      // line could abort the checkout without burning an order number. Now that the
+      // order has an id, the ledger rows can point at it.
+      await recordSaleMovements(tx, {
+        orderId: order.id,
+        changes: stock.changes,
+        reason: 'sale',
+        note: `Sold on ${order.orderNumber}.`,
+        performedBy: user.userId,
+        performedByName: user.email,
       });
 
       // COD and bank transfer both settle after the fact; the row records what is

@@ -1,0 +1,7 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { serviceActivityLogs, serviceTickets, users } from '@/db/schema';
+import { onlineBookingSchema } from '@/lib/validation/services';
+
+export async function POST(request: NextRequest) { const parsed = onlineBookingSchema.safeParse(await request.json()); if (!parsed.success) return NextResponse.json({ error: 'Invalid booking request' }, { status: 400 }); const data = parsed.data; let [customer] = await db.select({ id: users.id }).from(users).where(eq(users.phone, data.phone)).limit(1); if (!customer) [customer] = await db.insert(users).values({ name: data.customerName, email: data.email || `booking-${Date.now()}@local.invalid`, phone: data.phone, role: 'customer' }).returning({ id: users.id }); const [ticket] = await db.insert(serviceTickets).values({ ticketNumber: `SRV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`, customerId: customer.id, type: data.type, subject: data.subject, description: data.description, channel: 'ONLINE_BOOKING', workflowStatus: 'PENDING_INSPECTION', deviceBrand: data.deviceBrand, deviceModel: data.deviceModel, preferredDate: data.preferredDate, preferredTime: data.preferredTime, serviceAddress: data.serviceAddress }).returning(); await db.insert(serviceActivityLogs).values({ ticketId: ticket.id, activityType: 'BOOKING', message: 'Online booking submitted for review.' }); return NextResponse.json({ ticketNumber: ticket.ticketNumber }, { status: 201 }); }

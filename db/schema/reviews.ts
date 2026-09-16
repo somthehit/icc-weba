@@ -28,6 +28,7 @@ export const reviews = pgTable(
     rating: integer('rating').notNull(), // 1-5, validate at app layer
     title: varchar('title', { length: 150 }),
     comment: text('comment'),
+    images: jsonb('images').$type<Array<{ url: string; caption?: string }>>().notNull().default([]),
     // The hardware review form (components/HardwareReviewsSection.tsx) collects
     // more than a star rating: where the reviewer is from, their rig, and
     // per-aspect scores. Stored here so those submissions survive a round-trip.
@@ -42,10 +43,13 @@ export const reviews = pgTable(
     isApproved: boolean('is_approved').notNull().default(false),
     isVerifiedPurchase: boolean('is_verified_purchase').notNull().default(false),
     helpfulCount: integer('helpful_count').notNull().default(0),
+    adminResponse: text('admin_response'),
+    adminResponseAt: timestamp('admin_response_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => ({
     productIdx: index('reviews_product_idx').on(t.productId),
+    approvedIdx: index('reviews_is_approved_idx').on(t.isApproved),
   }),
 );
 

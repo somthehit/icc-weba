@@ -46,6 +46,7 @@ export const createReviewSchema = z.object({
   rating: z.coerce.number().int().min(1, 'Rating must be 1-5').max(5, 'Rating must be 1-5'),
   title: z.string().trim().max(150).optional(),
   comment: z.string().trim().max(4000).optional(),
+  images: z.array(z.object({ url: z.url().max(500), caption: z.string().max(200).optional() })).max(8).optional(),
   userCity: z.string().trim().max(120).optional(),
   hardwareSetup: z.string().trim().max(300).optional(),
   componentAspect: z.string().trim().max(60).optional(),
@@ -474,12 +475,46 @@ const NOTIFICATION_EVENTS = [
   'weekly_summary',
 ] as const;
 
+/**
+ * An image reference the browser can actually resolve.
+ *
+ * These were plain `z.string().max(500)`, which accepted anything — and the
+ * Settings "Choose file" control used to store `file.name`, so `logo_url` ended up
+ * holding `"Intel Logo.jpeg"`. The browser resolved that relative to the current
+ * page, 404'd, and the header silently fell back to initials.
+ *
+ * Accepted: an absolute http(s) URL, a root-relative path, a data URI, or empty
+ * (meaning "unset"). Rejected: a bare filename, which is never loadable.
+ */
+const assetUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .refine(
+    (value) =>
+      value === '' ||
+      /^https?:\/\//i.test(value) ||
+      value.startsWith('/') ||
+      value.startsWith('data:image/'),
+    { message: 'Upload the image, or paste a full URL starting with https:// or /' },
+  );
+
 const storeProfileSchema = z
   .object({
     storeName: z.string().trim().min(2).max(150).optional(),
+    tagline: z.string().trim().max(300).optional(),
+    legalName: z.string().trim().max(200).optional(),
+    panVatNumber: z.string().trim().regex(/^\d{9}$/, 'PAN/VAT number must contain 9 digits').optional(),
     contactEmail: z.email().max(200).optional(),
     contactPhone: z.string().trim().max(15).optional(),
-    logoUrl: z.string().trim().max(500).optional(),
+    logoUrl: assetUrlSchema.optional(),
+    darkLogoUrl: assetUrlSchema.optional(),
+    faviconUrl: assetUrlSchema.optional(),
+    invoiceLogoUrl: assetUrlSchema.optional(),
+    address: z.string().trim().max(500).optional(),
+    openingHours: z.string().trim().max(200).optional(),
+    announcementText: z.string().trim().max(300).optional(),
+    announcementEnabled: z.boolean().optional(),
     province: z.enum(PROVINCES).optional(),
     district: z.string().trim().max(100).optional(),
     municipality: z.string().trim().max(150).optional(),
@@ -487,6 +522,13 @@ const storeProfileSchema = z
     currency: z.string().trim().min(1).max(10).optional(),
     vatRatePercent: z.coerce.number().min(0).max(100).transform((n) => n.toFixed(2)).optional(),
     pricesIncludeVat: z.boolean().optional(),
+    multiCurrencyEnabled: z.boolean().optional(),
+    calendar: z.enum(['AD', 'BS']).optional(),
+    guestCheckoutEnabled: z.boolean().optional(),
+    minimumOrderAmount: money.optional(),
+    stockLockMinutes: z.coerce.number().int().min(1).max(1440).transform(String).optional(),
+    unpaidOrderCancelMinutes: z.coerce.number().int().min(1).max(10080).transform(String).optional(),
+    configuration: z.record(z.string().max(60), z.unknown()).optional(),
     freeDeliveryThreshold: money.optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {

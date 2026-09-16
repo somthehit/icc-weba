@@ -1,4 +1,4 @@
-// ICE Computers & Electronics — full Drizzle ORM schema (PostgreSQL)
+// Intel Computer Center — full Drizzle ORM schema (PostgreSQL)
 //
 // Usage: import { products, orders, ... } from './drizzle-schema'
 // (or from wherever you place this folder, e.g. src/db/schema)
@@ -7,6 +7,7 @@
 //   enums        shared pg enums
 //   users        customers + staff, addresses (Nepal Province/District/Municipality/Ward)
 //   catalog      brands, categories, products, spec sheet, variants, images
+//   attributes   catalog reference data — attribute vocabulary, options, filter tags
 //   inventory    multi-warehouse stock with reservation + low-stock threshold
 //   promotions   coupons
 //   cart         cart, cart items, wishlist
@@ -16,12 +17,14 @@
 //   reviews      product reviews (verified-purchase linkable)
 //   content      hero slides, pages, nav menu, announcement bar (Site & Content module)
 //   settings     store profile, VAT/currency, payment method config, notification prefs
+//   seo          site-wide search metadata, per-route overrides, redirect map
 //   accounting   suppliers, expenses, purchase bills — the shop books behind the P&L
 //   audit        audit_logs for accountability across the console
 
 export * from './enums';
 export * from './users';
 export * from './catalog';
+export * from './attributes';
 export * from './inventory';
 export * from './promotions';
 export * from './cart';
@@ -31,6 +34,10 @@ export * from './services';
 export * from './reviews';
 export * from './content';
 export * from './settings';
+export * from './seo';
 export * from './accounting';
 export * from './audit';
 export * from './driver-tracking';
+export * from './customers';
+export * from './inquiries';
+export * from './roles';

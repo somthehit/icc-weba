@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getUserFromRequest, JWTPayload } from '@/lib/auth/utils';
 
-export type UserRole = 'customer' | 'admin' | 'sales' | 'inventory_manager' | 'service_technician';
+export type UserRole = 'customer' | 'admin' | 'sales' | 'inventory_manager' | 'service_technician' | 'delivery_driver';
 
 /** Every role that may reach the admin console. */
 export const STAFF_ROLES: UserRole[] = [
@@ -17,6 +17,7 @@ export const STAFF_ROLES: UserRole[] = [
   'sales',
   'inventory_manager',
   'service_technician',
+  'delivery_driver',
 ];
 
 export interface AuthContext {

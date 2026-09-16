@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Product } from '@/types';
 import { useStore } from '@/context/StoreContext';
 import { computeProductEffectivePrice, formatCountdownTime } from '@/lib/offers/offerUtils';
@@ -13,7 +13,8 @@ import {
   Check, 
   ShieldCheck, 
   Tag,
-  Clock
+  Clock,
+  ImageOff
 } from 'lucide-react';
 
 export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
@@ -29,45 +30,48 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
   const isWishlisted = isInWishlist(product.id);
   const isCompared = isInCompare(product.id);
+  const imageUrl = product.images?.[0] || '';
+  const [failedImageUrl, setFailedImageUrl] = useState('');
+  const imageFailed = !imageUrl || failedImageUrl === imageUrl;
 
   // Compute time-bound effective price & discount status dynamically
   const { effectivePrice, onOffer, timeRemainingMs, discountPercentage } = computeProductEffectivePrice(product);
 
   return (
-    <div className="group bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative">
+    <div className="group relative flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg sm:p-4">
       {/* Top Badges */}
-      <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
-        <div className="flex flex-col gap-1 items-start">
+      <div className="pointer-events-none absolute left-5 right-5 top-5 z-10 flex items-start justify-between gap-2">
+        <div className="flex max-w-[calc(100%-44px)] flex-wrap items-start gap-1">
           {onOffer && (
-            <span className="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded shadow pointer-events-auto flex items-center gap-1 uppercase tracking-wider animate-pulse">
+            <span className="pointer-events-auto flex items-center gap-1 rounded-md bg-red-600 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-sm">
               <Clock className="w-2.5 h-2.5" />
-              <span>TIMED OFFER (-{discountPercentage}%)</span>
+              <span>-{discountPercentage}% LIMITED</span>
             </span>
           )}
           {!onOffer && discountPercentage > 0 && (
-            <span className="bg-amber-500 text-white font-bold text-[10px] px-2 py-0.5 rounded shadow pointer-events-auto">
+            <span className="pointer-events-auto rounded-md bg-amber-500 px-2 py-1 text-[10px] font-bold text-white shadow-sm">
               -{discountPercentage}% OFF
             </span>
           )}
           {product.isNewArrival && (
-            <span className="bg-[#0056b3] text-white font-bold text-[10px] px-2 py-0.5 rounded uppercase tracking-wider pointer-events-auto">
+            <span className="pointer-events-auto rounded-md bg-[#0056b3] px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white">
               NEW
             </span>
           )}
           {product.isTrending && (
-            <span className="bg-purple-600 text-white font-bold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider pointer-events-auto">
-              🔥 TRENDING
+            <span className="pointer-events-auto rounded-md bg-purple-600 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white">
+              TRENDING
             </span>
           )}
           {product.isBestSeller && !product.isNewArrival && !product.isTrending && (
-            <span className="bg-emerald-600 text-white font-bold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider pointer-events-auto">
+            <span className="pointer-events-auto rounded-md bg-emerald-600 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white">
               BESTSELLER
             </span>
           )}
         </div>
 
         {/* Quick Action Overlay Icons */}
-        <div className="flex flex-col gap-1.5 pointer-events-auto">
+        <div className="pointer-events-auto flex shrink-0 flex-col gap-1.5">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -100,14 +104,15 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
       {/* Product Image Frame */}
       <div 
         onClick={() => navigateTo('product-detail', product.slug)}
-        className="bg-gray-50 rounded-xl p-2 aspect-square mb-3 flex items-center justify-center relative border border-transparent group-hover:border-gray-200 transition-all overflow-hidden cursor-pointer"
+        className="relative mb-4 flex aspect-[4/3] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-slate-100 p-4 transition-all group-hover:border-blue-100"
       >
-        <img
-          src={product.images[0]}
-          alt={product.name}
-          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+        {!imageFailed ? <img
+          src={imageUrl}
+          alt=""
+          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
-        />
+          onError={() => setFailedImageUrl(imageUrl)}
+        /> : <div className="flex flex-col items-center justify-center gap-2 px-8 text-center text-slate-400"><span className="rounded-2xl bg-white p-4 shadow-sm"><ImageOff className="h-8 w-8" /></span><span className="text-[10px] font-bold uppercase tracking-widest">Image unavailable</span><span className="text-xs font-semibold text-slate-500">{product.brand}</span></div>}
 
         {/* Hover / Touch Quick Add Button */}
         <button
@@ -124,7 +129,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
       </div>
 
       {/* Product Info */}
-      <div className="space-y-1">
+      <div className="flex flex-1 flex-col space-y-1">
         <div className="flex items-center justify-between">
           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
             {product.brand}
@@ -138,7 +143,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
         <h4 
           onClick={() => navigateTo('product-detail', product.slug)}
-          className="text-sm font-bold text-[#1a1a1a] hover:text-[#0056b3] transition-colors cursor-pointer truncate"
+          className="min-h-10 cursor-pointer text-sm font-bold leading-5 text-[#1a1a1a] transition-colors line-clamp-2 hover:text-[#0056b3]"
           title={product.name}
         >
           {product.name}

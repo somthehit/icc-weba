@@ -52,6 +52,10 @@ const productColumns = {
   offerStackable: products.offerStackable,
   createdAt: products.createdAt,
   updatedAt: products.updatedAt,
+  // Per-SKU search metadata, so the storefront's product page can prefer the
+  // operator's title over the generated regional one.
+  metaTitle: products.metaTitle,
+  metaDescription: products.metaDescription,
   brandId: products.brandId,
   categoryId: products.categoryId,
   brandName: brands.name,

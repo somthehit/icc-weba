@@ -5,6 +5,7 @@ import { useStore } from '@/context/StoreContext';
 import { HeroBanner } from '@/components/HeroBanner';
 import { ProductCard } from '@/components/ProductCard';
 import { STORE_INFO, TECHNICAL_SERVICES } from '@/lib/data/initial-data';
+import { DEFAULT_HOMEPAGE_BLOCKS, type HomepageBlockKey, type HomepageBlock } from '@/lib/content/homepage-layout';
 import { 
   ShieldCheck, 
   Truck, 
@@ -20,6 +21,7 @@ import {
   ChevronRight, 
   CheckCircle2,
   Check,
+  BadgeCheck,
   Building2,
   Cpu,
   Laptop,
@@ -32,6 +34,21 @@ export const HomeView: React.FC = () => {
   const { products, categories, brands, navigateTo, setIsServiceModalOpen } = useStore();
   const [homeProductFilter, setHomeProductFilter] = React.useState<'featured' | 'newest' | 'older'>('featured');
   const [homeVisibleCount, setHomeVisibleCount] = React.useState(8);
+  const [homepageBlocks, setHomepageBlocks] = React.useState<HomepageBlock[]>(DEFAULT_HOMEPAGE_BLOCKS);
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/v1/public/homepage-layout', { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (data?.sections) setHomepageBlocks(data.sections); })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
+  const blockStyle = (key: HomepageBlockKey): React.CSSProperties => {
+    const block = homepageBlocks.find((item) => item.sectionType === key);
+    return { order: block?.displayOrder ?? 99, display: block?.isEnabled === false ? 'none' : undefined };
+  };
 
   const displayProducts = React.useMemo(() => {
     let list = [...products];
@@ -64,12 +81,12 @@ export const HomeView: React.FC = () => {
   );
 
   return (
-    <div className="space-y-10 pb-12">
+    <div className="flex flex-col gap-10 pb-12">
       {/* 1. Hero Banner */}
-      <HeroBanner />
+      <div style={blockStyle('hero_slider')}><HeroBanner /></div>
 
       {/* 2. Value Props Grid (Clean Minimalism) */}
-      <div className="bg-white py-6 px-4 md:px-12 grid grid-cols-2 md:grid-cols-4 border-y border-gray-100 max-w-7xl mx-auto gap-4">
+      <div style={{ order: 90 }} className="bg-white py-6 px-4 md:px-12 grid grid-cols-2 md:grid-cols-4 border-y border-gray-100 max-w-7xl mx-auto gap-4">
         <div className="flex items-center gap-3 border-r border-gray-100 justify-center pr-4">
           <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-[#0056b3]">
             <ShieldCheck className="w-5 h-5" />
@@ -112,7 +129,7 @@ export const HomeView: React.FC = () => {
       </div>
 
       {/* 3. Product Categories Grid */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8">
+      <section style={blockStyle('featured_categories')} className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-[#1a1a1a]">Product Categories</h2>
           <button
@@ -148,8 +165,10 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
+      {products.some((product) => product.offer?.enabled || product.offerToggle) && <section style={blockStyle('flash_sales')} className="max-w-7xl mx-auto px-4 md:px-8"><div className="mb-6"><h2 className="text-2xl font-bold text-[#1a1a1a]">Flash Sale / Hot Deals</h2><p className="text-xs text-gray-500">Limited-time offers while stocks last</p></div><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">{products.filter((product) => product.offer?.enabled || product.offerToggle).slice(0, 4).map((product) => <ProductCard key={product.id} product={product} />)}</div></section>}
+
       {/* 4. Products Showcase with Date-wise & Featured Filters */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8">
+      <section style={blockStyle('trending_laptops')} className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-[#1a1a1a]">Explore Tech Catalog</h2>
@@ -223,7 +242,7 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* 5. Service & Repairs Feature Box */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8">
+      <section style={blockStyle('custom_promo')} className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 lg:p-8 flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="space-y-2">
             <span className="text-[#0056b3] font-bold text-xs uppercase tracking-widest">Local Tech Service</span>
@@ -243,40 +262,25 @@ export const HomeView: React.FC = () => {
 
       {/* 6. Authorized Partner Brands */}
       {partnerBrands.length > 0 && (
-      <section className="max-w-7xl mx-auto px-4 md:px-8 overflow-hidden">
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-[#1a1a1a]">Authorized Partner Brands</h2>
-          <p className="text-xs text-gray-500">Genuine items direct from official Nepal distributors</p>
-        </div>
-
-        <div className="relative overflow-hidden w-full py-3 bg-gradient-to-r from-gray-50 via-white to-gray-50 rounded-2xl border border-gray-100 shadow-sm">
-          {/* Edge gradient overlays */}
-          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
-
-          {/* Right to Left Continuous Sliding Marquee */}
-          <div className="animate-marquee flex items-center gap-6">
-            {[...partnerBrands, ...partnerBrands, ...partnerBrands].map((brand, idx) => (
-              <div
-                key={`${brand.id}-${idx}`}
-                onClick={() => navigateTo('brands')}
-                className="flex-shrink-0 bg-white border border-gray-100 shadow-xs rounded-xl px-6 py-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:border-[#0056b3] hover:shadow-md transition-all group min-w-[150px] h-20"
-              >
-                <img
-                  src={brand.logo}
-                  alt={brand.name}
-                  className="h-8 w-auto max-w-[110px] object-contain group-hover:scale-105 transition-transform"
-                />
-                <span className="text-[11px] font-bold text-gray-700 font-mono group-hover:text-[#0056b3] transition-colors">
-                  {brand.name}
-                </span>
-              </div>
-            ))}
-          </div>
+      <section style={blockStyle('brand_showcase')} className="mx-auto w-full max-w-7xl px-4 md:px-8">
+        <div className="rounded-3xl border border-slate-100 bg-slate-50/60 px-4 py-8 sm:px-6 md:py-10">
+          <div className="mb-7 text-center"><span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700"><BadgeCheck className="h-3.5 w-3.5" />100% Genuine Guarantee</span><h2 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900">Authorized Partner Brands</h2><p className="mx-auto mt-1 max-w-xl text-xs text-slate-500 sm:text-sm">Direct imports and official warranty backed by verified Nepal distributors.</p></div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">{partnerBrands.map((brand) => <BrandTile key={brand.id} name={brand.name} fallbackLogo={brand.logo} onClick={() => navigateTo('brands')} />)}</div>
         </div>
       </section>
       )}
 
+      <section style={blockStyle('latest_blogs')} className="max-w-7xl mx-auto px-4 md:px-8"><div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center"><h2 className="text-xl font-bold text-slate-800">Tech News & Buying Guides</h2><p className="mt-2 text-sm text-slate-500">Published buying guides will appear here.</p></div></section>
+
     </div>
   );
 };
+
+const OFFICIAL_LOGOS: Record<string, string> = {
+  dell: 'https://cdn.simpleicons.org/dell/0076CE', epson: 'https://cdn.simpleicons.org/epson/003399', hikvision: 'https://cdn.simpleicons.org/hikvision/E60012', hp: 'https://cdn.simpleicons.org/hp/0096D6', lenovo: 'https://cdn.simpleicons.org/lenovo/E2231A', samsung: 'https://cdn.simpleicons.org/samsung/1428A0', 'tp-link': 'https://cdn.simpleicons.org/tplink/00A9E0', asus: 'https://cdn.simpleicons.org/asus/000000', acer: 'https://cdn.simpleicons.org/acer/83B81A', logitech: 'https://cdn.simpleicons.org/logitech/00B8FC', apple: 'https://cdn.simpleicons.org/apple/000000',
+};
+
+function BrandTile({ name, fallbackLogo, onClick }: { name: string; fallbackLogo: string; onClick: () => void }) {
+  const [officialFailed, setOfficialFailed] = React.useState(false); const [fallbackFailed, setFallbackFailed] = React.useState(false); const key = name.toLowerCase().replace(/\s+/g, '-'); const official = OFFICIAL_LOGOS[key]; const logo = !officialFailed && official ? official : !fallbackFailed ? fallbackLogo : '';
+  return <button type="button" onClick={onClick} className="group flex min-h-28 flex-col items-center justify-center rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"><div className="flex h-10 w-full items-center justify-center">{logo ? <img src={logo} alt={`${name} official logo`} onError={() => official && !officialFailed ? setOfficialFailed(true) : setFallbackFailed(true)} className="max-h-8 max-w-[85%] object-contain grayscale opacity-65 transition-all duration-300 group-hover:scale-105 group-hover:grayscale-0 group-hover:opacity-100" /> : <span className="text-lg font-black text-slate-500">{name}</span>}</div><span className="mt-3 text-[11px] font-semibold text-slate-500 transition-colors group-hover:text-slate-900">{name}</span></button>;
+}

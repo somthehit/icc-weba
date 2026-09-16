@@ -1,28 +1,29 @@
 'use client';
 
-import React from 'react';
-import { useSeo } from '@/context/SeoContext';
-import { useStore } from '@/context/StoreContext';
-import { useSeoMeta, SeoConfig } from '@/hooks/useSeoMeta';
+// components/SeoManager.tsx
+//
+// Invisible component that keeps `document.head` in sync with the active view.
+//
+// It is the single place where the admin-managed bundle, the view's override and
+// the current route meet — which is why nothing else calls `useSeoMeta` directly.
 
-interface SeoManagerProps {
+import React from 'react';
+
+import { useSeo } from '@/context/SeoContext';
+import { useSeoMeta } from '@/hooks/useSeoMeta';
+import type { SeoConfig } from '@/lib/seo/types';
+
+export interface SeoManagerProps {
   overrideConfig?: SeoConfig;
 }
 
-/**
- * SeoManager Component
- * Consumes SeoContext and active view state to dynamically inject meta tags (title, description, canonical, OG, Twitter, JSON-LD)
- * into document head based on the currently active view instead of static definitions.
- */
 export const SeoManager: React.FC<SeoManagerProps> = ({ overrideConfig }) => {
-  const { seoMeta } = useSeo();
-  const { currentPage } = useStore();
+  const { seoMeta, bundle } = useSeo();
 
-  // Combine SeoContext state with any direct prop override
+  // A prop override beats a context push, which beats the resolved defaults.
   const activeConfig: SeoConfig | undefined = overrideConfig || seoMeta || undefined;
 
-  // Dynamically update head meta tags based on active view and SeoContext
-  useSeoMeta(activeConfig);
+  useSeoMeta(activeConfig, bundle);
 
-  return null; // Invisible manager component
+  return null;
 };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { users, addresses } from '@/db/schema';
+import { users, addresses, staffProfiles } from '@/db/schema';
 import { eq, desc, ilike, sql, and, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { withRole } from '@/lib/auth/middleware';
@@ -117,7 +117,7 @@ export const POST = withRole(['admin'], async (request: NextRequest) => {
   try {
     const parsed = await parseJson(request, createUserSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, email, password, phone, role, avatarUrl } = parsed.data;
+    const { name, email, password, phone, role, avatarUrl, staffProfile } = parsed.data;
 
     const [existing] = await db
       .select({ id: users.id })
@@ -138,19 +138,15 @@ export const POST = withRole(['admin'], async (request: NextRequest) => {
       );
     }
 
-    const [user] = await db
-      .insert(users)
-      .values({
-        name,
-        email,
-        phone,
-        passwordHash: password ? await hashPassword(password) : null,
-        role,
-        avatarUrl,
-      })
-      .returning(publicUserColumns);
+    const user = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(users).values({
+        name, email, phone, passwordHash: password ? await hashPassword(password) : null, role, avatarUrl,
+      }).returning(publicUserColumns);
+      if (staffProfile) await tx.insert(staffProfiles).values({ ...staffProfile, userId: created.id });
+      return created;
+    });
 
-    return NextResponse.json({ success: true, user }, { status: 201 });
+    return NextResponse.json({ success: true, user, staffProfile: staffProfile ?? null }, { status: 201 });
   } catch (error) {
     console.error('Error creating user:', error);
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });

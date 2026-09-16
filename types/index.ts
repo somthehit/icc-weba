@@ -71,6 +71,15 @@ export interface Product {
   offerEnd?: string;
   flashSaleBadge?: boolean;
   stackableWithCoupons?: boolean;
+  /**
+   * Per-SKU search metadata, edited in the console's Product SEO Matrix.
+   *
+   * When set these win over the generated `"<name> Price in Dhangadhi"` title —
+   * see `lib/seo/resolve.ts`. Absent for most products, which is why the resolver
+   * still has a pattern to fall back to.
+   */
+  metaTitle?: string | null;
+  metaDescription?: string | null;
 }
 
 export interface CartItem {
@@ -281,6 +290,8 @@ export interface DeliveryZoneOption {
   name: string;
   /** `province_enum` values this zone covers. */
   provinces: string[];
+  districts?: string[];
+  municipalities?: string[];
   flatFee: number;
   estimatedDays: number;
 }
@@ -292,6 +303,7 @@ export interface Review {
   userCity: string;
   rating: number;
   comment: string;
+  images?: Array<{ url: string; caption?: string }>;
   date: string;
   verifiedPurchase: boolean;
   title?: string;
@@ -307,6 +319,7 @@ export interface Review {
   pros?: string[];
   cons?: string[];
   helpfulCount?: number;
+  adminResponse?: string;
   userUpvoted?: boolean;
 }
 
@@ -443,9 +456,18 @@ export interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: 'Super Admin' | 'Admin' | 'Sales Staff' | 'Inventory Staff' | 'Service Staff' | 'Content Manager';
+  role: 'Super Admin' | 'Admin' | 'Sales Staff' | 'Inventory Staff' | 'Service Staff' | 'Content Manager' | 'Delivery Driver';
   status: 'active' | 'inactive';
   lastLogin: string;
+  phone?: string;
+  staffRole?: 'SUPER_ADMIN' | 'STORE_MANAGER' | 'SALES_AGENT' | 'SERVICE_TECHNICIAN' | 'DELIVERY_DRIVER';
+  department?: string;
+  skills?: string[];
+  specialization?: string;
+  vehicleNumber?: string;
+  drivingLicenseNo?: string;
+  shiftStatus?: 'ON_DUTY' | 'ON_TRANSIT' | 'OFF_DUTY';
+  assignedCount?: number;
 }
 
 export interface AuditLogEntry {
@@ -524,4 +546,3 @@ export interface TrackingUpdate {
   notes?: string;
   proofOfDelivery?: DeliveryRoute['proofOfDelivery'];
 }
-

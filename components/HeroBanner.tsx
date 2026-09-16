@@ -54,7 +54,7 @@ const HERO_SLIDES: HeroSlide[] = [
     mrp: 285000,
     sellingPrice: 264999,
     stockLeft: 4,
-    location: 'Kathmandu warehouse',
+    location: 'Kailali warehouse',
     stockPercent: 26,
     productSlug: 'dell-inspiron-15-3520-i5'
   },
@@ -148,12 +148,12 @@ export const HeroBanner: React.FC = () => {
   };
 
   return (
-    <section 
+    <section
       id="hero-redesign-section"
       className="relative bg-white text-slate-900 overflow-hidden my-4 max-w-7xl mx-auto rounded-3xl border border-slate-200/80 px-6 lg:px-12 py-10 lg:py-12 select-none shadow-xs"
     >
       {/* Background Subtle Radial Glow */}
-      <div 
+      <div
         className="absolute w-[500px] h-[500px] rounded-full pointer-events-none -top-40 -right-20 opacity-60"
         style={{
           background: 'radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%)',
@@ -161,9 +161,9 @@ export const HeroBanner: React.FC = () => {
       />
 
       {/* Cyber Circuit SVG Background Grid (Subtle Light) */}
-      <svg 
-        className="absolute inset-0 w-full h-full opacity-40 pointer-events-none" 
-        viewBox="0 0 1400 700" 
+      <svg
+        className="absolute inset-0 w-full h-full opacity-40 pointer-events-none"
+        viewBox="0 0 1400 700"
         preserveAspectRatio="none"
       >
         <g stroke="#3b82f6" strokeWidth="1" opacity="0.08">
@@ -245,15 +245,15 @@ export const HeroBanner: React.FC = () => {
         {/* Right Column: Interactive Tech Spec Card */}
         <div className="lg:col-span-5 relative">
           {/* Animated Circuit Trace Line (Desktop only) */}
-          <svg 
-            className="hidden xl:block absolute -top-8 -left-56 w-[380px] h-[280px] pointer-events-none z-0" 
+          <svg
+            className="hidden xl:block absolute -top-8 -left-56 w-[380px] h-[280px] pointer-events-none z-0"
             viewBox="0 0 520 340"
           >
-            <path 
-              d="M0 300 H120 V200 H260 V90 H400" 
-              fill="none" 
-              stroke="#3b82f6" 
-              strokeWidth="1.5" 
+            <path
+              d="M0 300 H120 V200 H260 V90 H400"
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="1.5"
               className="animate-draw-circuit opacity-30"
             />
             <circle cx="400" cy="90" r="4" fill="#3b82f6" />
@@ -274,7 +274,7 @@ export const HeroBanner: React.FC = () => {
             {/* Virtual Device Display Screen */}
             <div className="relative rounded-t-xl rounded-b aspect-video bg-slate-950 border border-slate-800 overflow-hidden p-4 flex flex-col justify-center shadow-inner">
               {/* Radial Highlight in Screen */}
-              <div 
+              <div
                 className="absolute -top-12 -left-8 w-44 h-44 rounded-full pointer-events-none"
                 style={{
                   background: 'radial-gradient(circle, rgba(59,130,246,0.35), transparent 70%)',
@@ -291,7 +291,7 @@ export const HeroBanner: React.FC = () => {
             </div>
 
             {/* Device Metallic Base */}
-            <div 
+            <div
               className="h-2 rounded-b-lg mx-2.5 mb-3.5 shadow-2xs border-t border-slate-300"
               style={{
                 background: 'linear-gradient(90deg, #e2e8f0, #cbd5e1 50%, #e2e8f0)',
@@ -333,7 +333,7 @@ export const HeroBanner: React.FC = () => {
                 <span>{current.location}</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-                <div 
+                <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${current.stockPercent}%`,
@@ -346,11 +346,10 @@ export const HeroBanner: React.FC = () => {
             {/* Add to Cart Action */}
             <button
               onClick={handleAddToCart}
-              className={`w-full py-2.5 px-4 rounded-xl font-bold text-sm border-2 transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
-                addedNotice
-                  ? 'bg-emerald-600 border-emerald-600 text-white'
-                  : 'bg-white border-blue-600 text-blue-600 hover:bg-blue-50 shadow-2xs'
-              }`}
+              className={`w-full py-2.5 px-4 rounded-xl font-bold text-sm border-2 transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${addedNotice
+                ? 'bg-emerald-600 border-emerald-600 text-white'
+                : 'bg-white border-blue-600 text-blue-600 hover:bg-blue-50 shadow-2xs'
+                }`}
             >
               {addedNotice ? (
                 <>
@@ -376,9 +375,8 @@ export const HeroBanner: React.FC = () => {
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                idx === currentIndex ? 'w-8 bg-blue-600' : 'w-2 bg-slate-200 hover:bg-slate-300'
-              }`}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${idx === currentIndex ? 'w-8 bg-blue-600' : 'w-2 bg-slate-200 hover:bg-slate-300'
+                }`}
               aria-label={`Go to slide ${idx + 1}`}
             />
           ))}

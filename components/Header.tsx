@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
+import { useSeoOptional } from '@/context/SeoContext';
 import { RealtimeSearch } from '@/components/RealtimeSearch';
 import { 
   Search, 
@@ -34,6 +35,8 @@ export const Header: React.FC = () => {
     setIsAiAssistantOpen,
     setIsServiceModalOpen,
     isAdminLoggedIn,
+    isUserLoggedIn,
+    currentUser,
     siteSettings
   } = useStore();
 
@@ -42,12 +45,24 @@ export const Header: React.FC = () => {
 
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
+  /**
+   * The delivery promise, from the SEO engine's regional record.
+   *
+   * Read from `SeoContext` rather than kept here so the banner, the JSON-LD
+   * `areaServed` and the FAQ answers cannot disagree — the announcement used to
+   * say "Free Local Delivery" while the schema claimed all 77 districts.
+   */
+  const seo = useSeoOptional();
+  const announcement =
+    seo?.deliveryBanner ?? siteSettings.announcementText ?? 'FREE LOCAL DELIVERY';
+  const announcementVisible = siteSettings.announcementEnabled && Boolean(announcement);
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
       {/* 1. Top Announcement Bar */}
-      <div className="bg-[#1B3A8C] text-[#DCE6FF] py-2 px-4 md:px-10 text-xs font-mono tracking-wide flex justify-between items-center">
+      {announcementVisible && <div className="bg-[#1B3A8C] text-[#DCE6FF] py-2 px-4 md:px-10 text-xs font-mono tracking-wide flex justify-between items-center">
         <div>
-          <strong className="text-white font-semibold">FREE DELIVERY</strong> ON ORDERS ABOVE NPR 50,000
+          <strong className="text-white font-semibold">{announcement}</strong>
         </div>
         <div className="hidden sm:flex items-center gap-4 text-xs">
           <button onClick={() => navigateTo('contact')} className="opacity-90 hover:opacity-100 hover:text-white transition-opacity">Store Locator</button>
@@ -62,7 +77,7 @@ export const Header: React.FC = () => {
             {isAdminLoggedIn ? 'Admin Panel' : 'Admin'}
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* 2. Main Header Bar */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between gap-4">
@@ -78,9 +93,10 @@ export const Header: React.FC = () => {
 
           <div 
             onClick={() => navigateTo('home')} 
-            className="cursor-pointer flex items-center select-none py-0.5"
+            className="cursor-pointer flex items-center gap-3 select-none py-0.5"
             title={siteSettings.storeName}
           >
+            <BrandLogo key={siteSettings.logoUrl} logoUrl={siteSettings.logoUrl} storeName={siteSettings.storeName} />
             <span className="font-extrabold text-xl sm:text-2xl text-[#0056b3] tracking-tight hover:text-[#004494] transition-colors">
               {siteSettings.storeName}
             </span>
@@ -187,11 +203,12 @@ export const Header: React.FC = () => {
 
           {/* Account */}
           <button
-            onClick={() => navigateTo('account')}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
-            title="Account"
+            onClick={() => navigateTo(isUserLoggedIn ? 'account' : 'customer-login')}
+            className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+            title={isUserLoggedIn ? 'Open profile' : 'Sign in'}
           >
-            <User className="w-5 h-5" />
+            {isUserLoggedIn && currentUser?.avatarUrl ? <img src={currentUser.avatarUrl} alt={currentUser.name} className="h-8 w-8 rounded-full object-cover" /> : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0056b3] text-xs font-black text-white">{isUserLoggedIn && currentUser ? currentUser.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() : <User className="w-5 h-5" />}</span>}
+            {isUserLoggedIn && currentUser && <span className="hidden max-w-[100px] truncate text-xs font-bold sm:inline">{currentUser.name}</span>}
           </button>
         </div>
       </div>
@@ -238,3 +255,35 @@ export const Header: React.FC = () => {
     </header>
   );
 };
+
+function BrandLogo({ logoUrl, storeName }: { logoUrl: string; storeName: string }) {
+  const [failed, setFailed] = useState(false);
+  const usableUrl = logoUrl.startsWith('/') || /^https?:\/\//i.test(logoUrl);
+
+  if (!usableUrl || failed) {
+    const initials = storeName
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 3)
+      .toUpperCase();
+
+    return (
+      <span className="hidden h-14 w-20 shrink-0 items-center justify-center rounded-xl bg-[#0056b3] text-base font-black tracking-wider text-white sm:flex">
+        {initials}
+      </span>
+    );
+  }
+
+  return (
+    // The logo URL is managed by the store administrator and may be local or hosted.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logoUrl}
+      alt={`${storeName} logo`}
+      onError={() => setFailed(true)}
+      className="hidden h-14 w-20 shrink-0 object-contain sm:block lg:h-16 lg:w-28"
+    />
+  );
+}

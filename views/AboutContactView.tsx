@@ -1,23 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useStore } from '@/context/StoreContext';
 import { STORE_INFO } from '@/lib/data/initial-data';
 import { GoogleMapEmbed } from '@/components/GoogleMapEmbed';
 import { GoogleReviews } from '@/components/GoogleReviews';
 import { SeoHead } from '@/context/SeoContext';
-import { 
-  Building2, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  ShieldCheck, 
-  CheckCircle2, 
-  FileText, 
-  Send 
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  ShieldCheck,
+  CheckCircle2,
+  FileText,
+  Send
 } from 'lucide-react';
 
 export const AboutContactView: React.FC = () => {
+  const { siteSettings } = useStore();
   const [contactForm, setContactForm] = useState({
     name: '',
     phone: '',
@@ -27,9 +29,24 @@ export const AboutContactView: React.FC = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [inquiryNumber, setInquiryNumber] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    let response: Response;
+    try {
+      response = await fetch('/api/v1/public/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: contactForm.name, phone: contactForm.phone, email: contactForm.email, subject: contactForm.subject, message: contactForm.message }) });
+    } catch {
+      setError('Could not reach the contact service. Please try again.');
+      return;
+    }
+    const responseText = await response.text();
+    let data: { error?: string; inquiryNumber?: string } = {};
+    try { data = responseText ? JSON.parse(responseText) : {}; } catch { data = {}; }
+    if (!response.ok) { setError(data.error || 'Could not submit your inquiry.'); return; }
+    setInquiryNumber(data.inquiryNumber || '');
     setSubmitted(true);
   };
 
@@ -37,7 +54,7 @@ export const AboutContactView: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 text-xs">
       <SeoHead
         title="Contact Intel Computer Dhangadhi | Store Address & Google Reviews"
-        description="Visit Intel Computer & Electronics in Dhangadhi, Nepal. Certified computer store, laptop repair, CCTV installation & genuine accessories."
+        description="Visit Intel Computer Center in Dhangadhi, Nepal. Certified computer store, laptop repair, CCTV installation & genuine accessories."
         canonicalUrl="https://intelcomputer.com.np/contact"
         keywords={['Intel Computer Dhangadhi', 'Computer Shop Dhangadhi', 'Laptop Repair Kailali', 'Sudurpashchim Electronics']}
       />
@@ -47,9 +64,9 @@ export const AboutContactView: React.FC = () => {
         <span className="bg-white/20 backdrop-blur-sm text-white font-bold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider">
           Authorized Technology Outlet in Dhangadhi
         </span>
-        <h1 className="text-3xl md:text-4xl font-black">{STORE_INFO.name} — Dhangadhi</h1>
+        <h1 className="text-3xl md:text-4xl font-black">{siteSettings.storeName} — Dhangadhi</h1>
         <p className="text-blue-100 text-sm max-w-2xl leading-relaxed">
-          {STORE_INFO.tagline}. Located on Main Road near Campus Chowk in Dhangadhi, Kailali, we are a certified technology store and total hardware solutions provider for individuals, corporate offices, schools, and government institutions across Far-West Nepal.
+          {siteSettings.tagline}. Located at {siteSettings.address}, we are a certified technology store and total hardware solutions provider for individuals, corporate offices, schools, and government institutions across Far-West Nepal.
         </p>
       </div>
 
@@ -75,7 +92,7 @@ export const AboutContactView: React.FC = () => {
               <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-bold text-slate-900">Store Address:</div>
-                <div>{STORE_INFO.address.street}, {STORE_INFO.address.area}, {STORE_INFO.address.city}, {STORE_INFO.address.province}, Nepal</div>
+                <div>{siteSettings.address}</div>
                 <div className="text-[11px] text-slate-400 font-mono mt-0.5">GPS Coordinates: {STORE_INFO.address.mapCoordinates}</div>
               </div>
             </div>
@@ -84,8 +101,8 @@ export const AboutContactView: React.FC = () => {
               <Phone className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-bold text-slate-900">Telephone Hotlines:</div>
-                <div>Dhangadhi Landline: <a href={`tel:${STORE_INFO.phonePrimary}`} className="font-bold text-blue-700">{STORE_INFO.phonePrimary}</a></div>
-                <div>Mobile / WhatsApp: <a href={`tel:${STORE_INFO.phoneMobile}`} className="font-bold text-blue-700">{STORE_INFO.phoneMobile}</a></div>
+                <div>Support Phone: <a href={`tel:${siteSettings.phone}`} className="font-bold text-blue-700">{siteSettings.phone}</a></div>
+                <div>Mobile / WhatsApp: <a href={`tel:${siteSettings.whatsappNumber}`} className="font-bold text-blue-700">{siteSettings.whatsappNumber}</a></div>
               </div>
             </div>
 
@@ -93,9 +110,9 @@ export const AboutContactView: React.FC = () => {
               <Mail className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-bold text-slate-900">Email Addresses:</div>
-                <div>General Inquiry: {STORE_INFO.email}</div>
-                <div>Sales & Quotation: {STORE_INFO.salesEmail}</div>
-                <div>Technical Support: {STORE_INFO.supportEmail}</div>
+                <div>General Inquiry: {siteSettings.email}</div>
+                <div>Sales & Quotation: {siteSettings.email}</div>
+                <div>Technical Support: {siteSettings.email}</div>
               </div>
             </div>
 
@@ -103,7 +120,7 @@ export const AboutContactView: React.FC = () => {
               <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-bold text-slate-900">Store Opening Hours:</div>
-                <div>{STORE_INFO.openingHours}</div>
+                <div>{siteSettings.openingHours}</div>
               </div>
             </div>
 
@@ -130,7 +147,8 @@ export const AboutContactView: React.FC = () => {
               <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
               <h3 className="text-base font-bold text-slate-900">Message Received!</h3>
               <p className="text-slate-600">
-                Thank you for contacting Intel Computer & Electronics. Our sales representative will reply to your phone or email shortly.
+                Thank you for contacting Intel Computer Center. Our sales representative will reply to your phone or email shortly.
+                {inquiryNumber && <span className="mt-2 block font-mono font-bold text-emerald-700">Inquiry {inquiryNumber}</span>}
               </p>
               <button
                 onClick={() => setSubmitted(false)}
@@ -148,7 +166,7 @@ export const AboutContactView: React.FC = () => {
                   required
                   value={contactForm.name}
                   onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                  placeholder="e.g. Sunil Maharjan"
+                  placeholder="e.g. Som Thehit"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5"
                 />
               </div>
@@ -210,6 +228,7 @@ export const AboutContactView: React.FC = () => {
                 <Send className="w-4 h-4" />
                 <span>Submit Inquiry to Intel Sales</span>
               </button>
+              {error && <p className="text-center font-bold text-rose-600">{error}</p>}
             </form>
           )}
         </div>

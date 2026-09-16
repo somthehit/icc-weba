@@ -67,7 +67,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [modalStatusLocation, setModalStatusLocation] = useState(
     order.shippingAddress.district
       ? `${order.shippingAddress.district} Delivery Hub`
-      : 'Intel Kathmandu Showroom Hub',
+      : 'Intel Kailali Showroom Hub',
   );
   const [modalTargetStatus, setModalTargetStatus] = useState<OrderStatus>(
     getNextLogicalStatus(order.status),
@@ -79,7 +79,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
     updateOrderStatusExtended(order.id, modalTargetStatus, {
       note: modalStatusNote.trim() || `Status updated to ${modalTargetStatus.replace(/_/g, ' ')}.`,
-      location: modalStatusLocation.trim() || 'Intel Kathmandu Showroom Hub',
+      location: modalStatusLocation.trim() || 'Intel Kailali Showroom Hub',
       updatedBy: 'Admin (Sales Desk)',
       riderName: modalAssignedRider || order.assignedRiderName,
     });
@@ -135,18 +135,16 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <span className="font-black text-xl text-[#0056b3] font-mono">
                 Order #{order.id}
               </span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                order.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${order.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
                 order.status === 'out_for_delivery' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                order.status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
-                'bg-amber-100 text-amber-800'
-              }`}>
+                  order.status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
+                    'bg-amber-100 text-amber-800'
+                }`}>
                 {order.status.replace(/_/g, ' ')}
               </span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
-                order.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' :
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${order.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' :
                 'bg-amber-100 text-amber-800'
-              }`}>
+                }`}>
                 Payment: {order.paymentStatus} ({order.paymentMethod.toUpperCase()})
               </span>
             </div>
@@ -176,11 +174,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         <div className="flex border-b border-gray-200 bg-white px-5 text-xs font-bold gap-2">
           <button
             onClick={() => setModalActiveTab('timeline')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition-colors ${
-              modalActiveTab === 'timeline'
-                ? 'border-[#0056b3] text-[#0056b3]'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition-colors ${modalActiveTab === 'timeline'
+              ? 'border-[#0056b3] text-[#0056b3]'
+              : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
           >
             <History className="w-4 h-4" />
             <span>Delivery Tracking Timeline</span>
@@ -188,11 +185,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
           <button
             onClick={() => setModalActiveTab('details')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition-colors ${
-              modalActiveTab === 'details'
-                ? 'border-[#0056b3] text-[#0056b3]'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition-colors ${modalActiveTab === 'details'
+              ? 'border-[#0056b3] text-[#0056b3]'
+              : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
           >
             <ClipboardList className="w-4 h-4" />
             <span>Order Items &amp; Customer Info</span>
@@ -200,11 +196,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
           <button
             onClick={() => setModalActiveTab('notes')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition-colors relative ${
-              modalActiveTab === 'notes'
-                ? 'border-[#0056b3] text-[#0056b3]'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition-colors relative ${modalActiveTab === 'notes'
+              ? 'border-[#0056b3] text-[#0056b3]'
+              : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
           >
             <MessageSquare className="w-4 h-4" />
             <span>Internal Staff Notes</span>
@@ -248,13 +243,12 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     return (
                       <div
                         key={step.status}
-                        className={`py-2 px-1 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                          isCurrent
-                            ? 'bg-[#0056b3] text-white border-[#0056b3] shadow-md scale-102'
-                            : isDone
+                        className={`py-2 px-1 rounded-xl border flex flex-col items-center gap-1 transition-all ${isCurrent
+                          ? 'bg-[#0056b3] text-white border-[#0056b3] shadow-md scale-102'
+                          : isDone
                             ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
                             : 'bg-white text-gray-400 border-gray-200'
-                        }`}
+                          }`}
                       >
                         <div className="font-extrabold truncate w-full">{step.label}</div>
                         {isDone && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" />}
@@ -296,7 +290,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                       type="text"
                       value={modalStatusLocation}
                       onChange={(e) => setModalStatusLocation(e.target.value)}
-                      placeholder="e.g., Kathmandu Main Warehouse / Patan Route"
+                      placeholder="e.g., Kailali Main Warehouse / Patan Route"
                       className="w-full p-2.5 rounded-xl border border-gray-300 bg-white text-xs"
                     />
                   </div>
@@ -356,11 +350,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     return (
                       <div key={idx} className="relative flex items-start gap-4 group">
                         {/* Timeline Node Point */}
-                        <div className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                          isLatest
-                            ? 'bg-[#0056b3] border-white ring-4 ring-blue-100 text-white'
-                            : 'bg-emerald-500 border-white text-white'
-                        }`}>
+                        <div className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isLatest
+                          ? 'bg-[#0056b3] border-white ring-4 ring-blue-100 text-white'
+                          : 'bg-emerald-500 border-white text-white'
+                          }`}>
                           <CheckCircle2 className="w-3 h-3 text-white" />
                         </div>
 
@@ -376,7 +369,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                           <div className="flex items-center gap-3 pt-2 text-[10px] text-gray-500 border-t border-gray-200/60 mt-2">
                             <span className="inline-flex items-center gap-1 font-bold text-gray-700">
                               <MapPin className="w-3 h-3 text-gray-400" />
-                              <span>{event.location || 'Intel Kathmandu Hub'}</span>
+                              <span>{event.location || 'Intel Kailali Hub'}</span>
                             </span>
                             {event.updatedBy && (
                               <span className="inline-flex items-center gap-1">

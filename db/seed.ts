@@ -39,6 +39,14 @@ import {
   purchaseBills,
   purchaseBillItems,
   serviceTickets,
+  attributes,
+  attributeOptions,
+  attributeCategories,
+  productAttributeValues,
+  filterTags,
+  productFilterTags,
+  seoSettings,
+  seoPageMeta,
 } from '@/db/schema';
 import {
   INITIAL_SITE_SETTINGS,
@@ -47,9 +55,11 @@ import {
   INITIAL_PRODUCTS,
   INITIAL_COUPONS,
   INITIAL_ORDERS,
-  INITIAL_DELIVERY_ZONES,
   SAMPLE_REVIEWS,
 } from '@/lib/data/initial-data';
+import { SUDURPASHCHIM_CONFIG } from '@/config/regional';
+import { DEFAULT_PAGE_META, DEFAULT_SEO_SETTINGS } from '@/lib/seo/defaults';
+import { SEED_ATTRIBUTES, SEED_FILTER_TAGS } from './seed-facets';
 import type { Product } from '@/types';
 
 // Shared demo password for every login-capable seeded account.
@@ -206,6 +216,15 @@ async function seed() {
     'product_specs',
     'product_images',
     'product_variants',
+    // Catalog facet data. The value/link tables reference products, attributes,
+    // options, categories and tags, so all four dependents go ahead of the two
+    // definition tables, and every one of them ahead of products/categories below.
+    'product_attribute_values',
+    'product_filter_tags',
+    'attribute_options',
+    'attribute_categories',
+    'attributes',
+    'filter_tags',
     // Bill lines and expenses reference products and users, so they go before both.
     'purchase_bill_items',
     'purchase_bills',
@@ -227,6 +246,11 @@ async function seed() {
     'store_profile',
     'payment_method_settings',
     'announcement_bar',
+    // SEO engine. Both are standalone (nothing references them), so they can sit
+    // at the end; they must be listed at all, or a re-seed hits the unique index
+    // on seo_page_meta.page_key.
+    'seo_settings',
+    'seo_page_meta',
   ]
     .map((t) => `"${t}"`)
     .join(', ');
@@ -456,6 +480,124 @@ async function seed() {
     });
     if (specValues.length) await tx.insert(productSpecs).values(specValues);
 
+    // ---- catalog facets: attributes, options, per-product values ------------
+    //
+    // The definitions and the rules that read a value off a product live in
+    // db/seed-facets.ts. Nothing here is invented: a laptop's RAM facet comes from
+    // its own `RAM` spec line, its warranty facet from its own warranty text. A
+    // product the rule cannot read gets no row — so a low count on a facet means
+    // the catalogue genuinely has little to say about it (only 6 of the 30 seeded
+    // products are laptops), not that the wiring is missing.
+    let attributeValueCount = 0;
+    let attributeOptionCount = 0;
+    for (const [index, definition] of SEED_ATTRIBUTES.entries()) {
+      const [attribute] = await tx
+        .insert(attributes)
+        .values({
+          name: definition.name,
+          slug: definition.slug,
+          description: trunc(definition.description, 300),
+          dataType: definition.dataType,
+          unit: definition.unit,
+          isFilterable: definition.isFilterable,
+          displayOrder: index,
+        })
+        .returning({ id: attributes.id });
+
+      // Options exist for `select` only — the endpoints reject them on any other
+      // type, because a free-text value has no list to pick from.
+      const optionIdByValue = new Map<string, number>();
+      if (definition.dataType === 'select' && definition.options.length > 0) {
+        const insertedOptions = await tx
+          .insert(attributeOptions)
+          .values(
+            definition.options.map((value, order) => ({
+              attributeId: attribute.id,
+              value,
+              slug: slugify(value),
+              displayOrder: order,
+            })),
+          )
+          .returning({ id: attributeOptions.id, value: attributeOptions.value });
+        for (const option of insertedOptions) optionIdByValue.set(option.value, option.id);
+        attributeOptionCount += insertedOptions.length;
+      }
+
+      // No category rows means "applies everywhere", which is what Warranty Period
+      // wants — every product has one.
+      const categoryLinks = definition.categorySlugs.map((slug) => {
+        const categoryId = categoryIdBySlug.get(slug);
+        if (!categoryId) {
+          throw new Error(
+            `Attribute "${definition.slug}" names category "${slug}", which is not in INITIAL_CATEGORIES`,
+          );
+        }
+        return { attributeId: attribute.id, categoryId };
+      });
+      if (categoryLinks.length) await tx.insert(attributeCategories).values(categoryLinks);
+
+      const valueRows: Array<{
+        productId: number;
+        attributeId: number;
+        optionId: number | null;
+        valueText: string | null;
+      }> = [];
+      for (const p of INITIAL_PRODUCTS) {
+        // An attribute scoped to some categories is only asked of those products.
+        if (
+          definition.categorySlugs.length > 0 &&
+          !definition.categorySlugs.includes(p.category)
+        ) {
+          continue;
+        }
+        const derived = definition.derive(p);
+        if (derived === null) continue;
+        const productId = productIdBySlug.get(p.slug)!;
+
+        if (definition.dataType === 'select') {
+          const optionId = optionIdByValue.get(derived);
+          // Exact match or nothing. Auto-creating an option for a near-miss is how
+          // a catalogue ends up with "512GB" and "512 GB" filtering apart.
+          if (optionId === undefined) continue;
+          valueRows.push({ productId, attributeId: attribute.id, optionId, valueText: null });
+        } else {
+          // The CHECK constraint allows exactly one of the two columns.
+          valueRows.push({
+            productId,
+            attributeId: attribute.id,
+            optionId: null,
+            valueText: trunc(derived, 200),
+          });
+        }
+      }
+      if (valueRows.length) await tx.insert(productAttributeValues).values(valueRows);
+      attributeValueCount += valueRows.length;
+    }
+
+    // ---- filter tags -------------------------------------------------------
+    // Each tag mirrors a boolean the product already carries, so the counts the
+    // admin registry shows match the rails the storefront already renders.
+    let filterTagLinkCount = 0;
+    for (const [index, tag] of SEED_FILTER_TAGS.entries()) {
+      const [inserted] = await tx
+        .insert(filterTags)
+        .values({
+          name: tag.name,
+          slug: tag.slug,
+          description: trunc(tag.description, 300),
+          color: tag.color,
+          displayOrder: index,
+        })
+        .returning({ id: filterTags.id });
+
+      const links = INITIAL_PRODUCTS.filter((p) => tag.applies(p)).map((p) => ({
+        productId: productIdBySlug.get(p.slug)!,
+        filterTagId: inserted.id,
+      }));
+      if (links.length) await tx.insert(productFilterTags).values(links);
+      filterTagLinkCount += links.length;
+    }
+
     // ---- warehouse + inventory (single-warehouse denormalization) ---------
     const [warehouse] = await tx
       .insert(warehouses)
@@ -485,18 +627,18 @@ async function seed() {
     await tx.insert(coupons).values(couponValues);
 
     // ---- delivery zones ---------------------------------------------------
-    const zoneMeta: Record<string, { name: string; days: number }> = {
-      'dz-1': { name: 'Kathmandu Valley', days: 1 },
-      'dz-2': { name: 'Pokhara Valley', days: 3 },
-      'dz-3': { name: 'Butwal / Bhairahawa', days: 3 },
-      'dz-4': { name: 'Biratnagar / Itahari', days: 4 },
-      'dz-5': { name: 'Dhangadhi Main City', days: 2 },
-    };
-    const zoneValues = INITIAL_DELIVERY_ZONES.map((z) => ({
-      name: zoneMeta[z.id]?.name ?? z.municipality,
-      provinces: provinceToEnum(z.province),
-      flatFee: String(z.fee),
-      estimatedDays: zoneMeta[z.id]?.days ?? 2,
+    // Derived from `config/regional.ts` via INITIAL_DELIVERY_ZONES, so the seeded
+    // rows are the nine Sudurpashchim districts rather than the Dhangadhi /
+    // Dhangadhi / Butwal / Biratnagar set this used to hardcode. `districts` and
+    // `municipalities` are populated too — `zoneCoversAddress` narrows on them,
+    // and a zone with only a province matched every address in the province.
+    const zoneValues = SUDURPASHCHIM_CONFIG.keyDistricts.map((district) => ({
+      name: `${district.name} — ${district.hubs[0]}`,
+      provinces: SUDURPASHCHIM_CONFIG.primaryProvinceCode,
+      districts: district.name,
+      municipalities: district.hubs.join(','),
+      flatFee: String(district.flatFee),
+      estimatedDays: district.estimatedDays,
     }));
     const zoneRows = await tx
       .insert(deliveryZones)
@@ -784,7 +926,7 @@ async function seed() {
           contactPerson: 'Rajesh Shrestha',
           phone: '9851012345',
           email: 'sales@neoteric.com.np',
-          address: 'Teku, Kathmandu',
+          address: 'Teku, Kailali',
           vatPanNo: '301234567',
         },
         {
@@ -792,7 +934,7 @@ async function seed() {
           contactPerson: 'Anita Karki',
           phone: '9851023456',
           email: 'orders@cgelectronics.com.np',
-          address: 'Naxal, Kathmandu',
+          address: 'Naxal, Kailali',
           vatPanNo: '302345678',
         },
         {
@@ -800,7 +942,7 @@ async function seed() {
           contactPerson: 'Bikash Thapa',
           phone: '9851034567',
           email: 'trade@himelectronics.com',
-          address: 'Kalimati, Kathmandu',
+          address: 'Kalimati, Kailali',
           vatPanNo: '303456789',
         },
         {
@@ -822,7 +964,7 @@ async function seed() {
         { name: 'Electricity & Water', description: 'Utility bills including generator fuel' },
         { name: 'Internet & Phone', description: 'Broadband, landline and staff mobile top-ups' },
         { name: 'Marketing & Advertising', description: 'Facebook ads, hoardings, local FM spots' },
-        { name: 'Transport & Freight', description: 'Inbound freight from Kathmandu suppliers' },
+        { name: 'Transport & Freight', description: 'Inbound freight from Kailali suppliers' },
         { name: 'Repairs & Maintenance', description: 'Shop fittings, tools, workshop equipment' },
         { name: 'Office Supplies', description: 'Stationery, packaging, consumables' },
         { name: 'Bank Charges & Fees', description: 'Transaction fees, cheque charges, QR settlement' },
@@ -889,7 +1031,7 @@ async function seed() {
       const freight = 6500 + ((i * 2300) % 9000);
       expenseValues.push({
         categoryId: cat('Transport & Freight'),
-        description: `Inbound freight from Kathmandu — 2026-${mm}`,
+        description: `Inbound freight from Kailali — 2026-${mm}`,
         amount: String(freight),
         vatAmount: vatWithin(freight),
         expenseDate: `2026-${mm}-22`,
@@ -1135,7 +1277,7 @@ async function seed() {
 
     // ---- store settings ---------------------------------------------------
     await tx.insert(storeProfile).values({
-      storeName: 'ICE Computers & Electronics',
+      storeName: 'Intel Computer Center',
       contactEmail: INITIAL_SITE_SETTINGS.email,
       contactPhone: trunc(INITIAL_SITE_SETTINGS.phone, 15),
       logoUrl: INITIAL_SITE_SETTINGS.logoUrl,
@@ -1160,11 +1302,58 @@ async function seed() {
       isEnabled: INITIAL_SITE_SETTINGS.announcementEnabled ?? true,
     });
 
+    // ---- SEO engine -------------------------------------------------------
+    // Seeded from `lib/seo/defaults.ts` so a fresh database renders the same head
+    // tags a migrated one does, and the console has a row to edit rather than an
+    // "unsaved defaults" state on first open.
+    await tx.insert(seoSettings).values({
+      siteName: DEFAULT_SEO_SETTINGS.siteName,
+      canonicalBaseUrl: DEFAULT_SEO_SETTINGS.canonicalBaseUrl,
+      titleSuffix: DEFAULT_SEO_SETTINGS.titleSuffix,
+      defaultMetaTitle: DEFAULT_SEO_SETTINGS.defaultMetaTitle,
+      defaultMetaDescription: trunc(DEFAULT_SEO_SETTINGS.defaultMetaDescription, 500),
+      defaultKeywords: DEFAULT_SEO_SETTINGS.defaultKeywords,
+      ogImageUrl: DEFAULT_SEO_SETTINGS.ogImageUrl,
+      ogLocale: DEFAULT_SEO_SETTINGS.ogLocale,
+      activeScope: DEFAULT_SEO_SETTINGS.activeScope,
+      regionBannerMessage: trunc(DEFAULT_SEO_SETTINGS.regionBannerMessage, 300),
+      localBusinessType: DEFAULT_SEO_SETTINGS.localBusinessType,
+      priceRange: DEFAULT_SEO_SETTINGS.priceRange,
+      geoLatitude: String(SUDURPASHCHIM_CONFIG.geo.latitude),
+      geoLongitude: String(SUDURPASHCHIM_CONFIG.geo.longitude),
+      sitemapDefaultFrequency: DEFAULT_SEO_SETTINGS.sitemapDefaultFrequency,
+    });
+
+    await tx.insert(seoPageMeta).values(
+      DEFAULT_PAGE_META.map((page) => ({
+        pageKey: page.pageKey,
+        label: page.label,
+        path: page.path,
+        metaTitle: trunc(page.metaTitle, 200),
+        metaDescription: trunc(page.metaDescription, 500),
+        keywords: page.keywords || null,
+        noIndex: page.noIndex,
+        includeInSitemap: page.includeInSitemap,
+        sitemapPriority: String(page.sitemapPriority),
+        sitemapFrequency: page.sitemapFrequency,
+        displayOrder: page.displayOrder,
+      })),
+    );
+
     console.log('   ✓ users:', insertedUsers.length);
     console.log('   ✓ brands:', insertedBrands.length);
     console.log('   ✓ categories:', insertedCategories.length);
     console.log('   ✓ products:', insertedProducts.length);
     console.log('   ✓ images:', imageValues.length, '| specs:', specValues.length);
+    console.log(
+      '   ✓ attributes:', SEED_ATTRIBUTES.length,
+      '| options:', attributeOptionCount,
+      '| product values:', attributeValueCount,
+    );
+    console.log(
+      '   ✓ filter tags:', SEED_FILTER_TAGS.length,
+      '| product links:', filterTagLinkCount,
+    );
     console.log('   ✓ inventory rows:', inventoryValues.length);
     console.log('   ✓ coupons:', couponValues.length, '| delivery zones:', zoneValues.length);
     console.log('   ✓ delivery partners:', partnerValues.length);

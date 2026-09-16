@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { orders, orderItems, orderStatusHistory } from '@/db/schema';
+import { orders, orderItems, orderStatusHistory, accounts, journalEntries, journalLines } from '@/db/schema';
 import { and, desc, eq, notInArray } from 'drizzle-orm';
 import { STAFF_ROLES, withAuth, withRole } from '@/lib/auth/middleware';
 import { restockOrder } from '@/lib/orders/stock';
@@ -141,7 +141,9 @@ export const PUT = withRole<RouteContext>([...FULFILMENT_STAFF], async (request,
 
       if (!row) return null;
 
-      if (releasesStock) await restockOrder(tx, orderId);
+      if (releasesStock) {
+        await restockOrder(tx, orderId, { userId: user.userId, name: user.email });
+      }
 
       if (status) {
         await tx.insert(orderStatusHistory).values({
@@ -150,6 +152,27 @@ export const PUT = withRole<RouteContext>([...FULFILMENT_STAFF], async (request,
           note: note || `Status updated to ${status}`,
           changedBy: user.userId,
         });
+      }
+
+      if (paymentStatus === 'paid') {
+        const [alreadyPosted] = await tx.select({ id: journalEntries.id }).from(journalEntries).where(eq(journalEntries.sourceId, orderId)).limit(1);
+        if (!alreadyPosted) {
+          const [cash] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '1000')).limit(1);
+          const [revenue] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '4000')).limit(1);
+          const [vat] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '2100')).limit(1);
+          if (cash && revenue && vat) {
+            const [order] = await tx.select({ totalAmount: orders.totalAmount, subtotal: orders.subtotal, vatAmount: orders.vatAmount }).from(orders).where(eq(orders.id, orderId)).limit(1);
+            if (order) {
+              const amount = Number(order.totalAmount); const vatAmount = Number(order.vatAmount);
+              const [entry] = await tx.insert(journalEntries).values({ entryNumber: `SALE-${orderId}`, entryDate: new Date().toISOString().slice(0, 10), description: `Paid sale for order #${orderId}`, sourceType: 'order_payment', sourceId: orderId, postedBy: user.userId }).returning();
+              await tx.insert(journalLines).values([
+                { journalEntryId: entry.id, accountId: cash.id, debit: String(amount), credit: '0' },
+                { journalEntryId: entry.id, accountId: revenue.id, debit: '0', credit: String(amount - vatAmount) },
+                ...(vatAmount > 0 ? [{ journalEntryId: entry.id, accountId: vat.id, debit: '0', credit: String(vatAmount) }] : []),
+              ]);
+            }
+          }
+        }
       }
 
       return row;
@@ -221,7 +244,7 @@ export const DELETE = withAuth<RouteContext>(async (_request, { user }, context)
 
       // The units were taken off the shelf when the order was placed; a
       // cancellation that doesn't put them back leaks stock the shop still has.
-      await restockOrder(tx, orderId);
+      await restockOrder(tx, orderId, { userId: user.userId, name: user.email });
 
       await tx.insert(orderStatusHistory).values({
         orderId,

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { addresses } from '@/db/schema';
+import { addresses, deliveryZones } from '@/db/schema';
 import { withAuth } from '@/lib/auth/middleware';
 import { parseJson, parseQuery } from '@/lib/validation/parse';
 import {
@@ -10,6 +10,7 @@ import {
   createAddressSchema,
   updateAddressSchema,
 } from '@/lib/validation/commerce';
+import { zoneCoversAddress } from '@/lib/delivery/coverage';
 
 /**
  * The customer's address book.
@@ -29,6 +30,14 @@ import {
 const MAX_ADDRESSES = 20;
 
 const NOT_FOUND = () => NextResponse.json({ error: 'Address not found' }, { status: 404 });
+
+async function hasDeliveryCoverage(province: string, district: string, municipality: string) {
+  const zones = await db
+    .select({ provinces: deliveryZones.provinces, districts: deliveryZones.districts, municipalities: deliveryZones.municipalities })
+    .from(deliveryZones)
+    .where(eq(deliveryZones.isActive, true));
+  return zones.some((zone) => zoneCoversAddress(zone, { province, district, municipality }));
+}
 
 export const GET = withAuth(async (_request, { user }) => {
   try {
@@ -51,6 +60,10 @@ export const POST = withAuth(async (request, { user }) => {
   try {
     const parsed = await parseJson(request, createAddressSchema);
     if (!parsed.ok) return parsed.response;
+
+    if (!(await hasDeliveryCoverage(parsed.data.province, parsed.data.district, parsed.data.municipality))) {
+      return NextResponse.json({ error: 'We do not currently deliver to this province, district, or municipality.' }, { status: 422 });
+    }
 
     const created = await db.transaction(async (tx) => {
       const [{ count }] = await tx
@@ -100,6 +113,14 @@ export const PUT = withAuth(async (request, { user }) => {
 
     const { id, ...changes } = parsed.data;
     const owned = and(eq(addresses.id, id), eq(addresses.userId, user.userId));
+
+    if (changes.province || changes.district || changes.municipality) {
+      const [current] = await db.select({ province: addresses.province, district: addresses.district, municipality: addresses.municipality }).from(addresses).where(owned).limit(1);
+      if (!current) return NOT_FOUND();
+      if (!(await hasDeliveryCoverage(changes.province ?? current.province, changes.district ?? current.district, changes.municipality ?? current.municipality))) {
+        return NextResponse.json({ error: 'We do not currently deliver to this province, district, or municipality.' }, { status: 422 });
+      }
+    }
 
     const updated = await db.transaction(async (tx) => {
       // Promoting this one demotes the rest first, so `isDefault` stays unique

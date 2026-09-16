@@ -78,6 +78,9 @@ export interface DbProductRow {
   offerIsFlashSale?: boolean | null;
   offerStackable?: boolean | null;
   createdAt?: Date | string | null;
+  /** Per-SKU search metadata, set from the console's Product SEO Matrix. */
+  metaTitle?: string | null;
+  metaDescription?: string | null;
   /** Ordered image URLs (primary first). */
   images?: string[] | null;
   specs?: Array<{ specKey: string; specValue: string }> | null;
@@ -152,6 +155,9 @@ export function mapDbProductToProduct(row: DbProductRow): Product {
       : 'active',
     createdAt: iso(row.createdAt),
     releaseDate: str(row.releaseDate),
+    // Null rather than '' so the resolver can tell "no override" from "cleared".
+    metaTitle: row.metaTitle ?? null,
+    metaDescription: row.metaDescription ?? null,
   };
 }
 

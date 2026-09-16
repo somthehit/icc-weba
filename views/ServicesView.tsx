@@ -4,14 +4,14 @@ import React from 'react';
 import { useStore } from '@/context/StoreContext';
 import { SeoHead } from '@/context/SeoContext';
 import { TECHNICAL_SERVICES, STORE_INFO } from '@/lib/data/initial-data';
-import { 
-  Wrench, 
-  ShieldCheck, 
-  Clock, 
-  Check, 
-  Phone, 
-  MapPin, 
-  ArrowRight, 
+import {
+  Wrench,
+  ShieldCheck,
+  Clock,
+  Check,
+  Phone,
+  MapPin,
+  ArrowRight,
   CheckCircle2,
   Calendar,
   Sparkles
@@ -42,7 +42,7 @@ export const ServicesView: React.FC = () => {
           </h1>
 
           <p className="text-sm text-slate-300 leading-relaxed">
-            Intel Computer & Electronics provides chip-level hardware repair, motherboard diagnostics, CCTV security camera installation, printer head maintenance, and structured networking across Dhangadhi and Far-West Nepal.
+            Intel Computer Center provides chip-level hardware repair, motherboard diagnostics, CCTV security camera installation, printer head maintenance, and structured networking across Dhangadhi and Far-West Nepal.
           </p>
 
           <div className="pt-2 flex flex-wrap gap-4">

@@ -10,6 +10,9 @@ export interface DbReviewRow {
   rating: number;
   title?: string | null;
   comment?: string | null;
+  images?: unknown;
+  adminResponse?: string | null;
+  adminResponseAt?: Date | string | null;
   userName?: string | null;
   userCity?: string | null;
   hardwareSetup?: string | null;
@@ -51,6 +54,7 @@ export function mapDbReviewToReview(row: DbReviewRow): Review {
     userCity: row.userCity ?? '',
     rating: Number(row.rating) || 0,
     comment: row.comment ?? '',
+    images: Array.isArray(row.images) ? row.images.filter((item): item is { url: string; caption?: string } => Boolean(item && typeof item === 'object' && typeof (item as { url?: unknown }).url === 'string')) : [],
     date: day(row.createdAt),
     verifiedPurchase: row.isVerifiedPurchase ?? false,
     title: row.title ?? undefined,
@@ -60,5 +64,6 @@ export function mapDbReviewToReview(row: DbReviewRow): Review {
     pros: list(row.pros),
     cons: list(row.cons),
     helpfulCount: row.helpfulCount ?? 0,
+    adminResponse: row.adminResponse ?? undefined,
   };
 }

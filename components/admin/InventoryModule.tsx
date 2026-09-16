@@ -1,47 +1,47 @@
 'use client';
 
-import React from 'react';
-import type { StockAdjustment } from '@/types';
+import React, { useEffect, useState } from 'react';
+import { AlertTriangle, Box, FileText, Package, Plus, RefreshCw, Warehouse, X } from 'lucide-react';
+import { ReceiveInventoryModal } from './ReceiveInventoryModal';
 
-/** Module 6 — the stock adjustment ledger written by the audit modal. */
-export interface InventoryModuleProps {
-  stockAdjustments: StockAdjustment[];
-}
+type StockRow = { productId: number; sku: string; productName: string; stockQuantity: number; availableQuantity: number; unitCost: number | null; stockValue: number | null; lowStockThreshold: number; stockStatus: string; warehouseName: string | null; drift: boolean | null };
+type WarehouseRow = { id: number; name: string; district: string | null; province?: string | null; isActive: boolean; unitsOnHand: number; stockRows: number };
+type Movement = { id: number; createdAt: string; productName: string; sku: string; quantityDelta: number; reason: string; performedByName: string | null; note: string | null };
 
-export const InventoryModule: React.FC<InventoryModuleProps> = ({ stockAdjustments }) => {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 shadow-sm">
-        <h3 className="font-extrabold text-base text-[#1a1a1a]">Stock Adjustment Audit Log (Append-Only)</h3>
-        <p className="text-xs text-gray-500">Every inventory recount, damage removal, or supplier restock is permanently recorded here.</p>
+export const InventoryModule: React.FC<{ products?: unknown[]; stockAdjustments?: unknown[] }> = () => {
+  const [tab, setTab] = useState<'stock' | 'adjustments' | 'warehouses'>('stock');
+  const [stock, setStock] = useState<StockRow[]>([]); const [warehouses, setWarehouses] = useState<WarehouseRow[]>([]); const [movements, setMovements] = useState<Movement[]>([]);
+  const [search, setSearch] = useState(''); const [loading, setLoading] = useState(true); const [message, setMessage] = useState('');
+  const [adjusting, setAdjusting] = useState<StockRow | null>(null); const [delta, setDelta] = useState(''); const [reason, setReason] = useState('supplier_restock'); const [note, setNote] = useState('');
+  const [showReceive, setShowReceive] = useState(false); const [showWarehouse, setShowWarehouse] = useState(false);
+  const [warehouseName, setWarehouseName] = useState(''); const [warehouseDistrict, setWarehouseDistrict] = useState('');
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b text-gray-500 uppercase font-extrabold bg-gray-50/50">
-                <th className="py-3 px-3">Timestamp</th>
-                <th className="py-3 px-3">Product SKU</th>
-                <th className="py-3 px-3">Quantity Delta</th>
-                <th className="py-3 px-3">Adjustment Reason</th>
-                <th className="py-3 px-3">Acting Staff</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 font-medium">
-              {stockAdjustments.map((sa) => (
-                <tr key={sa.id} className="hover:bg-gray-50">
-                  <td className="py-3 px-3 font-mono text-gray-500">{sa.timestamp}</td>
-                  <td className="py-3 px-3 font-bold text-gray-900">{sa.productName}</td>
-                  <td className={`py-3 px-3 font-black ${sa.quantityDelta > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    {sa.quantityDelta > 0 ? `+${sa.quantityDelta}` : sa.quantityDelta} Units
-                  </td>
-                  <td className="py-3 px-3 uppercase text-[10px] font-bold tracking-wider">{sa.reason.replace('_', ' ')}</td>
-                  <td className="py-3 px-3 text-gray-700">{sa.adminName}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+  const load = async () => { setLoading(true); try { const [stockResponse, warehouseResponse, movementResponse] = await Promise.all([fetch('/api/inventory/stock-levels?limit=100&sort=name'), fetch('/api/inventory/warehouses'), fetch('/api/inventory/movements?limit=100')]); const stockData = await stockResponse.json(); const warehouseData = await warehouseResponse.json(); const movementData = await movementResponse.json(); if (!stockResponse.ok) throw new Error(stockData.error ?? 'Unable to load stock'); setStock(stockData.data ?? []); setWarehouses(warehouseData.data ?? []); setMovements(movementData.data ?? []); } catch (error) { setMessage(error instanceof Error ? error.message : 'Unable to load inventory'); } finally { setLoading(false); } };
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const submitAdjustment = async (event: React.FormEvent) => { event.preventDefault(); if (!adjusting) return; const response = await fetch('/api/inventory/adjust', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: adjusting.productId, quantityDelta: Number(delta), reason, note, expectedQuantity: adjusting.stockQuantity }) }); const data = await response.json(); if (!response.ok) { setMessage(data.error ?? 'Adjustment failed'); return; } setMessage(data.message); setAdjusting(null); setDelta(''); setNote(''); await load(); };
+  const addWarehouse = async (event: React.FormEvent) => { event.preventDefault(); setMessage(''); const response = await fetch('/api/inventory/warehouses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: warehouseName, district: warehouseDistrict || null }) }); const data = await response.json(); if (!response.ok) { setMessage(data.error ?? 'Unable to add warehouse'); return; } setMessage(`Warehouse ${data.warehouse.name} added.`); setShowWarehouse(false); setWarehouseName(''); setWarehouseDistrict(''); await load(); };
+  const visibleStock = stock.filter((row) => `${row.productName} ${row.sku}`.toLowerCase().includes(search.toLowerCase()));
+  const totalUnits = stock.reduce((sum, row) => sum + row.stockQuantity, 0); const totalValue = stock.reduce((sum, row) => sum + (row.stockValue ?? 0), 0); const alerts = stock.filter((row) => row.stockQuantity <= row.lowStockThreshold).length;
+
+  return <div className="space-y-6"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-xl font-black text-slate-950">Inventory Management</h2><p className="mt-1 text-xs text-slate-500">Live stock, warehouse mirrors, and append-only adjustment ledger.</p></div><button onClick={() => void load()} className="rounded-xl border border-slate-200 bg-white p-2.5"><RefreshCw className="h-4 w-4 text-slate-500" /></button></div>
+    {message && <div className="rounded-xl bg-blue-50 px-4 py-3 text-xs font-bold text-blue-700">{message}</div>}
+    <div className="grid gap-4 sm:grid-cols-3"><Metric icon={<Package />} label="Products tracked" value={stock.length.toLocaleString()} /><Metric icon={<Box />} label="Units on hand" value={totalUnits.toLocaleString()} /><Metric icon={<AlertTriangle />} label="Low stock alerts" value={alerts.toLocaleString()} /><Metric icon={<FileText />} label="Cost value" value={`NPR ${Math.round(totalValue).toLocaleString('en-IN')}`} /></div>
+    <div className="flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex gap-2 overflow-x-auto">{([['stock', 'Stock Levels'], ['adjustments', 'Adjustments'], ['warehouses', 'Warehouses']] as const).map(([id, label]) => <button key={id} onClick={() => setTab(id)} className={`rounded-xl px-4 py-2 text-xs font-bold ${tab === id ? 'bg-blue-600 text-white' : 'bg-white text-slate-500'}`}>{label}</button>)}</div>{tab === 'stock' && <button onClick={() => setShowReceive(true)} className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-bold text-white"><Plus className="h-4 w-4" /> Receive stock</button>}{tab === 'warehouses' && <button onClick={() => setShowWarehouse(true)} className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-bold text-white"><Plus className="h-4 w-4" /> Add warehouse</button>}</div>
+    {tab === 'stock' && <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="flex items-center gap-3 border-b border-slate-100 p-4"><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search product or SKU" className="w-full rounded-xl bg-slate-50 px-3 py-2.5 text-sm outline-none" /></div>{loading ? <p className="p-8 text-center text-sm text-slate-500">Loading live stock...</p> : <table className="w-full text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase text-slate-500"><tr><th className="p-4">Product</th><th className="p-4">SKU</th><th className="p-4">On hand</th><th className="p-4">Available</th><th className="p-4">Cost value</th><th className="p-4">Action</th></tr></thead><tbody className="divide-y divide-slate-100">{visibleStock.map((row) => <tr key={row.productId}><td className="p-4 font-bold text-slate-900">{row.productName}<div className="text-[10px] font-normal text-slate-400">{row.warehouseName ?? 'Product-level stock'}</div></td><td className="p-4 font-mono text-slate-500">{row.sku}</td><td className="p-4 font-black">{row.stockQuantity}</td><td className="p-4">{row.availableQuantity}</td><td className="p-4 font-bold">{row.stockValue === null ? 'Cost missing' : `NPR ${Math.round(row.stockValue).toLocaleString('en-IN')}`}</td><td className="p-4"><button onClick={() => setAdjusting(row)} className="rounded-lg bg-slate-900 px-3 py-2 text-[10px] font-bold text-white">Adjust stock</button></td></tr>)}</tbody></table>}</div>}
+    {tab === 'adjustments' && <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="border-b border-slate-100 p-4"><h3 className="font-extrabold text-slate-900">Inventory movement ledger</h3><p className="text-xs text-slate-500">Corrections are posted as new movements and cannot be edited.</p></div><table className="w-full text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase text-slate-500"><tr><th className="p-4">Date</th><th className="p-4">Product</th><th className="p-4">Change</th><th className="p-4">Reason</th><th className="p-4">Staff</th></tr></thead><tbody className="divide-y divide-slate-100">{movements.map((movement) => <tr key={movement.id}><td className="p-4 text-slate-500">{new Date(movement.createdAt).toLocaleString()}</td><td className="p-4 font-bold">{movement.productName}<div className="font-mono text-[10px] text-slate-400">{movement.sku}</div></td><td className={`p-4 font-black ${movement.quantityDelta > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{movement.quantityDelta > 0 ? '+' : ''}{movement.quantityDelta}</td><td className="p-4 text-slate-500">{movement.reason.replaceAll('_', ' ')}</td><td className="p-4 text-slate-500">{movement.performedByName ?? 'System'}</td></tr>)}</tbody></table></div>}
+    {tab === 'warehouses' && <div className="grid gap-4 md:grid-cols-3">{warehouses.map((warehouse) => <div key={warehouse.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><Warehouse className="h-5 w-5 text-blue-600" /><h3 className="mt-4 font-extrabold text-slate-900">{warehouse.name}</h3><p className="mt-1 text-xs text-slate-500">{warehouse.district ?? 'No district recorded'}</p><div className="mt-4 flex justify-between text-xs"><span className="text-slate-500">Products</span><b>{warehouse.stockRows}</b></div><div className="mt-2 flex justify-between text-xs"><span className="text-slate-500">Units</span><b>{warehouse.unitsOnHand}</b></div></div>)}{warehouses.length === 0 && <div className="rounded-2xl border border-dashed p-10 text-center text-sm text-slate-500">No warehouses configured. Add one before receiving stock.</div>}</div>}
+    {showReceive && <ReceiveInventoryModal products={stock.map((row) => ({ productId: row.productId, sku: row.sku, productName: row.productName, stockQuantity: row.stockQuantity, unitCost: row.unitCost }))} warehouses={warehouses.map((w) => ({ id: w.id, name: w.name, district: w.district, isActive: w.isActive }))} onClose={() => setShowReceive(false)} onReceived={async (msg) => { setMessage(msg); await load(); }} />}
+    {showWarehouse && <Modal title="Add warehouse" onClose={() => setShowWarehouse(false)}><form onSubmit={addWarehouse} className="space-y-3"><input required value={warehouseName} onChange={(e) => setWarehouseName(e.target.value)} placeholder="Warehouse name" className="w-full rounded-xl border p-3 text-sm" /><input value={warehouseDistrict} onChange={(e) => setWarehouseDistrict(e.target.value)} placeholder="District / location" className="w-full rounded-xl border p-3 text-sm" /><ModalActions onCancel={() => setShowWarehouse(false)} submit="Add warehouse" /></form></Modal>}
+    {adjusting && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"><form onSubmit={submitAdjustment} className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"><h3 className="text-lg font-black">Adjust {adjusting.productName}</h3><p className="mt-1 text-xs text-slate-500">Current on hand: {adjusting.stockQuantity}. Positive adds stock; negative removes it.</p><input required type="number" step="1" value={delta} onChange={(e) => setDelta(e.target.value)} placeholder="Quantity delta" className="mt-5 w-full rounded-xl border p-3 text-sm" /><select value={reason} onChange={(e) => setReason(e.target.value)} className="mt-3 w-full rounded-xl border p-3 text-sm"><option value="supplier_restock">Supplier restock</option><option value="customer_return">Customer return</option><option value="damaged">Damaged</option><option value="stolen">Stolen</option><option value="audit_correction">Audit correction</option></select><textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reference or note" className="mt-3 w-full rounded-xl border p-3 text-sm" /><div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setAdjusting(null)} className="rounded-xl border px-4 py-2 text-xs font-bold">Cancel</button><button className="rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white">Post adjustment</button></div></form></div>}
+  </div>;
 };
+
+function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">{icon}</div><p className="mt-4 text-2xl font-black text-slate-950">{value}</p><p className="mt-1 text-xs text-slate-500">{label}</p></div>; }
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"><div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"><div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black text-slate-950">{title}</h3><p className="mt-1 text-xs text-slate-500">Saved directly to the inventory database.</p></div><button onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button></div>{children}</div></div>; }
+
+function ModalActions({ onCancel, submit }: { onCancel: () => void; submit: string }) { return <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600">Cancel</button><button className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-bold text-white">{submit}</button></div>; }

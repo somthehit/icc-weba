@@ -67,7 +67,7 @@ export const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
           allowFullScreen
           loading="lazy"
           referrerPolicy="strict-origin-when-cross-origin"
-          title="Intel Computer & Electronics Dhangadhi Google Map"
+          title="Intel Computer Center Dhangadhi Google Map"
           className="w-full h-full"
         />
       </div>

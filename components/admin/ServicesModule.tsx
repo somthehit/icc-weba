@@ -1,63 +1,24 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { CalendarDays, Check, ClipboardList, Eye, HardDrive, LucideIcon, Plus, Printer, Search, Send, Wrench, X } from 'lucide-react';
 import { type ServiceRequest } from '@/types';
 
-/** Module 5 — the repair and service request queue. */
-export interface ServicesModuleProps {
-  serviceRequests: ServiceRequest[];
-  updateServiceStatus: (
-    id: string,
-    status: ServiceRequest['status'],
-    technician?: string,
-    cost?: number,
-  ) => void;
-  logAuditAction: (module: string, action: string, details: string) => void;
-}
+type Status = 'PENDING_INSPECTION' | 'DIAGNOSING' | 'QUOTATION_AWAITING' | 'IN_PROGRESS' | 'READY_FOR_PICKUP' | 'DELIVERED_CLOSED';
+type Ticket = { id: number; ticketNumber: string; channel: string; workflowStatus: Status; type: string; subject: string; description?: string; deviceBrand?: string; deviceModel?: string; serialNumber?: string; conditionChecklist?: Record<string, boolean>; lockCode?: string; customerName?: string; customerPhone?: string | null; assignedTo?: number | null; chargedAmount?: string; advanceAmount?: string; createdAt: string; };
+const statuses: Array<[Status, string, string]> = [['PENDING_INSPECTION', 'Pending inspection', 'bg-amber-100 text-amber-800'], ['DIAGNOSING', 'Diagnosing', 'bg-blue-100 text-blue-800'], ['QUOTATION_AWAITING', 'Quotation awaiting', 'bg-orange-100 text-orange-800'], ['IN_PROGRESS', 'In progress', 'bg-purple-100 text-purple-800'], ['READY_FOR_PICKUP', 'Ready for pickup', 'bg-emerald-100 text-emerald-800'], ['DELIVERED_CLOSED', 'Delivered / closed', 'bg-slate-200 text-slate-700']];
 
-export const ServicesModule: React.FC<ServicesModuleProps> = ({ serviceRequests, updateServiceStatus, logAuditAction }) => {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 shadow-sm">
-        <h3 className="font-extrabold text-base text-[#1a1a1a]">Technical Service Tickets ({serviceRequests.length})</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b text-gray-500 uppercase font-extrabold bg-gray-50/50">
-                <th className="py-3 px-3">Ticket ID</th>
-                <th className="py-3 px-3">Customer</th>
-                <th className="py-3 px-3">Service Type</th>
-                <th className="py-3 px-3">Assigned Tech</th>
-                <th className="py-3 px-3">Status</th>
-                <th className="py-3 px-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 font-medium">
-              {serviceRequests.map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50">
-                  <td className="py-3 px-3 font-mono font-bold text-[#0056b3]">{s.id}</td>
-                  <td className="py-3 px-3 font-bold">{s.customerName} ({s.phone})</td>
-                  <td className="py-3 px-3 capitalize">{s.serviceType.replace('-', ' ')}</td>
-                  <td className="py-3 px-3">{s.assignedTechnician || 'Unassigned'}</td>
-                  <td className="py-3 px-3">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-900 uppercase">
-                      {s.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    <button
-                      onClick={() => { updateServiceStatus(s.id, 'completed'); logAuditAction('Services', 'Complete Ticket', `Completed service ticket #${s.id}`); }}
-                      className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold"
-                    >
-                      Mark Resolved
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+export const ServicesModule: React.FC<{ serviceRequests: ServiceRequest[]; updateServiceStatus: (id: string, status: ServiceRequest['status'], technician?: string, cost?: number) => void; logAuditAction: (module: string, action: string, details: string) => void }> = ({ logAuditAction }) => {
+  const [view, setView] = useState<'intake' | 'queue' | 'bookings' | 'workloads'>('queue'); const [tickets, setTickets] = useState<Ticket[]>([]); const [technicians, setTechnicians] = useState<Array<{ id: number; name: string }>>([]); const [search, setSearch] = useState(''); const [intakeOpen, setIntakeOpen] = useState(false); const [jobSheet, setJobSheet] = useState<Ticket | null>(null); const [notice, setNotice] = useState('');
+  async function load() { const response = await fetch(`/api/v1/services?search=${encodeURIComponent(search)}`); if (response.ok) { const data = await response.json(); setTickets(data.tickets || []); setTechnicians(data.technicians || []); } }
+  useEffect(() => { const controller = new AbortController(); fetch(`/api/v1/services?search=${encodeURIComponent(search)}`, { signal: controller.signal }).then((response) => response.ok ? response.json() : null).then((data) => { if (data) { setTickets(data.tickets || []); setTechnicians(data.technicians || []); } }).catch(() => undefined); return () => controller.abort(); }, [search]);
+  async function updateStatus(ticket: Ticket, workflowStatus: Status) { const response = await fetch(`/api/v1/services/${ticket.id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflowStatus }) }); if (response.ok) { setNotice(`${ticket.ticketNumber} updated.`); void load(); logAuditAction('Services', 'Update ticket status', `${ticket.ticketNumber} moved to ${workflowStatus}.`); } }
+  const visible = tickets.filter((ticket) => view === 'bookings' ? ticket.channel === 'ONLINE_BOOKING' : view === 'workloads' ? ticket.assignedTo != null : view === 'queue' ? ticket.workflowStatus !== 'DELIVERED_CLOSED' : true);
+  const views: Array<[typeof view, string, LucideIcon]> = [['queue', 'Active repair queue', ClipboardList], ['bookings', 'Online bookings', CalendarDays], ['workloads', 'Tech workloads', Wrench], ['intake', 'All tickets', HardDrive]];
+  return <div className="space-y-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-600">Repair management system</p><h2 className="mt-1 text-xl font-extrabold text-slate-900">Services & repairs</h2></div><button type="button" onClick={() => setIntakeOpen(true)} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white"><Plus className="h-4 w-4" />New walk-in intake</button></div><div className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2">{views.map(([id, label, Icon]) => <button key={id} type="button" onClick={() => setView(id)} className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold ${view === id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}><Icon className="h-4 w-4" />{label}</button>)}</div>{notice && <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700"><Check className="h-4 w-4" />{notice}</p>}<div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3"><Search className="h-4 w-4 text-slate-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search ticket, issue, or customer..." className="w-full py-3 text-sm outline-none" /></div><div className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Ticket</th><th className="px-4 py-3">Customer / device</th><th className="px-4 py-3">Channel</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Technician</th><th className="px-4 py-3">Actions</th></tr></thead><tbody className="divide-y divide-slate-100">{visible.map((ticket) => <tr key={ticket.id}><td className="px-4 py-4"><p className="font-extrabold text-slate-900">{ticket.ticketNumber}</p><p className="text-xs text-slate-400">{new Date(ticket.createdAt).toLocaleDateString()}</p></td><td className="px-4 py-4"><p className="font-bold">{ticket.customerName || 'Customer'}</p><p className="text-xs text-slate-500">{ticket.deviceBrand} {ticket.deviceModel} · {ticket.subject}</p></td><td className="px-4 py-4"><span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-extrabold">{ticket.channel}</span></td><td className="px-4 py-4"><StatusSelect ticket={ticket} onChange={(value) => void updateStatus(ticket, value)} /></td><td className="px-4 py-4"><select value={ticket.assignedTo || ''} onChange={async (e) => { const response = await fetch(`/api/v1/services/${ticket.id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workflowStatus: ticket.workflowStatus, assignedTo: e.target.value ? Number(e.target.value) : null }) }); if (response.ok) void load(); }} className="rounded-lg border border-slate-200 px-2 py-1 text-xs"><option value="">Unassigned</option>{technicians.map((tech) => <option key={tech.id} value={tech.id}>{tech.name}</option>)}</select></td><td className="px-4 py-4"><div className="flex gap-2"><button type="button" onClick={() => setJobSheet(ticket)} title="View job sheet" className="rounded-lg bg-slate-100 p-2"><Eye className="h-4 w-4" /></button><button type="button" onClick={() => setNotice(`Progress update queued for ${ticket.customerPhone || 'customer'}.`)} title="Send customer update" className="rounded-lg bg-emerald-50 p-2 text-emerald-700"><Send className="h-4 w-4" /></button></div></td></tr>)}</tbody></table></div>{!visible.length && <p className="p-10 text-center text-sm text-slate-500">No repair tickets in this view.</p>}</div>{intakeOpen && <WalkInModal onClose={() => setIntakeOpen(false)} onCreated={(ticket) => { setIntakeOpen(false); setJobSheet(ticket); void load(); }} />}{jobSheet && <JobSheet ticket={jobSheet} onClose={() => setJobSheet(null)} />}</div>;
 };
+
+function StatusSelect({ ticket, onChange }: { ticket: Ticket; onChange: (value: Status) => void }) { const current = statuses.find(([status]) => status === ticket.workflowStatus); return <select value={ticket.workflowStatus} onChange={(e) => onChange(e.target.value as Status)} className={`rounded-full border-0 px-2 py-1 text-[10px] font-extrabold ${current?.[2]}`} >{statuses.map(([status, label]) => <option key={status} value={status}>{label}</option>)}</select>; }
+function WalkInModal({ onClose, onCreated }: { onClose: () => void; onCreated: (ticket: Ticket) => void }) { const [form, setForm] = useState<any>({ customerName: '', phone: '', email: '', type: 'repair', subject: '', description: '', deviceBrand: '', deviceModel: '', serialNumber: '', lockCode: '', advanceAmount: 0, conditionChecklist: {} }); const set = (key: string, value: any) => setForm({ ...form, [key]: value }); async function submit(e: React.FormEvent) { e.preventDefault(); const response = await fetch('/api/v1/services/walk-in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) }); if (response.ok) onCreated((await response.json()).ticket); } const checks = ['chargerIncluded', 'batteryPresent', 'ramSsdSerial', 'physicalScratches']; return <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/50 p-4"><form onSubmit={submit} className="w-full max-w-2xl space-y-4 rounded-2xl bg-white p-6 shadow-2xl"><div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase text-emerald-600">Offline request engine</p><h2 className="text-xl font-extrabold">New walk-in repair intake</h2></div><button type="button" onClick={onClose}><X /></button></div><div className="grid gap-3 md:grid-cols-2"><Field label="Customer name" required value={form.customerName} onChange={(v) => set('customerName', v)} /><Field label="Phone lookup" required value={form.phone} onChange={(v) => set('phone', v)} type="tel" /><Field label="Device brand" value={form.deviceBrand} onChange={(v) => set('deviceBrand', v)} /><Field label="Device model" value={form.deviceModel} onChange={(v) => set('deviceModel', v)} /><Field label="Serial number" value={form.serialNumber} onChange={(v) => set('serialNumber', v)} /><Field label="Lock code / pattern note" value={form.lockCode} onChange={(v) => set('lockCode', v)} /></div><Field label="Reported issue" required value={form.subject} onChange={(v) => set('subject', v)} /><label className="block space-y-1"><span className="text-xs font-bold text-slate-600">Technician notes</span><textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={3} className="w-full rounded-xl border border-slate-200 p-3 text-sm" /></label><div><p className="mb-2 text-xs font-bold text-slate-600">Condition checklist</p><div className="grid gap-2 sm:grid-cols-2">{checks.map((key) => <label key={key} className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 text-sm"><input type="checkbox" checked={Boolean(form.conditionChecklist[key])} onChange={(e) => setForm({ ...form, conditionChecklist: { ...form.conditionChecklist, [key]: e.target.checked } })} />{key.replace(/([A-Z])/g, ' $1')}</label>)}</div></div><button className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-bold text-white"><ClipboardList className="h-4 w-4" />Create receipt / job sheet</button></form></div>; }
+function JobSheet({ ticket, onClose }: { ticket: Ticket; onClose: () => void }) { return <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4"><div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl"><div className="flex items-center justify-between print:hidden"><h2 className="font-extrabold">Service job sheet</h2><button type="button" onClick={onClose}><X /></button></div><div className="mt-5 border-2 border-dashed border-slate-300 p-6" id="job-sheet"><div className="flex items-center justify-between border-b pb-4"><div><p className="text-xs font-bold uppercase text-slate-500">Intel Computer Center</p><h1 className="text-2xl font-black">{ticket.ticketNumber}</h1></div><div className="grid h-16 w-16 place-items-center border-2 border-slate-900 text-[9px] font-black">QR<br />{ticket.id}</div></div><div className="grid gap-3 py-5 text-sm"><p><b>Customer:</b> {ticket.customerName} · {ticket.customerPhone}</p><p><b>Device:</b> {ticket.deviceBrand} {ticket.deviceModel}</p><p><b>Serial:</b> {ticket.serialNumber || 'Not provided'}</p><p><b>Issue:</b> {ticket.subject}</p><p><b>Status:</b> Pending inspection</p></div><p className="border-t pt-4 text-xs text-slate-500">Keep this receipt for collection and service status updates.</p></div><button type="button" onClick={() => window.print()} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-bold text-white print:hidden"><Printer className="h-4 w-4" />Print job sheet</button></div></div>; }
+function Field({ label, value, onChange, required, type = 'text' }: { label: string; value: any; onChange: (value: string) => void; required?: boolean; type?: string }) { return <label className="block space-y-1"><span className="text-xs font-bold text-slate-600">{label}{required ? ' *' : ''}</span><input required={required} type={type} value={value ?? ''} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-900" /></label>; }

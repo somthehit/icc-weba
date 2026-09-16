@@ -352,7 +352,7 @@ export const DriverTrackingView: React.FC = () => {
                     <button
                       onClick={() =>
                         updateDeliveryStatus(
-                          delivery.id,
+                          Number(delivery.id),
                           getNextAction(delivery.status)!.nextStatus,
                         )
                       }
@@ -502,7 +502,7 @@ export const DriverTrackingView: React.FC = () => {
                 <button
                   onClick={() =>
                     updateDeliveryStatus(
-                      selectedDelivery.id,
+                      Number(selectedDelivery.id),
                       getNextAction(selectedDelivery.status)!.nextStatus,
                     )
                   }

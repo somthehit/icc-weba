@@ -69,7 +69,7 @@ export function watchPosition(
   return () => navigator.geolocation.clearWatch(watchId);
 }
 
-export function requestPermissions(): Promise<GeolocationPermission> {
+export function requestPermissions(): Promise<PermissionState> {
   return new Promise((resolve) => {
     if (!navigator.permissions) {
       resolve('granted');

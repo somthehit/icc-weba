@@ -1,25 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { Order, ShippingAddress } from '@/types';
-import { 
-  Package, 
-  Heart, 
-  User, 
-  MapPin, 
-  LogOut, 
-  Truck, 
-  CheckCircle2, 
-  Clock, 
-  ArrowRight, 
-  RefreshCw, 
-  FileText, 
-  Printer, 
-  Bell, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  Package,
+  Heart,
+  User,
+  MapPin,
+  LogOut,
+  Truck,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  RefreshCw,
+  FileText,
+  Printer,
+  Bell,
+  Plus,
+  Edit,
+  Trash2,
   AlertCircle,
   HelpCircle,
   X,
@@ -27,10 +27,10 @@ import {
 } from 'lucide-react';
 
 export const AccountView: React.FC = () => {
-  const { 
-    orders, 
-    wishlist, 
-    products, 
+  const {
+    orders,
+    wishlist,
+    products,
     isUserLoggedIn,
     currentUser,
     setIsAuthModalOpen,
@@ -38,7 +38,7 @@ export const AccountView: React.FC = () => {
     addToCart,
     createServiceRequest,
     setIsServiceModalOpen,
-    navigateTo 
+    navigateTo
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<'orders' | 'addresses' | 'wishlist' | 'notifications' | 'profile'>('orders');
@@ -48,6 +48,8 @@ export const AccountView: React.FC = () => {
   const [returnReason, setReturnReason] = useState('defective');
   const [returnNote, setReturnNote] = useState('');
   const [returnSuccessMsg, setReturnSuccessMsg] = useState('');
+  const [profileData, setProfileData] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Address State (Nepal Address Model)
   const [addresses, setAddresses] = useState<ShippingAddress[]>([
@@ -55,8 +57,8 @@ export const AccountView: React.FC = () => {
       fullName: 'Valued Customer (Anish Thapa)',
       phone: '+977-9851084291',
       province: 'Bagmati Province',
-      district: 'Kathmandu',
-      municipality: 'Kathmandu Metropolitan City',
+      district: 'Kailali',
+      municipality: 'Kailali Metropolitan City',
       ward: '10',
       addressLine: 'New Baneshwor, Near Civil Bank',
       landmark: 'Opposite Everest Hotel Plaza',
@@ -80,12 +82,23 @@ export const AccountView: React.FC = () => {
     fullName: 'Anish Thapa',
     phone: '9851084291',
     province: 'Bagmati Province',
-    district: 'Kathmandu',
-    municipality: 'Kathmandu Metropolitan City',
+    district: 'Kailali',
+    municipality: 'Kailali Metropolitan City',
     ward: '1',
     addressLine: 'New Road Plaza',
     landmark: 'Bishal Bazar',
   });
+
+  useEffect(() => {
+    if (!isUserLoggedIn || !currentUser?.id) return;
+    let cancelled = false;
+    fetch(`/api/users/${currentUser.id}`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (!cancelled && data) { setProfileData(data); if (Array.isArray(data.addresses)) setAddresses(data.addresses.map((address: any) => ({ fullName: address.fullName, phone: address.phone, province: address.province, district: address.district, municipality: address.municipality, ward: address.wardNo, addressLine: address.streetAddress || '', landmark: address.landmark || '', isDefault: address.isDefault }))); } })
+      .catch(() => undefined)
+      .finally(() => { if (!cancelled) setProfileLoading(false); });
+    return () => { cancelled = true; };
+  }, [isUserLoggedIn, currentUser?.id]);
 
   // Notifications List
   const [notifications] = useState([
@@ -99,7 +112,7 @@ export const AccountView: React.FC = () => {
     {
       id: 'n2',
       title: 'Official Warranty Registered',
-      message: 'Your 1-Year Brand Warranty for Dell Inspiron 15 is active in Kathmandu.',
+      message: 'Your 1-Year Brand Warranty for Dell Inspiron 15 is active in Kailali.',
       time: 'Yesterday',
       unread: false,
     },
@@ -127,8 +140,24 @@ export const AccountView: React.FC = () => {
     navigateTo('cart');
   };
 
-  const handleAddAddress = (e: React.FormEvent) => {
+  const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isUserLoggedIn) return;
+    const response = await fetch('/api/addresses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        label: 'Home', fullName: newAddr.fullName, phone: newAddr.phone,
+        province: newAddr.province.toLowerCase().replace(/\s+province$/, ''),
+        district: newAddr.district, municipality: newAddr.municipality, wardNo: newAddr.ward,
+        streetAddress: newAddr.addressLine, landmark: newAddr.landmark, isDefault: addresses.length === 0,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      window.alert(data.error || 'This address is outside our delivery coverage.');
+      return;
+    }
     setAddresses([...addresses, { ...newAddr, isDefault: addresses.length === 0 }]);
     setIsAddAddressOpen(false);
   };
@@ -147,22 +176,21 @@ export const AccountView: React.FC = () => {
       {/* 1. Header Profile Banner */}
       <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#0056b3] text-white font-black text-xl flex items-center justify-center shadow">
-            {isUserLoggedIn && currentUser ? currentUser.name.split(' ').map(n => n[0]).join('') : 'G'}
+          <div className="w-14 h-14 overflow-hidden rounded-2xl bg-[#0056b3] text-white font-black text-xl flex items-center justify-center shadow">
+            {profileData?.avatarUrl ? <img src={profileData.avatarUrl} alt={profileData.name} className="h-full w-full rounded-2xl object-cover" /> : isUserLoggedIn && currentUser ? currentUser.name.split(' ').map(n => n[0]).join('') : 'G'}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-black text-[#1a1a1a]">
                 {isUserLoggedIn && currentUser ? currentUser.name : 'Guest Customer'}
               </h1>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                isUserLoggedIn ? 'bg-blue-100 text-[#0056b3]' : 'bg-gray-100 text-gray-600'
-              }`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${isUserLoggedIn ? 'bg-blue-100 text-[#0056b3]' : 'bg-gray-100 text-gray-600'
+                }`}>
                 {isUserLoggedIn ? 'Verified Member' : 'Not Signed In'}
               </span>
             </div>
             <p className="text-gray-500">
-              {isUserLoggedIn && currentUser ? `${currentUser.email} | ${currentUser.phone}` : 'Sign in to save wishlist and track orders'}
+              {isUserLoggedIn && currentUser ? `${profileData?.email || currentUser.email} | ${profileData?.phone || currentUser.phone || 'Phone not added'}` : 'Sign in to save wishlist and track orders'}
             </p>
           </div>
         </div>
@@ -215,7 +243,7 @@ export const AccountView: React.FC = () => {
             </div>
 
             <div className="bg-white/10 p-3 rounded-2xl space-y-1 backdrop-blur-sm border border-white/10">
-              <div className="text-[10px] uppercase font-bold text-blue-200">Assigned Kathmandu Rider</div>
+              <div className="text-[10px] uppercase font-bold text-blue-200">Assigned Kailali Rider</div>
               <div className="font-bold text-white text-xs flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-blue-300" />
                 <span>Sujan Shrestha (+977 9851012345)</span>
@@ -240,9 +268,8 @@ export const AccountView: React.FC = () => {
       <div className="flex border-b border-gray-200 gap-6 font-bold text-sm overflow-x-auto">
         <button
           onClick={() => setActiveTab('orders')}
-          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
-            activeTab === 'orders' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
-          }`}
+          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'orders' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
+            }`}
         >
           <Package className="w-4 h-4" />
           <span>My Orders ({orders.length})</span>
@@ -250,9 +277,8 @@ export const AccountView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('addresses')}
-          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
-            activeTab === 'addresses' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
-          }`}
+          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'addresses' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
+            }`}
         >
           <MapPin className="w-4 h-4" />
           <span>Saved Addresses ({addresses.length})</span>
@@ -260,9 +286,8 @@ export const AccountView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('wishlist')}
-          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
-            activeTab === 'wishlist' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
-          }`}
+          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'wishlist' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
+            }`}
         >
           <Heart className="w-4 h-4" />
           <span>Saved Wishlist ({wishlistedProducts.length})</span>
@@ -270,9 +295,8 @@ export const AccountView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('notifications')}
-          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap relative ${
-            activeTab === 'notifications' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
-          }`}
+          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap relative ${activeTab === 'notifications' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
+            }`}
         >
           <Bell className="w-4 h-4" />
           <span>Notifications</span>
@@ -281,9 +305,8 @@ export const AccountView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('profile')}
-          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${
-            activeTab === 'profile' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
-          }`}
+          className={`pb-3 border-b-2 flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'profile' ? 'border-[#0056b3] text-[#0056b3]' : 'border-transparent text-gray-500'
+            }`}
         >
           <User className="w-4 h-4" />
           <span>Profile Info</span>
@@ -575,11 +598,13 @@ export const AccountView: React.FC = () => {
         <div className="bg-white p-6 rounded-3xl border border-gray-100 space-y-4 max-w-lg">
           <h3 className="font-bold text-sm text-[#1a1a1a]">Customer Account Details</h3>
           <div className="space-y-2 text-gray-700">
-            <div><strong>Full Name:</strong> Anish Thapa</div>
-            <div><strong>Email:</strong> anish@example.com</div>
-            <div><strong>Mobile Phone:</strong> +977-9851084291</div>
-            <div><strong>Primary City:</strong> Kathmandu, Nepal</div>
-            <div><strong>Loyalty Status:</strong> Verified Tech Member</div>
+            {profileLoading ? <div className="text-gray-400">Loading your profile...</div> : <>
+              <div><strong>Full Name:</strong> {profileData?.name || currentUser?.name || 'Not available'}</div>
+              <div><strong>Email:</strong> {profileData?.email || currentUser?.email || 'Not available'}</div>
+              <div><strong>Mobile Phone:</strong> {profileData?.phone || currentUser?.phone || 'Not added'}</div>
+              <div><strong>Primary City:</strong> {addresses[0] ? `${addresses[0].district}, Nepal` : 'No saved address'}</div>
+              <div><strong>Loyalty Status:</strong> {isUserLoggedIn ? 'Verified Tech Member' : 'Not Signed In'}</div>
+            </>}
           </div>
         </div>
       )}
@@ -667,8 +692,8 @@ export const AccountView: React.FC = () => {
             </div>
 
             <div className="text-center space-y-1 border-b pb-4">
-              <h2 className="font-black text-lg text-[#0056b3]">INTEL COMPUTER & ELECTRONICS</h2>
-              <p className="text-gray-500">New Road Plaza, Opposite Bishal Bazar, Kathmandu, Nepal</p>
+              <h2 className="font-black text-lg text-[#0056b3]">Intel Computer Center</h2>
+              <p className="text-gray-500">New Road Plaza, Opposite Bishal Bazar, Kailali, Nepal</p>
               <p className="text-gray-500 font-mono">VAT/PAN No: 302910482 | Tel: +977-1-4261890</p>
             </div>
 

@@ -7,18 +7,18 @@ import { ProductCard } from '@/components/ProductCard';
 import { ProductImageZoom } from '@/components/ProductImageZoom';
 import { HardwareReviewsSection } from '@/components/HardwareReviewsSection';
 import { computeProductEffectivePrice, formatCountdownTime } from '@/lib/offers/offerUtils';
-import { 
-  ShoppingCart, 
-  Heart, 
-  Layers, 
-  ShieldCheck, 
-  Truck, 
-  Star, 
-  Check, 
-  ArrowLeft, 
-  Share2, 
-  CheckCircle2, 
-  Package, 
+import {
+  ShoppingCart,
+  Heart,
+  Layers,
+  ShieldCheck,
+  Truck,
+  Star,
+  Check,
+  ArrowLeft,
+  Share2,
+  CheckCircle2,
+  Package,
   HelpCircle,
   MessageSquare,
   Clock,
@@ -110,11 +110,11 @@ export const ProductDetailView: React.FC = () => {
       {/* Deep-nested SEO metadata pushed to layout head */}
       <SeoHead
         title={`${product.name} Price in Nepal (NPR ${product.sellingPrice.toLocaleString()}) | Intel Computer`}
-        description={product.shortDescription || `Buy genuine ${product.name} in Nepal at Intel Computer & Electronics with brand warranty.`}
+        description={product.shortDescription || `Buy genuine ${product.name} in Nepal at Intel Computer Center with brand warranty.`}
         canonicalUrl={`https://intelcomputer.com.np/product/${product.slug}`}
         ogImage={product.images[0]}
         ogType="product"
-        keywords={[product.name, product.brand, product.category, 'Nepal Electronics', 'Kathmandu Store']}
+        keywords={[product.name, product.brand, product.category, 'Nepal Electronics', 'Kailali Store']}
         jsonLd={{
           '@context': 'https://schema.org/',
           '@type': 'Product',
@@ -133,7 +133,7 @@ export const ProductDetailView: React.FC = () => {
             availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
             seller: {
               '@type': 'Organization',
-              name: 'Intel Computer & Electronics',
+              name: 'Intel Computer Center',
             },
           },
         }}
@@ -206,7 +206,7 @@ export const ProductDetailView: React.FC = () => {
               <span className="text-slate-300">|</span>
               {product.inStock ? (
                 <span className="text-emerald-700 font-bold flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> In Stock ({product.stockQuantity} units in Kathmandu)
+                  <Check className="w-3.5 h-3.5" /> In Stock ({product.stockQuantity} units in Kailali)
                 </span>
               ) : (
                 <span className="text-red-600 font-bold">Out of Stock</span>
@@ -300,7 +300,7 @@ export const ProductDetailView: React.FC = () => {
             <div className="flex items-center gap-2 p-2.5 bg-amber-50/60 rounded-xl border border-amber-100">
               <Truck className="w-5 h-5 text-amber-600 flex-shrink-0" />
               <div>
-                <div className="font-bold text-slate-900">Kathmandu Express Delivery</div>
+                <div className="font-bold text-slate-900">Kailali Express Delivery</div>
                 <div className="text-[11px] text-slate-500">Same-day dispatch for Valley orders</div>
               </div>
             </div>
@@ -350,9 +350,8 @@ export const ProductDetailView: React.FC = () => {
 
               <button
                 onClick={() => toggleWishlist(product.id)}
-                className={`p-3.5 rounded-xl border transition-colors ${
-                  isWishlisted ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-50 text-slate-700 border-slate-200'
-                }`}
+                className={`p-3.5 rounded-xl border transition-colors ${isWishlisted ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-50 text-slate-700 border-slate-200'
+                  }`}
                 title="Wishlist"
               >
                 <Heart className="w-5 h-5 fill-current" />
@@ -360,9 +359,8 @@ export const ProductDetailView: React.FC = () => {
 
               <button
                 onClick={() => toggleCompare(product.id)}
-                className={`p-3.5 rounded-xl border transition-colors ${
-                  isCompared ? 'bg-amber-50 text-amber-700 border-amber-300' : 'bg-slate-50 text-slate-700 border-slate-200'
-                }`}
+                className={`p-3.5 rounded-xl border transition-colors ${isCompared ? 'bg-amber-50 text-amber-700 border-amber-300' : 'bg-slate-50 text-slate-700 border-slate-200'
+                  }`}
                 title="Compare Specs"
               >
                 <Layers className="w-5 h-5" />
@@ -377,38 +375,33 @@ export const ProductDetailView: React.FC = () => {
         <div className="flex border-b border-slate-200 gap-6 text-sm font-bold mb-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'overview' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'overview' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
           >
             Product Overview
           </button>
           <button
             onClick={() => setActiveTab('specs')}
-            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'specs' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'specs' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
           >
             Full Specifications ({specsList.length})
           </button>
           <button
             onClick={() => setActiveTab('warranty')}
-            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'warranty' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'warranty' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
           >
             Warranty &amp; What&apos;s In The Box
           </button>
           <button
             onClick={() => setActiveTab('reviews')}
-            className={`pb-3 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === 'reviews' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+            className={`pb-3 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${activeTab === 'reviews' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
           >
             <span>Hardware Reviews &amp; Testimonials</span>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-extrabold ${
-              activeTab === 'reviews' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
-            }`}>
+            <span className={`text-[11px] px-2 py-0.5 rounded-full font-extrabold ${activeTab === 'reviews' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+              }`}>
               {productReviews.length}
             </span>
           </button>
@@ -448,7 +441,7 @@ export const ProductDetailView: React.FC = () => {
               <h4 className="font-bold text-emerald-900 text-sm">Official Manufacturer Warranty</h4>
               <p>{product.warranty}</p>
               <p className="text-[11px] text-emerald-700 pt-1">
-                Note: Warranty cards are stamped and issued by Intel Computer & Electronics upon dispatch. Serial numbers are registered in our customer database.
+                Note: Warranty cards are stamped and issued by Intel Computer Center upon dispatch. Serial numbers are registered in our customer database.
               </p>
             </div>
 

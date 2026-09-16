@@ -1,0 +1,13 @@
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "legal_name" varchar(200);
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "pan_vat_number" varchar(20);
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "dark_logo_url" varchar(500);
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "favicon_url" varchar(500);
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "invoice_logo_url" varchar(500);
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "address" varchar(500);
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "multi_currency_enabled" boolean DEFAULT false NOT NULL;
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "calendar" varchar(3) DEFAULT 'AD' NOT NULL;
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "guest_checkout_enabled" boolean DEFAULT true NOT NULL;
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "minimum_order_amount" numeric(12, 2) DEFAULT '0' NOT NULL;
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "stock_lock_minutes" numeric(6, 0) DEFAULT '15' NOT NULL;
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "unpaid_order_cancel_minutes" numeric(6, 0) DEFAULT '30' NOT NULL;
+ALTER TABLE "store_profile" ADD COLUMN IF NOT EXISTS "configuration" jsonb DEFAULT '{}'::jsonb NOT NULL;

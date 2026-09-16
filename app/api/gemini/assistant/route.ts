@@ -32,13 +32,13 @@ export async function POST(req: NextRequest) {
       (p) => `- ${p.name} (Brand: ${p.brand}, Category: ${p.category}, Selling Price: NPR ${p.sellingPrice.toLocaleString()}, Specs: ${p.shortDescription})`
     ).join('\n');
 
-    const systemInstruction = `You are "Intel AI Consultant", the expert technical advisor for Intel Computer & Electronics (www.intelcomputer.com.np) in New Road, Kathmandu, Nepal.
+    const systemInstruction = `You are "Intel AI Consultant", the expert technical advisor for Intel Computer Center (www.intelcomputer.com.np) in New Road, Kailali, Nepal.
 
 Available Catalog Highlights:
 ${catalogSummary}
 
 Store Info:
-- Location: New Road Plaza, Opposite Bishal Bazar, New Road, Kathmandu, Nepal.
+- Location: New Road Plaza, Opposite Bishal Bazar, New Road, Kailali, Nepal.
 - Phone: +977-1-4261890 / 9851034291.
 - Free Valley Delivery on orders over NPR 10,000. Express courier all over Nepal.
 

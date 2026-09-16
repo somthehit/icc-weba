@@ -14,6 +14,7 @@ const reviewColumns = {
   rating: reviews.rating,
   title: reviews.title,
   comment: reviews.comment,
+  images: reviews.images,
   userCity: reviews.userCity,
   hardwareSetup: reviews.hardwareSetup,
   componentAspect: reviews.componentAspect,
@@ -22,6 +23,7 @@ const reviewColumns = {
   cons: reviews.cons,
   isVerifiedPurchase: reviews.isVerifiedPurchase,
   helpfulCount: reviews.helpfulCount,
+  adminResponse: reviews.adminResponse,
   createdAt: reviews.createdAt,
   userName: users.name,
 } as const;

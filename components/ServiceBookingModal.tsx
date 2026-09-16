@@ -2,16 +2,16 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { 
-  X, 
-  Wrench, 
-  CheckCircle2, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  User, 
-  FileText 
+import {
+  X,
+  Wrench,
+  CheckCircle2,
+  Calendar,
+  Clock,
+  MapPin,
+  Phone,
+  User,
+  FileText
 } from 'lucide-react';
 
 export const ServiceBookingModal: React.FC = () => {
@@ -26,7 +26,7 @@ export const ServiceBookingModal: React.FC = () => {
     problemDescription: '',
     preferredDate: '',
     preferredTime: 'Morning (10 AM - 1 PM)',
-    address: 'Kathmandu Valley',
+    address: 'Dhangadhi, Kailali',
   });
 
   const [submittedRequest, setSubmittedRequest] = useState<any | null>(null);
@@ -107,7 +107,7 @@ export const ServiceBookingModal: React.FC = () => {
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
             <p className="text-slate-600 bg-blue-50 p-3 rounded-xl border border-blue-100 leading-relaxed">
-              Book expert computer/laptop repair, printer servicing, or CCTV installation with certified engineers in Kathmandu.
+              Book expert computer/laptop repair, printer servicing, or CCTV installation with certified engineers in Kailali.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

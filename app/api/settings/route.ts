@@ -6,6 +6,7 @@ import { STAFF_ROLES, withRole } from '@/lib/auth/middleware';
 import { getUserFromRequest } from '@/lib/auth/utils';
 import { parseJson, parseQuery } from '@/lib/validation/parse';
 import { settingsPayloadSchema, settingsTypeQuerySchema } from '@/lib/validation/commerce';
+import { mergeEncryptedConfiguration, redactConfiguration } from '@/lib/settings/secrets';
 
 /**
  * Store configuration.
@@ -26,7 +27,28 @@ export async function GET(request: NextRequest) {
     const isStaff = Boolean(caller && STAFF_ROLES.includes(caller.role as (typeof STAFF_ROLES)[number]));
 
     if (query.data.type === 'profile') {
-      const [profile] = await db.select().from(storeProfile).limit(1);
+      if (isStaff) {
+        const [profile] = await db.select().from(storeProfile).limit(1);
+        return NextResponse.json({
+          profile: profile ? { ...profile, configuration: redactConfiguration(profile.configuration) } : null,
+        });
+      }
+
+      const [profile] = await db.select({
+        storeName: storeProfile.storeName,
+        tagline: storeProfile.tagline,
+        contactEmail: storeProfile.contactEmail,
+        contactPhone: storeProfile.contactPhone,
+        address: storeProfile.address,
+        openingHours: storeProfile.openingHours,
+        announcementText: storeProfile.announcementText,
+        announcementEnabled: storeProfile.announcementEnabled,
+        logoUrl: storeProfile.logoUrl,
+        currency: storeProfile.currency,
+        vatRatePercent: storeProfile.vatRatePercent,
+        pricesIncludeVat: storeProfile.pricesIncludeVat,
+        freeDeliveryThreshold: storeProfile.freeDeliveryThreshold,
+      }).from(storeProfile).limit(1);
       return NextResponse.json({ profile: profile || null });
     }
 
@@ -79,9 +101,13 @@ export const POST = withRole(['admin'], async (request: NextRequest) => {
       const [existing] = await db.select({ id: storeProfile.id }).from(storeProfile).limit(1);
 
       if (existing) {
+        const [current] = await db.select({ configuration: storeProfile.configuration }).from(storeProfile).where(eq(storeProfile.id, existing.id)).limit(1);
+        const data = payload.data.configuration
+          ? { ...payload.data, configuration: mergeEncryptedConfiguration(current?.configuration || {}, payload.data.configuration) }
+          : payload.data;
         const [updated] = await db
           .update(storeProfile)
-          .set({ ...payload.data, updatedAt: new Date() })
+          .set({ ...data, updatedAt: new Date() })
           .where(eq(storeProfile.id, existing.id))
           .returning();
 

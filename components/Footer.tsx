@@ -9,11 +9,11 @@ export const Footer: React.FC = () => {
   return (
     <footer id="main-footer" className="bg-[#121316] text-white mt-auto border-t border-white/5 py-10 px-6 lg:px-12">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-10">
-        
+
         {/* Brand & Logo Section */}
         <div className="flex flex-row lg:flex-col items-center lg:items-start justify-between w-full lg:w-auto gap-4">
-          <button 
-            onClick={() => navigateTo('home')} 
+          <button
+            onClick={() => navigateTo('home')}
             className="text-left group cursor-pointer focus:outline-none"
           >
             <div className="font-extrabold text-xl leading-tight tracking-tight text-white group-hover:text-blue-400 transition-colors">
@@ -58,26 +58,26 @@ export const Footer: React.FC = () => {
               Quick Links
             </span>
             <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-gray-300">
-              <button 
-                onClick={() => navigateTo('shop')} 
+              <button
+                onClick={() => navigateTo('shop')}
                 className="hover:text-white transition-colors cursor-pointer"
               >
                 Shop
               </button>
-              <button 
-                onClick={() => navigateTo('services')} 
+              <button
+                onClick={() => navigateTo('services')}
                 className="hover:text-white transition-colors cursor-pointer"
               >
                 Services
               </button>
-              <button 
-                onClick={() => navigateTo('track-order')} 
+              <button
+                onClick={() => navigateTo('track-order')}
                 className="hover:text-white transition-colors cursor-pointer"
               >
                 Track Order
               </button>
-              <button 
-                onClick={() => navigateTo('contact')} 
+              <button
+                onClick={() => navigateTo('contact')}
                 className="hover:text-white transition-colors cursor-pointer"
               >
                 Contact
@@ -109,7 +109,7 @@ export const Footer: React.FC = () => {
 
         {/* Copyright Notice */}
         <div className="text-[11px] text-gray-400 leading-relaxed max-w-[220px] self-start lg:self-center lg:text-left">
-          {siteSettings.footerNotice || '© 2026 ICE Computers & Electronics. All Rights Reserved. Official Nepal Warranty Authorized Retailer.'}
+          {siteSettings.footerNotice || '© 2026 Intel Computer Center. All Rights Reserved. Official Nepal Warranty Authorized Retailer.'}
         </div>
 
       </div>

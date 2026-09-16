@@ -12,9 +12,14 @@ export const USER_ROLES = [
   'sales',
   'inventory_manager',
   'service_technician',
+  'delivery_driver',
 ] as const;
 
 export const userRoleSchema = z.enum(USER_ROLES);
+export const staffRoleSchema = z.enum([
+  'SUPER_ADMIN', 'STORE_MANAGER', 'SALES_AGENT', 'SERVICE_TECHNICIAN', 'DELIVERY_DRIVER',
+]);
+export const shiftStatusSchema = z.enum(['ON_DUTY', 'ON_TRANSIT', 'OFF_DUTY']);
 
 /**
  * Nepali mobile numbers are ten digits starting with 97/98, optionally written
@@ -63,6 +68,21 @@ export const createUserSchema = z.object({
   phone: nepaliPhoneSchema.optional(),
   role: userRoleSchema.default('customer'),
   avatarUrl: z.url().max(500).optional(),
+  staffProfile: z.object({
+    staffRole: staffRoleSchema,
+    department: z.string().trim().max(120).optional(),
+    skills: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
+    specialization: z.string().trim().max(180).optional(),
+    vehicleNumber: z.string().trim().max(40).optional(),
+    drivingLicenseNo: z.string().trim().max(60).optional(),
+    shiftStatus: shiftStatusSchema.default('OFF_DUTY'),
+    assignedCount: z.number().int().min(0).default(0),
+  }).optional(),
+}).superRefine((data, ctx) => {
+  if (data.staffProfile?.staffRole === 'DELIVERY_DRIVER') {
+    if (!data.staffProfile.vehicleNumber) ctx.addIssue({ code: 'custom', path: ['staffProfile', 'vehicleNumber'], message: 'Vehicle number is required' });
+    if (!data.staffProfile.drivingLicenseNo) ctx.addIssue({ code: 'custom', path: ['staffProfile', 'drivingLicenseNo'], message: 'Driving license number is required' });
+  }
 });
 
 /**
@@ -77,6 +97,26 @@ export const updateOwnProfileSchema = z
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'Provide at least one field to update',
+  });
+
+/**
+ * Changing your own password.
+ *
+ * Deliberately not folded into `updateOwnProfileSchema`: a password change has
+ * to prove knowledge of the current one, which a generic field-patch route
+ * cannot enforce. It gets its own endpoint.
+ *
+ * `currentPassword` is not `passwordSchema` — an account created before the
+ * current length rule still has to be able to authenticate against it.
+ */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    newPassword: passwordSchema,
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: 'The new password must be different from the current one',
+    path: ['newPassword'],
   });
 
 /** Everything above, plus the fields only staff may set. */

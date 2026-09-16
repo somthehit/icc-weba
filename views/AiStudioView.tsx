@@ -2,29 +2,29 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { 
-  Sparkles, 
-  Bot, 
-  Send, 
-  User, 
-  Loader2, 
-  Cpu, 
-  MapPin, 
-  Image as ImageIcon, 
-  Download, 
-  Copy, 
-  Check, 
-  RotateCcw, 
-  Sliders, 
-  ExternalLink, 
-  Zap, 
-  Layers, 
-  Wrench, 
-  Compass, 
-  Upload, 
-  Trash2, 
-  Eye, 
-  CheckCircle2, 
+import {
+  Sparkles,
+  Bot,
+  Send,
+  User,
+  Loader2,
+  Cpu,
+  MapPin,
+  Image as ImageIcon,
+  Download,
+  Copy,
+  Check,
+  RotateCcw,
+  Sliders,
+  ExternalLink,
+  Zap,
+  Layers,
+  Wrench,
+  Compass,
+  Upload,
+  Trash2,
+  Eye,
+  CheckCircle2,
   AlertCircle,
   HelpCircle,
   Maximize2,
@@ -43,15 +43,15 @@ interface ChatMessage {
 }
 
 export const AiStudioView: React.FC = () => {
-  const { 
-    products, 
-    savedImages, 
-    saveGeneratedImage, 
-    deleteGeneratedImage, 
+  const {
+    products,
+    savedImages,
+    saveGeneratedImage,
+    deleteGeneratedImage,
     navigateTo,
     currentUser,
     isUserLoggedIn,
-    setIsAuthModalOpen 
+    setIsAuthModalOpen
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<'chat' | 'image_studio' | 'maps_grounding'>('chat');
@@ -140,7 +140,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
         {
           id: `err-${Date.now()}`,
           sender: 'assistant',
-          text: `An error occurred while connecting to the Gemini server: ${err.message || 'Unknown issue'}. You can contact Intel Computer Kathmandu directly at +977-1-4261890.`,
+          text: `An error occurred while connecting to the Gemini server: ${err.message || 'Unknown issue'}. You can contact Intel Computer Kailali directly at +977-1-4261890.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -228,7 +228,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
   };
 
   // --- MAPS GROUNDING STATE ---
-  const [mapsQuery, setMapsQuery] = useState('Authorized computer stores and IT repair markets in New Road Kathmandu');
+  const [mapsQuery, setMapsQuery] = useState('Authorized computer stores and IT repair markets in New Road Kailali');
   const [mapsResults, setMapsResults] = useState<{
     text: string;
     places: Array<{ title: string; uri: string; sourceSnippet?: string }>;
@@ -274,11 +274,11 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        
+
         {/* Studio Top Banner */}
         <div className="bg-gradient-to-r from-slate-950 via-[#002d62] to-indigo-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-blue-900/40 relative overflow-hidden">
           <div className="absolute right-0 top-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-          
+
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1 rounded-full text-xs font-bold">
@@ -289,7 +289,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                 Intel Computer AI Studio & Hardware Intelligence
               </h1>
               <p className="text-xs sm:text-sm text-blue-100/80 leading-relaxed">
-                Harness multi-model Gemini reasoning (3.5-flash, 3.1-pro-preview, 3.1-flash-lite), Google Maps Grounding for Kathmandu tech centers, and 3.1-flash-image for custom hardware image creation and editing.
+                Harness multi-model Gemini reasoning (3.5-flash, 3.1-pro-preview, 3.1-flash-lite), Google Maps Grounding for Kailali tech centers, and 3.1-flash-image for custom hardware image creation and editing.
               </p>
             </div>
 
@@ -297,11 +297,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
             <div className="flex flex-wrap sm:flex-nowrap bg-slate-900/80 backdrop-blur-md p-1.5 rounded-2xl border border-blue-800/40 text-xs font-bold self-start md:self-auto">
               <button
                 onClick={() => setActiveTab('chat')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
-                  activeTab === 'chat'
-                    ? 'bg-[#0056b3] text-white shadow-md'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${activeTab === 'chat'
+                  ? 'bg-[#0056b3] text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
               >
                 <Bot className="w-4 h-4" />
                 <span>Multi-Model Chatbot</span>
@@ -309,11 +308,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
 
               <button
                 onClick={() => setActiveTab('image_studio')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
-                  activeTab === 'image_studio'
-                    ? 'bg-[#0056b3] text-white shadow-md'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${activeTab === 'image_studio'
+                  ? 'bg-[#0056b3] text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
               >
                 <ImageIcon className="w-4 h-4" />
                 <span>AI Image Creator & Editor</span>
@@ -324,11 +322,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                   setActiveTab('maps_grounding');
                   if (!mapsResults) handleQueryMaps();
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
-                  activeTab === 'maps_grounding'
-                    ? 'bg-[#0056b3] text-white shadow-md'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${activeTab === 'maps_grounding'
+                  ? 'bg-[#0056b3] text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
               >
                 <MapPin className="w-4 h-4" />
                 <span>Maps Grounding Explorer</span>
@@ -340,7 +337,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
         {/* TAB 1: MULTI-MODEL CHATBOT */}
         {activeTab === 'chat' && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            
+
             {/* Sidebar Controls: Model & Role Configuration */}
             <div className="lg:col-span-1 space-y-4">
               <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-5">
@@ -376,11 +373,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                         key={m.id}
                         type="button"
                         onClick={() => setChatModel(m.id as any)}
-                        className={`w-full text-left p-3 rounded-2xl border transition-all text-xs ${
-                          chatModel === m.id
-                            ? 'bg-blue-50 border-[#0056b3] text-[#0056b3] font-bold ring-1 ring-[#0056b3]'
-                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                        }`}
+                        className={`w-full text-left p-3 rounded-2xl border transition-all text-xs ${chatModel === m.id
+                          ? 'bg-blue-50 border-[#0056b3] text-[#0056b3] font-bold ring-1 ring-[#0056b3]'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-extrabold">{m.name}</span>
@@ -418,7 +414,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                       },
                       {
                         id: 'local_guide',
-                        title: 'Kathmandu Navigator',
+                        title: 'Kailali Navigator',
                         desc: 'New Road showroom directions & Nepal courier',
                       },
                     ].map((r) => (
@@ -426,11 +422,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                         key={r.id}
                         type="button"
                         onClick={() => setChatRole(r.id as any)}
-                        className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs ${
-                          chatRole === r.id
-                            ? 'bg-indigo-50 border-indigo-600 text-indigo-900 font-bold'
-                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                        }`}
+                        className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs ${chatRole === r.id
+                          ? 'bg-indigo-50 border-indigo-600 text-indigo-900 font-bold'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                          }`}
                       >
                         <div className="font-bold">{r.title}</div>
                         <div className="text-[10px] text-slate-500 font-normal">{r.desc}</div>
@@ -448,15 +443,14 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                     <button
                       type="button"
                       onClick={() => setChatMapsGrounding(!chatMapsGrounding)}
-                      className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${
-                        chatMapsGrounding ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
-                      }`}
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${chatMapsGrounding ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
+                        }`}
                     >
                       {chatMapsGrounding ? 'ON (3.5-flash)' : 'OFF'}
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-500">
-                    Retrieves verified place links from Google Maps for locations in Kathmandu and Nepal.
+                    Retrieves verified place links from Google Maps for locations in Kailali and Nepal.
                   </p>
                 </div>
               </div>
@@ -464,7 +458,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
 
             {/* Chat History & Input Panel */}
             <div className="lg:col-span-3 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col h-[700px] overflow-hidden">
-              
+
               {/* Chat Header Bar */}
               <div className="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
                 <div className="flex items-center gap-3">
@@ -519,11 +513,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
 
                     <div className="max-w-[85%] space-y-2">
                       <div
-                        className={`rounded-2xl p-4 text-xs shadow-sm leading-relaxed ${
-                          msg.sender === 'user'
-                            ? 'bg-[#0056b3] text-white font-medium rounded-tr-none'
-                            : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none whitespace-pre-wrap'
-                        }`}
+                        className={`rounded-2xl p-4 text-xs shadow-sm leading-relaxed ${msg.sender === 'user'
+                          ? 'bg-[#0056b3] text-white font-medium rounded-tr-none'
+                          : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none whitespace-pre-wrap'
+                          }`}
                       >
                         <div>{msg.text}</div>
 
@@ -610,7 +603,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                   {[
                     'Laptops with RTX 4060 under 150k NPR',
                     'Building an architectural CAD workstation budget',
-                    'Directions to Intel Computer New Road Kathmandu',
+                    'Directions to Intel Computer New Road Kailali',
                     'CCTV 4-camera IP kit price & installation',
                   ].map((s, idx) => (
                     <button
@@ -655,7 +648,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
         {activeTab === 'image_studio' && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
+
               {/* Creator Controls */}
               <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-6">
                 <div>
@@ -706,7 +699,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                   <span className="text-[11px] font-bold text-slate-500">Instant Presets:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      'Ultra-clean ASUS ROG gaming laptop on Kathmandu oak wood desk',
+                      'Ultra-clean ASUS ROG gaming laptop on Kailali oak wood desk',
                       'Futuristic RGB liquid cooling loop with neon tubes and dark chassis',
                       'High-resolution blueprint schematic of a computer motherboard',
                       'Commercial studio product photo of 4K IP security dome camera',
@@ -739,11 +732,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                         key={st.id}
                         type="button"
                         onClick={() => setImageStylePreset(st.id as any)}
-                        className={`p-2.5 rounded-2xl border text-left transition-all ${
-                          imageStylePreset === st.id
-                            ? 'bg-blue-50 border-[#0056b3] text-[#0056b3] font-bold ring-1 ring-[#0056b3]'
-                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                        }`}
+                        className={`p-2.5 rounded-2xl border text-left transition-all ${imageStylePreset === st.id
+                          ? 'bg-blue-50 border-[#0056b3] text-[#0056b3] font-bold ring-1 ring-[#0056b3]'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
                       >
                         <div className="text-xs font-bold">{st.label}</div>
                         <div className="text-[10px] text-slate-500 font-normal">{st.sub}</div>
@@ -763,11 +755,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                         key={ratio}
                         type="button"
                         onClick={() => setImageAspectRatio(ratio as any)}
-                        className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
-                          imageAspectRatio === ratio
-                            ? 'bg-[#0056b3] text-white border-[#0056b3]'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${imageAspectRatio === ratio
+                          ? 'bg-[#0056b3] text-white border-[#0056b3]'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                          }`}
                       >
                         {ratio}
                       </button>
@@ -833,7 +824,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
 
                       {/* Select from catalog products */}
                       <div className="text-[11px] text-slate-500 font-medium">
-                        Or pick a product from Kathmandu store:
+                        Or pick a product from Kailali store:
                       </div>
                       <div className="flex gap-2 overflow-x-auto pb-2">
                         {products.slice(0, 5).map((prod) => (
@@ -1025,7 +1016,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                     <span>Google Maps Grounding Navigator</span>
                   </h2>
                   <p className="text-xs text-slate-500 mt-1">
-                    Powered by <strong>gemini-3.5-flash</strong> with the official Google Maps Tool grounding for Kathmandu Valley, New Road, and authorized IT centers across Nepal.
+                    Powered by <strong>gemini-3.5-flash</strong> with the official Google Maps Tool grounding for Kailali Valley, New Road, and authorized IT centers across Nepal.
                   </p>
                 </div>
 
@@ -1072,10 +1063,10 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
               {/* Instant Preset Queries */}
               <div className="flex flex-wrap gap-2 pt-1">
                 {[
-                  'Intel Computer & Electronics New Road showroom Kathmandu',
-                  'Computer repair shops near Putalisadak Kathmandu',
+                  'Intel Computer Center New Road showroom Kailali',
+                  'Computer repair shops near Putalisadak Kailali',
                   'IT electronic hubs around Bishal Bazar New Road',
-                  'Authorized laptop service centers in Pokhara and Biratnagar',
+                  'Authorized laptop service centers in Dhangadhi and Biratnagar',
                 ].map((preset, idx) => (
                   <button
                     key={idx}
@@ -1097,7 +1088,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                   <Loader2 className="w-8 h-8 animate-spin text-[#0056b3] mx-auto" />
                   <h4 className="font-bold text-sm text-slate-800">Grounding via Google Maps Data...</h4>
                   <p className="text-xs text-slate-500">
-                    Gemini 3.5 Flash is extracting verified place records, URIs, and localized context for Kathmandu.
+                    Gemini 3.5 Flash is extracting verified place records, URIs, and localized context for Kailali.
                   </p>
                 </div>
               ) : mapsResults ? (

@@ -1,6 +1,6 @@
-# ICE Computers & Electronics — Drizzle Schema
+# Intel Computer Center — Drizzle Schema
 
-14 files, organized by domain. Drop this folder into your project (e.g. `src/db/schema/`)
+15 files, organized by domain. Drop this folder into your project (e.g. `src/db/schema/`)
 and import everything through `index.ts`.
 
 ## Install
@@ -56,16 +56,22 @@ export const db = drizzle(pool, { schema });
 - **Secret encryption** — `payment_method_settings.secret_key_encrypted` expects an
   already-encrypted string (e.g. via `pgcrypto` or app-layer AES) — never store eSewa/Khalti
   secrets in plaintext.
-- **Single-row tables** — `store_profile` is designed to hold exactly one row; enforce that
-  in your seed script / application logic (a partial unique index on a constant expression
-  also works if you want the DB to enforce it).
+- **Single-row tables** — `store_profile` and `seo_settings` are each designed to hold exactly
+  one row; enforce that in your seed script / application logic (a partial unique index on a
+  constant expression also works if you want the DB to enforce it).
+- **SEO metadata lives in the database** — `seo_settings` (site-wide defaults + the
+  `regional_scope` flag), `seo_page_meta` (one row per storefront route, keyed on `page_key`)
+  and `seo_redirects`. `lib/seo/defaults.ts` holds the fallbacks used when a row is missing, and
+  `config/regional.ts` is the source of truth for the delivery footprint the metadata describes.
+  Per-product and per-page overrides reuse the existing `products.meta_title` and
+  `pages.meta_title` columns rather than duplicating them here.
 
 ## Suggested next steps
 
 1. `drizzle-zod` — auto-generate Zod validation schemas from these tables for your
    Express/Next.js API routes.
-2. A seed script for `warehouses` (e.g. "Kathmandu Warehouse"), `delivery_zones`
-   (Kathmandu Valley / Terai / Hill), and `payment_method_settings` rows (cod, esewa,
-   khalti, bank_transfer — all starting `is_enabled: false` until configured).
+2. A seed script for `warehouses` (e.g. "Dhangadhi Warehouse"), `delivery_zones` (the nine
+   Sudurpashchim districts — see `config/regional.ts`), and `payment_method_settings` rows
+   (cod, esewa, khalti, bank_transfer — all starting `is_enabled: false` until configured).
 3. Wire `order_status_history` inserts into whatever service transitions `orders.status`,
    so the admin console's audit trail is never manually maintained.

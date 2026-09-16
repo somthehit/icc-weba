@@ -1,28 +1,24 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { Product, type CategoryItem, type Brand } from '@/types';
+import React, { useState } from 'react';
+import { Product } from '@/types';
 import { CATALOG_STATUS_BADGE } from './shared';
-import {
-  Award,
-  Boxes,
-  Download,
-  Edit,
-  FolderTree,
-  Plus,
-  Search,
-  Tag,
-  Trash2,
-} from 'lucide-react';
+import { CatalogRegistries, type RegistrySubTab } from './catalog/CatalogRegistries';
+import { Boxes, Download, Edit, Plus, Search, Trash2 } from 'lucide-react';
 
 /**
- * Module 2 — the product catalogue, plus the read-only category, brand,
- * attribute and tag views derived from it.
+ * Module 2 — the product catalogue, plus the four reference-data registries it
+ * depends on.
+ *
+ * The registry tabs are not derived from the product list: they load their own rows
+ * from `/api/categories?view=admin`, `/api/brands?view=admin`,
+ * `/api/catalog/attributes` and `/api/catalog/filter-tags`. The storefront payloads
+ * this module already holds publish a category or brand's *slug* as its `id` and
+ * drop `isFeatured` entirely, so an edit form built on them would have no key to
+ * address a row with and no way to see half the fields it edits.
  */
 export interface CatalogModuleProps {
   products: Product[];
-  brands: Brand[];
-  categories: CategoryItem[];
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   setAuditProduct: (product: Product | null) => void;
@@ -32,10 +28,16 @@ export interface CatalogModuleProps {
   handleSoftDeleteProduct: (productId: string, productName: string) => void;
 }
 
+const SUB_TABS: Array<{ id: 'products' | RegistrySubTab; label: string }> = [
+  { id: 'products', label: 'Products SKU Catalog' },
+  { id: 'categories', label: 'Category Tree' },
+  { id: 'brands', label: 'Brand Directory' },
+  { id: 'attributes', label: 'Attributes & Specs' },
+  { id: 'tags', label: 'Faceted Filter Tags' },
+];
+
 export const CatalogModule: React.FC<CatalogModuleProps> = ({
   products,
-  brands,
-  categories,
   searchQuery,
   setSearchQuery,
   setAuditProduct,
@@ -44,84 +46,27 @@ export const CatalogModule: React.FC<CatalogModuleProps> = ({
   handleOpenEditProduct,
   handleSoftDeleteProduct,
 }) => {
-  const [catalogSubTab, setCatalogSubTab] = useState<
-    'products' | 'categories' | 'brands' | 'attributes' | 'tags'
-  >('products');
-
-  // Categories list — from the database, not a hardcoded copy. `CategoryItem.id`
-  // is the slug (see `mapDbCategoryToCategoryItem`), which is what the product
-  // rows carry, so the counts line up without a join.
-  const categoriesList = useMemo(
-    () =>
-      categories.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        slug: cat.id,
-        parent: 'None',
-        count: products.filter((p) => p.category === cat.id).length,
-      })),
-    [categories, products],
-  );
-
-  // Brands list — likewise from `/api/brands`, where `Brand.id` is the slug.
-  // Products only carry the brand *name*, so the count matches on that.
-  const brandsList = useMemo(
-    () =>
-      brands.map((brand) => ({
-        id: brand.id,
-        name: brand.name,
-        slug: brand.id,
-        logo: brand.logo,
-        isPartner: brand.isPartner,
-        count: products.filter((p) => p.brand.toLowerCase() === brand.name.toLowerCase()).length,
-      })),
-    [brands, products],
-  );
+  const [catalogSubTab, setCatalogSubTab] = useState<'products' | RegistrySubTab>('products');
 
   return (
     <div className="space-y-6">
       {/* Sub Tab Buttons */}
       <div className="flex gap-2 border-b border-gray-200 pb-3 font-bold text-xs overflow-x-auto">
-        <button
-          onClick={() => setCatalogSubTab('products')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            catalogSubTab === 'products' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Products SKU Catalog
-        </button>
-        <button
-          onClick={() => setCatalogSubTab('categories')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            catalogSubTab === 'categories' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Category Tree
-        </button>
-        <button
-          onClick={() => setCatalogSubTab('brands')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            catalogSubTab === 'brands' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Brand Directory
-        </button>
-        <button
-          onClick={() => setCatalogSubTab('attributes')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            catalogSubTab === 'attributes' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Attributes &amp; Specs
-        </button>
-        <button
-          onClick={() => setCatalogSubTab('tags')}
-          className={`px-4 py-2 rounded-xl border transition-colors ${
-            catalogSubTab === 'tags' ? 'bg-[#0056b3] text-white border-[#0056b3]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-          }`}
-        >
-          Faceted Filter Tags
-        </button>
+        {SUB_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setCatalogSubTab(tab.id)}
+            aria-pressed={catalogSubTab === tab.id}
+            className={`px-4 py-2 rounded-xl border transition-colors whitespace-nowrap ${
+              catalogSubTab === tab.id
+                ? 'bg-[#0056b3] text-white border-[#0056b3]'
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Sub-view: Products */}
@@ -258,162 +203,10 @@ export const CatalogModule: React.FC<CatalogModuleProps> = ({
         </div>
       )}
 
-      {/* Sub-view: Categories */}
-      {catalogSubTab === 'categories' && (
-        <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center border-b pb-3">
-            <h3 className="font-extrabold text-base text-[#1a1a1a]">Category Hierarchy &amp; Navigation Tree</h3>
-            <button
-              onClick={() => alert('New category dialog created.')}
-              className="bg-[#0056b3] hover:bg-blue-700 text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Category</span>
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {categoriesList.map((cat) => (
-              <div key={cat.id} className="p-4 rounded-2xl border border-gray-200 bg-gray-50/50 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-sm text-gray-900 flex items-center gap-2">
-                    <FolderTree className="w-4 h-4 text-[#0056b3]" />
-                    <span>{cat.name}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    Slug: <code className="bg-gray-200 px-1 py-0.5 rounded text-[11px]">{cat.slug}</code> &bull; {cat.count} active products assigned
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                    Active Menu Item
-                  </span>
-                  <button
-                    onClick={() => {
-                      if (cat.count > 0) {
-                        alert(`Cannot delete category "${cat.name}". It contains ${cat.count} products. Reassign or remove products first.`);
-                      } else {
-                        alert(`Category "${cat.name}" deleted.`);
-                      }
-                    }}
-                    className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg border border-transparent hover:border-rose-200"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sub-view: Brands */}
-      {catalogSubTab === 'brands' && (
-        <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center border-b pb-3">
-            <h3 className="font-extrabold text-base text-[#1a1a1a]">Official Brand Partners Directory</h3>
-            <button
-              onClick={() => alert('Brand creation form opened.')}
-              className="bg-[#0056b3] text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Brand</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {brandsList.map((brand) => (
-              <div key={brand.id} className="p-4 rounded-2xl border border-gray-200 bg-white flex flex-col justify-between space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-black text-base text-gray-900">{brand.name}</span>
-                  {brand.isPartner && <Award className="w-4 h-4 text-[#0056b3]" />}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {brand.count} {brand.count === 1 ? 'SKU' : 'SKUs'} in catalog
-                </div>
-                <div className="pt-2 border-t flex justify-between items-center text-xs">
-                  {/* `brands.is_partner` — not every brand carried is an authorized
-                      partner, and claiming it on all of them makes the badge worthless. */}
-                  {brand.isPartner ? (
-                    <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded">
-                      Authorized Partner
-                    </span>
-                  ) : (
-                    <span className="text-gray-500 font-bold bg-gray-100 px-2 py-0.5 rounded">
-                      Stocked Brand
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (brand.count > 0) {
-                        alert(`Cannot delete brand "${brand.name}". Contains ${brand.count} products.`);
-                      } else {
-                        alert(`Brand "${brand.name}" removed.`);
-                      }
-                    }}
-                    className="text-rose-600 hover:underline font-bold text-[11px]"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sub-view: Attributes & Specs */}
-      {catalogSubTab === 'attributes' && (
-        <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center border-b pb-3">
-            <div>
-              <h3 className="font-extrabold text-base text-[#1a1a1a]">Product Specifications &amp; Filter Attributes</h3>
-              <p className="text-xs text-gray-500">Drives dynamic faceted shop filters automatically without code changes</p>
-            </div>
-            <button onClick={() => alert('Attribute key added.')} className="bg-[#0056b3] text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1">
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Attribute</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div className="p-4 border rounded-2xl bg-gray-50 space-y-1">
-              <div className="font-bold text-gray-900 text-sm">Processor Generation / CPU</div>
-              <div className="text-gray-500">Scope: Computers &amp; Laptops &bull; Type: Select Filter &bull; Filterable: Yes</div>
-            </div>
-            <div className="p-4 border rounded-2xl bg-gray-50 space-y-1">
-              <div className="font-bold text-gray-900 text-sm">System RAM Memory</div>
-              <div className="text-gray-500">Scope: Computers &amp; Laptops &bull; Type: Select Filter &bull; Filterable: Yes</div>
-            </div>
-            <div className="p-4 border rounded-2xl bg-gray-50 space-y-1">
-              <div className="font-bold text-gray-900 text-sm">CCTV Camera Resolution (Megapixels)</div>
-              <div className="text-gray-500">Scope: CCTV &amp; Security &bull; Type: Number &bull; Filterable: Yes</div>
-            </div>
-            <div className="p-4 border rounded-2xl bg-gray-50 space-y-1">
-              <div className="font-bold text-gray-900 text-sm">Printer Ink Type (Tank / Laser)</div>
-              <div className="text-gray-500">Scope: Printers &amp; Scanners &bull; Type: Select Filter &bull; Filterable: Yes</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sub-view: Tags */}
-      {catalogSubTab === 'tags' && (
-        <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 shadow-sm">
-          <h3 className="font-extrabold text-base text-[#1a1a1a]">Cross-Cutting Faceted Filter Tags</h3>
-          <p className="text-xs text-gray-500">Tags enable custom cross-category filter pills like &quot;Gaming&quot;, &quot;Business&quot;, &quot;Student Pick&quot;, &quot;Hot Deal&quot;.</p>
-
-          <div className="flex flex-wrap gap-2 pt-2">
-            {['Core i5', 'Core i7', '16GB RAM', 'Gaming Laptop', 'Student Pick', 'Office Printer', 'IP Camera', '4K CCTV', 'Nepal Warranty'].map((t, idx) => (
-              <span key={idx} className="bg-blue-50 text-[#0056b3] border border-blue-200 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
-                <Tag className="w-3 h-3" />
-                <span>{t}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Sub-views: the four reference-data registries.
+          They own their own fetch, their own modals and their own error states —
+          nothing here is derived from the product list above. */}
+      {catalogSubTab !== 'products' && <CatalogRegistries subTab={catalogSubTab} />}
     </div>
   );
 };

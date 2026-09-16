@@ -31,15 +31,20 @@ import type {
 import { CatalogModule } from '@/components/admin/CatalogModule';
 import { ContentModule } from '@/components/admin/ContentModule';
 import { CustomersModule } from '@/components/admin/CustomersModule';
+import { InquiriesModule } from '@/components/admin/InquiriesModule';
+import { ReviewsModule } from '@/components/admin/ReviewsModule';
 import { DashboardModule } from '@/components/admin/DashboardModule';
 import { DeliveryModule } from '@/components/admin/DeliveryModule';
 import { InventoryModule } from '@/components/admin/InventoryModule';
 import { ProductFormModal } from '@/components/admin/ProductFormModal';
 import { ReportsModule } from '@/components/admin/ReportsModule';
 import { SalesModule } from '@/components/admin/SalesModule';
+import { SeoModule } from '@/components/admin/SeoModule';
 import { ServicesModule } from '@/components/admin/ServicesModule';
 import { SettingsModule } from '@/components/admin/SettingsModule';
 import { StaffModule } from '@/components/admin/StaffModule';
+import { AccountModule } from '@/components/admin/AccountModule';
+import { AccountingModule } from '@/components/admin/AccountingModule';
 import { StockAuditModal } from '@/components/admin/StockAuditModal';
 import { WaybillModal } from '@/components/admin/WaybillModal';
 import { useProductForm } from '@/components/admin/useProductForm';
@@ -53,6 +58,7 @@ import {
 import {
   BarChart3,
   Boxes,
+  DollarSign,
   Eye,
   LayoutDashboard,
   Package,
@@ -64,7 +70,11 @@ import {
   ShoppingBag,
   Truck,
   Users,
+  User,
   Wrench,
+  MessageSquare,
+  Star,
+  Globe2,
 } from 'lucide-react';
 
 export const AdminView: React.FC = () => {
@@ -90,6 +100,7 @@ export const AdminView: React.FC = () => {
     updateOrder,
     updateServiceStatus,
     navigateTo,
+    currentUser,
   } = useStore();
 
   const [activeModule, setActiveModule] = useState<AdminModule>('dashboard');
@@ -112,7 +123,7 @@ export const AdminView: React.FC = () => {
   const [stockAdjustments, setStockAdjustments] = useState<StockAdjustment[]>(
     INITIAL_STOCK_ADJUSTMENTS,
   );
-  const [adminUsers] = useState<AdminUser[]>(INITIAL_ADMIN_USERS);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(INITIAL_ADMIN_USERS);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
 
   // Stock audit modal — opened from both the dashboard's low-stock queue and the
@@ -382,6 +393,18 @@ export const AdminView: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveModule('seo')}
+            className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
+              activeModule === 'seo'
+                ? 'bg-[#4C63FF] text-white font-semibold shadow-sm'
+                : 'text-[#B4BACC] hover:bg-[#181F30] hover:text-white'
+            }`}
+          >
+            <Globe2 className="w-4 h-4 flex-shrink-0 opacity-90" />
+            <span className="flex-1">SEO & Region</span>
+          </button>
+
+          <button
             onClick={() => setActiveModule('customers')}
             className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
               activeModule === 'customers'
@@ -394,6 +417,30 @@ export const AdminView: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveModule('inquiries')}
+            className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
+              activeModule === 'inquiries'
+                ? 'bg-[#4C63FF] text-white font-semibold shadow-sm'
+                : 'text-[#B4BACC] hover:bg-[#181F30] hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 flex-shrink-0 opacity-90" />
+            <span className="flex-1">Inquiries</span>
+          </button>
+
+          <button
+            onClick={() => setActiveModule('reviews')}
+            className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
+              activeModule === 'reviews'
+                ? 'bg-[#4C63FF] text-white font-semibold shadow-sm'
+                : 'text-[#B4BACC] hover:bg-[#181F30] hover:text-white'
+            }`}
+          >
+            <Star className="w-4 h-4 flex-shrink-0 opacity-90" />
+            <span className="flex-1">Reviews</span>
+          </button>
+
+          <button
             onClick={() => setActiveModule('reports')}
             className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
               activeModule === 'reports'
@@ -403,6 +450,18 @@ export const AdminView: React.FC = () => {
           >
             <BarChart3 className="w-4 h-4 flex-shrink-0 opacity-90" />
             <span className="flex-1">Reports</span>
+          </button>
+
+          <button
+            onClick={() => setActiveModule('accounting')}
+            className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
+              activeModule === 'accounting'
+                ? 'bg-[#4C63FF] text-white font-semibold shadow-sm'
+                : 'text-[#B4BACC] hover:bg-[#181F30] hover:text-white'
+            }`}
+          >
+            <DollarSign className="w-4 h-4 flex-shrink-0 opacity-90" />
+            <span className="flex-1">Accounting</span>
           </button>
 
           <button
@@ -427,6 +486,18 @@ export const AdminView: React.FC = () => {
           >
             <ShieldAlert className="w-4 h-4 flex-shrink-0 opacity-90" />
             <span className="flex-1">Staff & Roles</span>
+          </button>
+
+          <button
+            onClick={() => setActiveModule('account')}
+            className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
+              activeModule === 'account'
+                ? 'bg-[#4C63FF] text-white font-semibold shadow-sm'
+                : 'text-[#B4BACC] hover:bg-[#181F30] hover:text-white'
+            }`}
+          >
+            <User className="w-4 h-4 flex-shrink-0 opacity-90" />
+            <span className="flex-1">My Account</span>
           </button>
         </nav>
 
@@ -484,9 +555,10 @@ export const AdminView: React.FC = () => {
               )}
             </button>
 
-            <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-[#4C63FF] to-[#7C5CFF] text-white font-bold text-[13px] flex items-center justify-center shadow-xs">
-              N
-            </div>
+            <button onClick={() => setActiveModule('account')} className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-[#F4F5F8]" title="Open admin profile">
+              {currentUser?.avatarUrl ? <img src={currentUser.avatarUrl} alt={currentUser.name} className="h-[34px] w-[34px] rounded-full object-cover" /> : <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-gradient-to-br from-[#4C63FF] to-[#7C5CFF] text-[13px] font-bold text-white shadow-xs">{currentUser?.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'A'}</div>}
+              <span className="hidden text-left sm:block"><span className="block text-xs font-bold text-[#12151C]">{currentUser?.name || 'Admin'}</span><span className="block text-[10px] capitalize text-[#6B7280]">{currentUser?.role?.replace('_', ' ') || 'Administrator'}</span></span>
+            </button>
           </div>
         </header>
 
@@ -511,8 +583,6 @@ export const AdminView: React.FC = () => {
           {activeModule === 'catalog' && (
             <CatalogModule
               products={products}
-              brands={brands}
-              categories={categories}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               setAuditProduct={setAuditProduct}
@@ -540,7 +610,12 @@ export const AdminView: React.FC = () => {
           )}
 
           {activeModule === 'delivery' && (
-            <DeliveryModule deliveryZones={deliveryZones} riders={riders} />
+            <DeliveryModule
+              deliveryZones={deliveryZones}
+              riders={riders}
+              orders={orders}
+              logAuditAction={logAuditAction}
+            />
           )}
 
           {activeModule === 'services' && (
@@ -551,7 +626,12 @@ export const AdminView: React.FC = () => {
             />
           )}
 
-          {activeModule === 'inventory' && <InventoryModule stockAdjustments={stockAdjustments} />}
+          {activeModule === 'inventory' && (
+            <InventoryModule
+              products={products}
+              stockAdjustments={stockAdjustments}
+            />
+          )}
 
           {activeModule === 'content' && (
             <ContentModule
@@ -561,19 +641,35 @@ export const AdminView: React.FC = () => {
             />
           )}
 
+          {activeModule === 'seo' && <SeoModule logAuditAction={logAuditAction} />}
+
           {activeModule === 'customers' && <CustomersModule />}
+
+          {activeModule === 'inquiries' && <InquiriesModule />}
+
+          {activeModule === 'reviews' && <ReviewsModule />}
 
           {activeModule === 'reports' && (
             <ReportsModule
               products={products}
+              orders={orders}
               totalRevenue={totalRevenue}
               handleExportOrdersCsv={handleExportOrdersCsv}
             />
           )}
 
+          {activeModule === 'accounting' && (
+            <AccountingModule
+              orders={orders}
+              products={products}
+            />
+          )}
+
           {activeModule === 'settings' && <SettingsModule />}
 
-          {activeModule === 'staff' && <StaffModule adminUsers={adminUsers} auditLogs={auditLogs} />}
+          {activeModule === 'staff' && <StaffModule adminUsers={adminUsers} auditLogs={auditLogs} onAdminUsersChange={setAdminUsers} />}
+
+          {activeModule === 'account' && <AccountModule />}
 
         </main>
       </div>

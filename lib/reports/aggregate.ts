@@ -47,7 +47,7 @@ function delta(current: number, previous: number): number | null {
   return Number((((current - previous) / previous) * 100).toFixed(1));
 }
 
-/** `2026-08-24`, in local terms — `toISOString()` would shift the day in Kathmandu. */
+/** `2026-08-24`, in local terms — `toISOString()` would shift the day in Kailali. */
 function isoDate(value: Date): string {
   const month = String(value.getMonth() + 1).padStart(2, '0');
   const day = String(value.getDate()).padStart(2, '0');

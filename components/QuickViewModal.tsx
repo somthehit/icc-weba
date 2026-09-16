@@ -2,27 +2,27 @@
 
 import React from 'react';
 import { useStore } from '@/context/StoreContext';
-import { 
-  X, 
-  ShoppingCart, 
-  Heart, 
-  ShieldCheck, 
-  Truck, 
-  Star, 
-  Layers, 
-  Check 
+import {
+  X,
+  ShoppingCart,
+  Heart,
+  ShieldCheck,
+  Truck,
+  Star,
+  Layers,
+  Check
 } from 'lucide-react';
 
 export const QuickViewModal: React.FC = () => {
-  const { 
-    quickViewProduct, 
-    setQuickViewProduct, 
-    addToCart, 
-    toggleWishlist, 
+  const {
+    quickViewProduct,
+    setQuickViewProduct,
+    addToCart,
+    toggleWishlist,
     isInWishlist,
     toggleCompare,
     isInCompare,
-    navigateTo 
+    navigateTo
   } = useStore();
 
   if (!quickViewProduct) return null;
@@ -99,7 +99,7 @@ export const QuickViewModal: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 text-amber-700 font-medium">
                   <Truck className="w-4 h-4" />
-                  <span> Kathmandu Valley Same-day Delivery Available</span>
+                  <span> Same-day Delivery in Dhangadhi, Attariya &amp; Mahendranagar</span>
                 </div>
               </div>
             </div>
@@ -121,9 +121,8 @@ export const QuickViewModal: React.FC = () => {
 
                 <button
                   onClick={() => toggleWishlist(product.id)}
-                  className={`p-3 rounded-xl border transition-colors ${
-                    isWishlisted ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-50 text-slate-700 border-slate-200'
-                  }`}
+                  className={`p-3 rounded-xl border transition-colors ${isWishlisted ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
                   title="Wishlist"
                 >
                   <Heart className="w-4 h-4 fill-current" />
@@ -131,9 +130,8 @@ export const QuickViewModal: React.FC = () => {
 
                 <button
                   onClick={() => toggleCompare(product.id)}
-                  className={`p-3 rounded-xl border transition-colors ${
-                    isCompared ? 'bg-amber-50 text-amber-700 border-amber-300' : 'bg-slate-50 text-slate-700 border-slate-200'
-                  }`}
+                  className={`p-3 rounded-xl border transition-colors ${isCompared ? 'bg-amber-50 text-amber-700 border-amber-300' : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
                   title="Compare Specs"
                 >
                   <Layers className="w-4 h-4" />

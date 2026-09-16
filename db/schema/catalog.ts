@@ -13,7 +13,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { discountTypeEnum, productStatusEnum, stockStatusEnum } from './enums';
 
 export const brands = pgTable(
@@ -27,6 +27,11 @@ export const brands = pgTable(
     // Curated "Official Partner Brand" flag. Every brand a product references gets
     // a row here, but only partners are merchandised on the Brands page.
     isPartner: boolean('is_partner').notNull().default(false),
+    // Merchandising choice, deliberately distinct from isPartner: isPartner is a
+    // commercial fact (an authorized dealership), isFeatured is whether the brand
+    // appears on the homepage strip. Conflating them left no way to promote a brand
+    // without also claiming a dealership the shop may not hold.
+    isFeatured: boolean('is_featured').notNull().default(false),
     // Category slugs this brand is merchandised under (display-only ordering hint).
     categorySlugs: jsonb('category_slugs').$type<string[]>(),
     isActive: boolean('is_active').notNull().default(true),
@@ -68,6 +73,12 @@ export const products = pgTable(
   {
     id: serial('id').primaryKey(),
     sku: varchar('sku', { length: 60 }).notNull(),
+    // Manufacturer EAN/UPC, where there is one. Nullable because most of this
+    // catalogue has none — the printable shelf label falls back to encoding the SKU,
+    // which is what a shop without manufacturer barcodes actually does. Unique via a
+    // *partial* index (WHERE barcode IS NOT NULL) so any number of products may have
+    // none while no two may share one.
+    barcode: varchar('barcode', { length: 64 }),
     name: varchar('name', { length: 200 }).notNull(),
     slug: varchar('slug', { length: 220 }).notNull(),
     brandId: integer('brand_id').references(() => brands.id, { onDelete: 'set null' }),
@@ -125,6 +136,10 @@ export const products = pgTable(
   (t) => ({
     skuIdx: uniqueIndex('products_sku_idx').on(t.sku),
     slugIdx: uniqueIndex('products_slug_idx').on(t.slug),
+    // Partial: unique among the products that have a barcode, silent about the rest.
+    barcodeIdx: uniqueIndex('products_barcode_idx')
+      .on(t.barcode)
+      .where(sql`${t.barcode} IS NOT NULL`),
     brandIdx: index('products_brand_idx').on(t.brandId),
     categoryIdx: index('products_category_idx').on(t.categoryId),
     statusIdx: index('products_status_idx').on(t.status),

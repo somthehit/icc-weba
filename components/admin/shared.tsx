@@ -44,10 +44,15 @@ export type AdminModule =
   | 'services'
   | 'inventory'
   | 'content'
+  | 'seo'
   | 'customers'
+  | 'inquiries'
+  | 'reviews'
   | 'reports'
+  | 'accounting'
   | 'settings'
-  | 'staff';
+  | 'staff'
+  | 'account';
 
 /** Sales sub-tab. Shell-owned because the dashboard links straight to `orders`. */
 export type SalesSubTab = 'orders' | 'phone-order' | 'returns' | 'offers' | 'coupons';

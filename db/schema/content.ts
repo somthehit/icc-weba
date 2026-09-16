@@ -20,6 +20,8 @@ export const heroSlides = pgTable('hero_slides', {
   subtitle: varchar('subtitle', { length: 400 }),
   ctaLabel: varchar('cta_label', { length: 60 }).default('Shop Now'),
   ctaUrl: varchar('cta_url', { length: 300 }),
+  desktopImageUrl: varchar('desktop_image_url', { length: 500 }),
+  mobileImageUrl: varchar('mobile_image_url', { length: 500 }),
   badgeText: varchar('badge_text', { length: 30 }), // e.g. "-7% OFF"
   featuredProductId: integer('featured_product_id').references(() => products.id, {
     onDelete: 'set null',
@@ -27,6 +29,8 @@ export const heroSlides = pgTable('hero_slides', {
   status: contentStatusEnum('status').notNull().default('draft'),
   displayOrder: integer('display_order').notNull().default(0),
   publishedAt: timestamp('published_at'),
+  startsAt: timestamp('starts_at'),
+  endsAt: timestamp('ends_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
@@ -67,6 +71,29 @@ export const announcementBar = pgTable('announcement_bar', {
   isEnabled: boolean('is_enabled').notNull().default(true),
   startsAt: timestamp('starts_at'),
   endsAt: timestamp('ends_at'),
+});
+
+export const homepageSections = pgTable('homepage_sections', {
+  id: serial('id').primaryKey(),
+  sectionType: varchar('section_type', { length: 40 }).notNull(),
+  title: varchar('title', { length: 150 }),
+  configuration: jsonb('configuration').$type<Record<string, unknown>>().notNull().default({}),
+  displayOrder: integer('display_order').notNull().default(0),
+  isEnabled: boolean('is_enabled').notNull().default(true),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (t) => ({ orderIdx: index('homepage_sections_order_idx').on(t.displayOrder) }));
+
+export const siteContentSettings = pgTable('site_content_settings', {
+  id: serial('id').primaryKey(),
+  socialLinks: jsonb('social_links').$type<Record<string, string>>().notNull().default({}),
+  footerColumns: jsonb('footer_columns').$type<Array<{ title: string; links: Array<{ label: string; url: string }> }>>().notNull().default([]),
+  copyrightText: varchar('copyright_text', { length: 300 }),
+  metaTitle: varchar('meta_title', { length: 200 }),
+  metaDescription: varchar('meta_description', { length: 500 }),
+  openGraphImageUrl: varchar('open_graph_image_url', { length: 500 }),
+  googleAnalyticsId: varchar('google_analytics_id', { length: 100 }),
+  facebookPixelId: varchar('facebook_pixel_id', { length: 100 }),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 export const heroSlidesRelations = relations(heroSlides, ({ one }) => ({

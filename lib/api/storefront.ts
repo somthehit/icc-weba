@@ -23,8 +23,14 @@ import type { DbOrderDetail } from '@/lib/adapters/orders';
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
-/** The message the API gave, or something honest about the network. */
-async function request<T>(url: string, init?: RequestInit): Promise<ApiResult<T>> {
+/**
+ * The message the API gave, or something honest about the network.
+ *
+ * Exported so the admin helpers in ./catalog-admin.ts share this one
+ * implementation — two copies of the error-shaping would drift, and the shape it
+ * unwraps (`details` from Zod, then `error`) is the contract every route returns.
+ */
+export async function request<T>(url: string, init?: RequestInit): Promise<ApiResult<T>> {
   try {
     const response = await fetch(url, {
       ...init,
@@ -214,6 +220,8 @@ interface RawZone {
   id: number;
   name: string;
   provinces: string[];
+  districts?: string[];
+  municipalities?: string[];
   flatFee: string | number;
   estimatedDays: number;
 }
@@ -224,10 +232,12 @@ export async function fetchDeliveryZones(): Promise<ApiResult<DeliveryZoneOption
 
   return {
     ok: true,
-    data: (result.data.zones ?? []).map((zone) => ({
+      data: (result.data.zones ?? []).map((zone) => ({
       id: zone.id,
       name: zone.name,
-      provinces: zone.provinces ?? [],
+        provinces: zone.provinces ?? [],
+        districts: zone.districts ?? [],
+        municipalities: zone.municipalities ?? [],
       flatFee: money(zone.flatFee),
       estimatedDays: zone.estimatedDays,
     })),

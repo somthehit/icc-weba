@@ -12,10 +12,10 @@ import { isForeignKeyViolation } from '@/lib/db/errors';
  * middleware policy table; the guard is repeated here so the route is never one
  * matcher edit away from being open.
  */
-const DRIVERS = ['admin', 'service_technician'] as const;
+const DRIVERS = ['admin', 'service_technician', 'delivery_driver'] as const;
 
 /** Roles a delivery may be assigned to. */
-const ASSIGNABLE_ROLES = ['service_technician', 'admin'];
+const ASSIGNABLE_ROLES = ['service_technician', 'admin', 'delivery_driver'];
 
 /**
  * A driver's manifest.

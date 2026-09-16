@@ -26,9 +26,12 @@ import {
   Tag,
   Trash2,
   TrendingUp,
+  Upload,
   X,
   Image as ImageIcon,
 } from 'lucide-react';
+
+import { UploadButton } from './ImageUploadField';
 
 export interface ProductFormModalProps {
   /** The bundle from `useProductForm`, owned by the admin shell. */
@@ -82,6 +85,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
     primaryImageRow,
     previewImage,
     addImageRow,
+    appendImageRows,
     removeImageRow,
     patchImageRow,
     moveImageRow,
@@ -135,11 +139,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                   aria-checked={prodForm.status === state.value}
                   title={state.hint}
                   onClick={() => patchProdForm({ status: state.value })}
-                  className={`px-3 py-1.5 rounded-[10px] font-bold text-[11px] transition-colors ${
-                    prodForm.status === state.value
-                      ? 'bg-white text-[#0056b3] shadow-sm'
-                      : 'text-gray-500 hover:text-gray-800'
-                  }`}
+                  className={`px-3 py-1.5 rounded-[10px] font-bold text-[11px] transition-colors ${prodForm.status === state.value
+                    ? 'bg-white text-[#0056b3] shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800'
+                    }`}
                 >
                   {state.label}
                 </button>
@@ -182,11 +185,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                     type="button"
                     onClick={() => setActiveProductTab(tab.id)}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 font-bold border-b-2 transition-colors ${
-                      isActive
-                        ? 'border-[#0056b3] text-[#0056b3]'
-                        : 'border-transparent text-gray-500 hover:text-gray-800'
-                    }`}
+                    className={`flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 font-bold border-b-2 transition-colors ${isActive
+                      ? 'border-[#0056b3] text-[#0056b3]'
+                      : 'border-transparent text-gray-500 hover:text-gray-800'
+                      }`}
                   >
                     <span>{tab.label}</span>
                     {hasError && (
@@ -421,14 +423,29 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                         everywhere the product is listed.
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={addImageRow}
-                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 font-bold text-gray-700 hover:bg-gray-50"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add image</span>
-                    </button>
+                    <div className="flex-shrink-0 flex items-center gap-1.5">
+                      <UploadButton
+                        purpose="product"
+                        multiple
+                        onUploaded={(urls) => {
+                          clearProductFieldError('images');
+                          appendImageRows(urls);
+                        }}
+                        title="Upload one or more images"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload images</span>
+                      </UploadButton>
+                      <button
+                        type="button"
+                        onClick={addImageRow}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 font-bold text-gray-700 hover:bg-gray-50"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add URL</span>
+                      </button>
+                    </div>
                   </div>
 
                   {productFieldErrors.images && (
@@ -444,9 +461,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                       return (
                         <div
                           key={row.key}
-                          className={`rounded-xl border p-3 ${
-                            rowError ? 'border-rose-300 bg-rose-50/40' : 'border-gray-200'
-                          }`}
+                          className={`rounded-xl border p-3 ${rowError ? 'border-rose-300 bg-rose-50/40' : 'border-gray-200'
+                            }`}
                         >
                           <div className="flex items-start gap-3">
                             <div className="w-14 h-14 flex-shrink-0 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center">
@@ -466,17 +482,29 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                             </div>
 
                             <div className="flex-1 min-w-0 space-y-2">
-                              <input
-                                type="url"
-                                value={row.url}
-                                onChange={(e) => {
-                                  clearProductFieldError(`image:${row.key}`);
-                                  clearProductFieldError('images');
-                                  patchImageRow(row.key, { url: e.target.value });
-                                }}
-                                placeholder="https://…/legion-pro-5.jpg"
-                                className={`${inputClass(Boolean(rowError))} font-mono text-[11px]`}
-                              />
+                              <div className="flex items-center gap-1.5">
+                                <input
+                                  type="url"
+                                  value={row.url}
+                                  onChange={(e) => {
+                                    clearProductFieldError(`image:${row.key}`);
+                                    clearProductFieldError('images');
+                                    patchImageRow(row.key, { url: e.target.value });
+                                  }}
+                                  placeholder="Upload a file, or paste an image URL"
+                                  className={`${inputClass(Boolean(rowError))} font-mono text-[11px]`}
+                                />
+                                <UploadButton
+                                  purpose="product"
+                                  onUploaded={([url]) => {
+                                    clearProductFieldError(`image:${row.key}`);
+                                    clearProductFieldError('images');
+                                    patchImageRow(row.key, { url });
+                                  }}
+                                  title="Upload a file for this row"
+                                  className="flex-shrink-0 p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
+                                />
+                              </div>
                               <input
                                 type="text"
                                 value={row.altText}
@@ -493,11 +521,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                                 onClick={() => setPrimaryImageKey(row.key)}
                                 title={isPrimary ? 'This is the thumbnail' : 'Use as the thumbnail'}
                                 aria-pressed={isPrimary}
-                                className={`p-1.5 rounded-lg border transition-colors ${
-                                  isPrimary
-                                    ? 'border-amber-200 bg-amber-50 text-amber-500'
-                                    : 'border-gray-200 text-gray-300 hover:text-amber-400'
-                                }`}
+                                className={`p-1.5 rounded-lg border transition-colors ${isPrimary
+                                  ? 'border-amber-200 bg-amber-50 text-amber-500'
+                                  : 'border-gray-200 text-gray-300 hover:text-amber-400'
+                                  }`}
                               >
                                 <Star className={`w-3.5 h-3.5 ${isPrimary ? 'fill-current' : ''}`} />
                               </button>
@@ -634,13 +661,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                     )}
                     {marginPercent !== null && (
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 font-bold ${
-                          marginPercent <= 0
-                            ? 'border-rose-200 bg-rose-50 text-rose-700'
-                            : marginPercent < 10
-                              ? 'border-amber-200 bg-amber-50 text-amber-800'
-                              : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                        }`}
+                        className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 font-bold ${marginPercent <= 0
+                          ? 'border-rose-200 bg-rose-50 text-rose-700'
+                          : marginPercent < 10
+                            ? 'border-amber-200 bg-amber-50 text-amber-800'
+                            : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                          }`}
                       >
                         <TrendingUp className="w-3.5 h-3.5" />
                         {marginPercent}% margin — {npr(sellingPriceNum - costPriceNum)} per unit
@@ -1061,7 +1087,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                       }}
                       maxLength={500}
                       rows={3}
-                      placeholder={prodForm.shortDescription || 'Buy the Lenovo Legion Pro 5 in Nepal with official warranty and free Kathmandu delivery.'}
+                      placeholder={prodForm.shortDescription || 'Buy the Lenovo Legion Pro 5 in Nepal with official warranty and free Kailali delivery.'}
                       className={inputClass(Boolean(productFieldErrors.metaDescription))}
                     />
                   </FormField>

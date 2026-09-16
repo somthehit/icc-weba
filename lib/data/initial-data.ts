@@ -1,12 +1,12 @@
-import { 
-  Product, 
-  CategoryItem, 
-  Brand, 
-  PromoBanner, 
-  Coupon, 
-  Order, 
-  ServiceRequest, 
-  Review, 
+import {
+  Product,
+  CategoryItem,
+  Brand,
+  PromoBanner,
+  Coupon,
+  Order,
+  ServiceRequest,
+  Review,
   SiteSettings,
   DeliveryZone,
   DeliveryRider,
@@ -19,29 +19,30 @@ import {
   AdminUser,
   AuditLogEntry
 } from '@/types';
+import { SUDURPASHCHIM_CONFIG } from '@/config/regional';
 
 export const INITIAL_SITE_SETTINGS: SiteSettings = {
-  storeName: 'ICE Computers & Electronics',
-  tagline: 'Your Premier Technology & Electronics Partner in Nepal',
-  logoUrl: '/logo.png',
+  storeName: 'Intel Computer Center',
+  tagline: 'Your Premier Technology & Electronics Partner in Sudurpashchim',
+  logoUrl: '/logo.jpeg',
   phone: '+977-91-521890',
   email: 'info@icecomputers.com.np',
   address: 'Main Road, Near Campus Chowk, Dhangadhi, Nepal',
   openingHours: 'Sun - Fri: 9:30 AM - 7:00 PM | Sat: By Appointment',
-  announcementText: '🎉 Special Clearance Offer! Up to 40% OFF on Laptops & Electronics | Free Local Delivery',
+  announcementText: '🚚 Fast Express Delivery Across All 9 Districts of Sudurpashchim Province! (Nepal-wide delivery coming soon)',
   announcementEnabled: true,
   facebookUrl: 'https://facebook.com/icecomputers.np',
   instagramUrl: 'https://instagram.com/icecomputers.np',
   whatsappNumber: '+9779851034291',
   googleMapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d101348.57094050164!2d80.6060457!3d28.6954264!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39a1ed0ffb42cc37%3A0x7fe89470a724b11c!2sDhangadhi!5e1!3m2!1sen!2snp!4v1786581737660!5m2!1sen!2snp',
   googlePlaceId: 'ChIJN8xC-23toTkRHLE0p3CU6H8',
-  footerNotice: '© 2026 ICE Computers & Electronics. All Rights Reserved. Official Nepal Warranty Authorized Retailer.',
+  footerNotice: '© 2026 Intel Computer Center. All Rights Reserved. Official Nepal Warranty Authorized Retailer.',
 };
 
 export const STORE_INFO = {
-  name: 'Intel Computer & Electronics',
+  name: 'Intel Computer Center',
   shortName: 'Intel Computer Dhangadhi',
-  tagline: 'Your Trusted Technology & Electronics Partner in Dhangadhi, Nepal',
+  tagline: 'Your Trusted Technology & Electronics Partner in Sudurpashchim, Nepal',
   domain: 'www.intelcomputer.com.np',
   phonePrimary: '+977-91-521890',
   phoneMobile: '+977-9851034291',
@@ -61,7 +62,11 @@ export const STORE_INFO = {
     embedMapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d101348.57094050164!2d80.6060457!3d28.6954264!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39a1ed0ffb42cc37%3A0x7fe89470a724b11c!2sDhangadhi!5e1!3m2!1sen!2snp!4v1786581737660!5m2!1sen!2snp',
   },
   openingHours: 'Sunday - Friday: 9:30 AM - 7:00 PM | Saturday: Closed / Technical Appointments Only',
-  deliveryPolicy: 'Same-day local delivery across Dhangadhi & Kailali district. Express courier dispatch across all 77 districts of Nepal.',
+  // Sudurpashchim-only, matching `config/regional.ts`. The previous copy promised
+  // "express courier dispatch across all 77 districts of Nepal" from a warehouse
+  // that has never shipped outside the province.
+  deliveryPolicy:
+    'Same-day delivery across Dhangadhi, Attariya & Mahendranagar. 24-96 hour express dispatch to all 9 districts of Sudurpashchim Province. Nepal-wide delivery coming soon.',
   warrantyPolicy: '100% Genuine Products with Official Manufacturer Warranty & Local Technical Repair Center in Dhangadhi.',
 };
 
@@ -251,7 +256,7 @@ export const INITIAL_PRODUCTS: Product[] = [
       { key: 'Display', value: '16" WQXGA (2560x1600) IPS 240Hz 500nits 100% sRGB G-Sync HDR400' },
       { key: 'Battery', value: '80Whr Battery with Super Rapid Charge Pro' },
     ],
-    tags: ['Gaming Laptop', 'Lenovo', 'RTX 4070', 'Core i9', 'Flagship', 'Kathmandu Gaming'],
+    tags: ['Gaming Laptop', 'Lenovo', 'RTX 4070', 'Core i9', 'Flagship', 'Kailali Gaming'],
     whatsInTheBox: ['Lenovo Legion Pro 5 Laptop', '300W Slim AC Adapter', 'Legion Gaming Mouse & Bag', 'Warranty Card']
   },
   {
@@ -599,7 +604,7 @@ export const INITIAL_PRODUCTS: Product[] = [
       { key: 'Mobile App', value: 'Hik-Connect (iOS & Android) Remote Live Monitoring' },
       { key: 'Power & Cables', value: 'Includes 12V 5A Power Adapter, BNC Connectors & 40m CCTV Cable Wire' },
     ],
-    tags: ['CCTV', 'Hikvision', 'Security', 'Night Vision', 'Kathmandu CCTV', 'Nepal Surveillance'],
+    tags: ['CCTV', 'Hikvision', 'Security', 'Night Vision', 'Kailali CCTV', 'Nepal Surveillance'],
     whatsInTheBox: ['4x Hikvision 2MP Cameras', '1x Hikvision 4CH DVR', '1TB Surveillance HDD', 'Power Adapter', 'BNC/DC Connectors', '40m Coaxial Cable']
   },
   {
@@ -637,7 +642,7 @@ export const INITIAL_PRODUCTS: Product[] = [
       { key: 'Connectivity', value: 'High-speed USB 2.0' },
       { key: 'Ink Bottle Code', value: 'Epson 003 (Black, Cyan, Magenta, Yellow)' },
     ],
-    tags: ['Printer', 'Epson', 'EcoTank', 'Office', 'Scanners', 'Kathmandu'],
+    tags: ['Printer', 'Epson', 'EcoTank', 'Office', 'Scanners', 'Kailali'],
     whatsInTheBox: ['Epson L3210 Printer', 'Full Set of 4x 003 Ink Bottles', 'Power Cable', 'USB Cable', 'Driver CD & Manual']
   },
   {
@@ -779,7 +784,7 @@ export const INITIAL_PRODUCTS: Product[] = [
       { key: 'Audio Output', value: '20W 2 Channel with OTS Lite & Q-Symphony' },
       { key: 'Connectivity', value: '3x HDMI, 1x USB, Wi-Fi 5, Bluetooth 5.2, Optical' },
     ],
-    tags: ['Smart TV', 'Samsung', '4K TV', 'Home Electronics', 'Kathmandu Appliance'],
+    tags: ['Smart TV', 'Samsung', '4K TV', 'Home Electronics', 'Kailali Appliance'],
     whatsInTheBox: ['Samsung 43" 4K TV', 'Smart Remote Control', 'Table Top Stands', 'Power Cable', 'User Manual']
   },
   {
@@ -1300,7 +1305,7 @@ export const INITIAL_PROMO_BANNERS: PromoBanner[] = [
     id: 'banner-cctv-surveillance',
     title: 'Complete Security & CCTV Systems',
     subtitle: 'Protect your home, shop & office with Hikvision & Dahua 2MP/5MP Smart Night Vision Packages',
-    badge: 'Free Kathmandu Installation Support',
+    badge: 'Free Kailali Installation Support',
     image: 'https://picsum.photos/seed/banner-cctv/1200/500',
     ctaText: 'Explore CCTV Packages',
     ctaLink: '/shop?category=cctv-security',
@@ -1361,8 +1366,8 @@ export const INITIAL_ORDERS: Order[] = [
       phone: '9851123456',
       email: 'aashish@example.com',
       province: 'Bagmati Province',
-      district: 'Kathmandu',
-      municipality: 'Kathmandu Metropolitan City',
+      district: 'Kailali',
+      municipality: 'Kailali Metropolitan City',
       ward: '10',
       addressLine: 'Baneshwor Height, Near Everest Hospital',
       landmark: 'Behind Bakery Cafe',
@@ -1482,7 +1487,7 @@ export const INITIAL_SERVICE_REQUESTS: ServiceRequest[] = [
     problemDescription: 'Need professional mounting, wiring and remote view configuration for a 2-story office building in Lazimpat.',
     preferredDate: '2026-08-14',
     preferredTime: 'Morning (10 AM - 1 PM)',
-    address: 'Lazimpat, Near British Embassy, Kathmandu',
+    address: 'Lazimpat, Near British Embassy, Kailali',
     status: 'assigned',
     assignedTechnician: 'Bikram Thapa (Senior CCTV Engineer)',
     estimatedCost: 3500,
@@ -1498,7 +1503,7 @@ export const INITIAL_SERVICE_REQUESTS: ServiceRequest[] = [
     problemDescription: 'Laptop overheating, fan making loud noise, and laptop turns off during Zoom meetings.',
     preferredDate: '2026-08-10',
     preferredTime: 'Afternoon (2 PM - 5 PM)',
-    address: 'Intel Computer Service Center, New Road Plaza, Kathmandu (In-Store Drop)',
+    address: 'Intel Computer Service Center, New Road Plaza, Kailali (In-Store Drop)',
     status: 'in_progress',
     assignedTechnician: 'Suman Gurung (Hardware Technician)',
     estimatedCost: 1800,
@@ -1510,7 +1515,7 @@ export const SAMPLE_REVIEWS: Review[] = [
     id: 'rev-1',
     productId: 'p-dell-inspiron-15',
     userName: 'Subash Bhattarai',
-    userCity: 'Kathmandu',
+    userCity: 'Kailali',
     rating: 5,
     title: 'Solid thermal efficiency for engineering CAD and daily programming',
     comment: 'Authentic product with official warranty! Bought this Dell laptop for my engineering coursework. The 12th Gen Intel Core i5 handles AutoCAD and VS Code simultaneously without stuttering. Temps hover around 68°C under load with whisper-quiet fan profile. Intel Computer staff configured Windows & Office free of charge. Highly recommended store in New Road.',
@@ -1556,7 +1561,7 @@ export const SAMPLE_REVIEWS: Review[] = [
     id: 'rev-samsung-ssd-1',
     productId: 'p-samsung-980-1tb-ssd',
     userName: 'Bikash Rana',
-    userCity: 'Pokhara',
+    userCity: 'Dhangadhi',
     rating: 5,
     title: 'Benchmarked 3,485 MB/s sequential read on PCIe 3.0 slot! Zero throttling',
     comment: 'Installed this in my custom Ryzen editing workstation. CrystalDiskMark showed 3,485 MB/s Read and 2,980 MB/s Write. Even under sustained 100GB 4K ProRes video transfers, Samsung HMB thermal control keeps temps at 52°C with motherboard heatsink. Samsung Magician firmware update was seamless.',
@@ -1579,7 +1584,7 @@ export const SAMPLE_REVIEWS: Review[] = [
     id: 'rev-samsung-ssd-2',
     productId: 'p-samsung-980-1tb-ssd',
     userName: 'Aashish Adhikari',
-    userCity: 'Kathmandu',
+    userCity: 'Kailali',
     rating: 5,
     title: 'Flawless secondary drive for AAA game library load times',
     comment: 'Load times in Cyberpunk 2077 and Black Myth: Wukong dropped to mere seconds. Genuine piece with serial verified on Samsung website.',
@@ -1625,7 +1630,7 @@ export const SAMPLE_REVIEWS: Review[] = [
     id: 'rev-loq-1',
     productId: 'p-lenovo-loq-gaming',
     userName: 'Aayush Maharjan',
-    userCity: 'Kathmandu',
+    userCity: 'Kailali',
     rating: 5,
     title: 'RTX 3050 6GB 95W TGP delivers 85+ FPS in modern titles',
     comment: 'The dual-fan quad-heatpipe cooling solution on this LOQ chassis is remarkable. GPU temps never exceed 71°C during extended sessions in Dota 2 and GTA V. The 16GB DDR5 5200MHz RAM dual-channel configuration gives consistent 1% lows. Keyboard feels tactile with crisp actuation.',
@@ -1671,10 +1676,10 @@ export const SAMPLE_REVIEWS: Review[] = [
     id: 'rev-3',
     productId: 'p-hikvision-4ch-cctv-kit',
     userName: 'Green House Hotel & Restaurant',
-    userCity: 'Pokhara',
+    userCity: 'Dhangadhi',
     rating: 5,
     title: 'Rock solid 24/7 DVR recording and crystal clear EXIR night vision',
-    comment: 'Ordered from Pokhara via express bus courier. Packaging was super secure and installation guidance on WhatsApp was very helpful. EXIR 2.0 infrared captures license plates clearly at night up to 18 meters. Surveillance Western Digital purple drive runs cool and quiet inside the DVR metal chassis.',
+    comment: 'Ordered from Dhangadhi via express bus courier. Packaging was super secure and installation guidance on WhatsApp was very helpful. EXIR 2.0 infrared captures license plates clearly at night up to 18 meters. Surveillance Western Digital purple drive runs cool and quiet inside the DVR metal chassis.',
     date: '2026-08-05',
     verifiedPurchase: true,
     hardwareSetup: 'Installed on: 2-Story Hotel Perimeter (2 Dome + 2 Bullet IP67)',
@@ -1717,10 +1722,10 @@ export const SAMPLE_REVIEWS: Review[] = [
     id: 'rev-canon-1',
     productId: 'p-canon-lbp2900b',
     userName: 'Advocate Prakash Sharma',
-    userCity: 'Kathmandu',
+    userCity: 'Kailali',
     rating: 5,
     title: 'Indestructible workhorse printer for law firm document preparation',
-    comment: 'The legendary Canon 2900B is unbeatable for fast black & white printing. Instant warm-up with CAPT technology starts printing in under 9 seconds. Toner cartridge 303 is available everywhere in Kathmandu and very cheap to refill. Highly durable mechanical pickup rollers.',
+    comment: 'The legendary Canon 2900B is unbeatable for fast black & white printing. Instant warm-up with CAPT technology starts printing in under 9 seconds. Toner cartridge 303 is available everywhere in Kailali and very cheap to refill. Highly durable mechanical pickup rollers.',
     date: '2026-08-03',
     verifiedPurchase: true,
     hardwareSetup: 'Legal Office Daily Document Batch (50-100 pages/day)',
@@ -1776,13 +1781,27 @@ export const TECHNICAL_SERVICES = [
   },
 ];
 
-export const INITIAL_DELIVERY_ZONES: DeliveryZone[] = [
-  { id: 'dz-1', province: 'Bagmati', district: 'Kathmandu Valley', municipality: 'Kathmandu / Lalitpur / Bhaktapur', fee: 150, etaDays: 'Same Day - 24 Hours', codAvailable: true, freeShippingThreshold: 5000 },
-  { id: 'dz-2', province: 'Gandaki', district: 'Kaski', municipality: 'Pokhara Valley', fee: 350, etaDays: '2-3 Business Days', codAvailable: true, freeShippingThreshold: 10000 },
-  { id: 'dz-3', province: 'Lumbini', district: 'Rupandehi', municipality: 'Butwal / Bhairahawa', fee: 400, etaDays: '2-3 Business Days', codAvailable: true, freeShippingThreshold: 10000 },
-  { id: 'dz-4', province: 'Koshi', district: 'Morang', municipality: 'Biratnagar / Itahari', fee: 450, etaDays: '3-4 Business Days', codAvailable: true, freeShippingThreshold: 12000 },
-  { id: 'dz-5', province: 'Sudurpashchim', district: 'Kailali', municipality: 'Dhangadhi Main City', fee: 200, etaDays: '1-2 Business Days', codAvailable: true, freeShippingThreshold: 5000 },
-];
+/**
+ * The nine districts of Sudurpashchim, derived from `config/regional.ts`.
+ *
+ * Previously this listed Dhangadhi Valley (as "Kailali Valley / Kailali /
+ * Lalitpur / Bhaktapur"), Dhangadhi, Butwal and Biratnagar — none of which this
+ * warehouse serves. Generating it from the regional config means the delivery
+ * table, the SEO `areaServed` list and the checkout fee cannot drift apart.
+ */
+export const INITIAL_DELIVERY_ZONES: DeliveryZone[] = SUDURPASHCHIM_CONFIG.keyDistricts.map(
+  (district, index) => ({
+    id: `dz-${index + 1}`,
+    province: SUDURPASHCHIM_CONFIG.primaryProvinceShort,
+    district: district.name,
+    municipality: district.hubs.join(' / '),
+    fee: district.flatFee,
+    etaDays: district.estTime,
+    codAvailable: district.codAvailable,
+    // Free delivery kicks in sooner where the run is cheap.
+    freeShippingThreshold: district.sameDay ? 5000 : district.estimatedDays >= 4 ? 20000 : 10000,
+  }),
+);
 
 export const INITIAL_RIDERS: DeliveryRider[] = [
   { id: 'rdr-1', name: 'Roshan Shrestha', phone: '+977-9841998877', type: 'in_house', activeDeliveries: 3, status: 'active' },
@@ -1815,9 +1834,15 @@ export const INITIAL_BLOG_POSTS: BlogPost[] = [
 ];
 
 export const INITIAL_FAQS: FaqItem[] = [
-  { id: 'faq-1', question: 'Are all products sold by ICE Computers authentic with official Nepal warranty?', answer: 'Yes! 100% of our products are sourced directly from official brand distributors in Nepal and carry genuine authorized manufacturer warranty.', category: 'Warranty & Authenticity', order: 1 },
-  { id: 'faq-2', question: 'Do you offer Cash on Delivery (COD) outside Kathmandu Valley?', answer: 'Yes, Cash on Delivery is supported in major Nepalese cities including Pokhara, Butwal, Biratnagar, Narayangarh, and Dhangadhi.', category: 'Payment & Shipping', order: 2 },
-  { id: 'faq-3', question: 'Can I request an on-site CCTV site survey before buying?', answer: 'Absolutely! Our technical team provides free on-site site surveys within Kathmandu Valley and Dhangadhi city limits.', category: 'Services & Installations', order: 3 },
+  { id: 'faq-1', question: 'Are all products sold by Intel Computer Center authentic with official Nepal warranty?', answer: 'Yes. 100% of our products are sourced directly from official brand distributors in Nepal and carry genuine authorized manufacturer warranty, serviced from our Dhangadhi repair bench.', category: 'Warranty & Authenticity', order: 1 },
+  // The delivery answers name the districts we actually reach. The previous copy
+  // offered COD in Dhangadhi, Butwal, Biratnagar and Narayangarh — four cities
+  // outside this warehouse's footprint — and a "free CCTV survey in Kailali
+  // Valley", a place that does not exist.
+  { id: 'faq-2', question: 'Which districts do you deliver to?', answer: `We deliver to all 9 districts of Sudurpashchim Province: ${SUDURPASHCHIM_CONFIG.keyDistricts.map((d) => d.name).join(', ')}. Nepal-wide delivery is coming soon.`, category: 'Payment & Shipping', order: 2 },
+  { id: 'faq-3', question: 'Do you offer Cash on Delivery (COD)?', answer: `Yes. COD is available in ${SUDURPASHCHIM_CONFIG.keyDistricts.filter((d) => d.codAvailable).map((d) => d.name).join(', ')}. eSewa, Khalti, Fonepay QR and bank transfer work everywhere we ship.`, category: 'Payment & Shipping', order: 3 },
+  { id: 'faq-4', question: 'How fast is delivery to Dhangadhi and Mahendranagar?', answer: 'Dhangadhi, Attariya, Tikapur, Lamki and Sukkhad receive orders same day to 24 hours. Mahendranagar, Belauri and Jhalari take 24-36 hours. Hill districts such as Bajhang, Bajura and Darchula take 3-4 days.', category: 'Payment & Shipping', order: 4 },
+  { id: 'faq-5', question: 'Can I request an on-site CCTV site survey before buying?', answer: 'Yes. Our technical team provides free on-site surveys inside Dhangadhi, Attariya and Mahendranagar, and scheduled paid visits to the remaining Sudurpashchim districts.', category: 'Services & Installations', order: 5 },
 ];
 
 export const INITIAL_TESTIMONIALS: Testimonial[] = [
@@ -1826,9 +1851,10 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
 ];
 
 export const INITIAL_ADMIN_USERS: AdminUser[] = [
-  { id: 'adm-1', name: 'Admin (System Owner)', email: 'admin@icecomputers.com.np', role: 'Super Admin', status: 'active', lastLogin: '2026-08-13 02:45 AM' },
-  { id: 'adm-2', name: 'Sales Manager', email: 'sales@icecomputers.com.np', role: 'Sales Staff', status: 'active', lastLogin: '2026-08-12 04:20 PM' },
-  { id: 'adm-3', name: 'Service Lead Technician', email: 'service@icecomputers.com.np', role: 'Service Staff', status: 'active', lastLogin: '2026-08-11 11:10 AM' },
+  { id: 'adm-1', name: 'Admin (System Owner)', email: 'admin@icecomputers.com.np', phone: '9800000001', role: 'Super Admin', staffRole: 'SUPER_ADMIN', department: 'Management', status: 'active', lastLogin: '2026-08-13 02:45 AM' },
+  { id: 'adm-2', name: 'Sales Manager', email: 'sales@icecomputers.com.np', phone: '9800000002', role: 'Sales Staff', staffRole: 'SALES_AGENT', department: 'Sales & Support', assignedCount: 12, status: 'active', lastLogin: '2026-08-12 04:20 PM' },
+  { id: 'adm-3', name: 'Service Lead Technician', email: 'service@icecomputers.com.np', phone: '9800000003', role: 'Service Staff', staffRole: 'SERVICE_TECHNICIAN', department: 'Hardware Repair', skills: ['BGA Rework', 'Chip-level Repair'], specialization: 'Laptop Motherboard & BGA', assignedCount: 5, status: 'active', lastLogin: '2026-08-11 11:10 AM' },
+  { id: 'adm-4', name: 'Ram Bahadur', email: 'driver@icecomputers.com.np', phone: '9851000000', role: 'Delivery Driver', staffRole: 'DELIVERY_DRIVER', department: 'Logistics', vehicleNumber: 'Ba 2 Pa 4589', drivingLicenseNo: '01-08-00987654', shiftStatus: 'ON_TRANSIT', status: 'active', lastLogin: '2026-08-13 09:15 AM' },
 ];
 
 export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
@@ -1836,4 +1862,3 @@ export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
   { id: 'log-102', timestamp: '2026-08-12 05:30 PM', adminName: 'Sales Manager', role: 'Sales Staff', module: 'Sales / Orders', action: 'Order Status Change', details: 'Changed Order #ORD-2026-8801 status from Confirmed to Out for Delivery (Rider: Roshan)' },
   { id: 'log-103', timestamp: '2026-08-11 01:20 PM', adminName: 'Admin (System Owner)', role: 'Super Admin', module: 'Delivery / Zones', action: 'Create Delivery Zone', details: 'Added Dhangadhi Main City Zone (NPR 200 fee, 1-2 day ETA)' },
 ];
-

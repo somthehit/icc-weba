@@ -56,7 +56,7 @@ export const AdminLoginView: React.FC = () => {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-black text-white">Admin Dashboard</h1>
-          <p className="text-sm text-gray-400 mt-1">Intel Computer & Electronics — Staff Portal</p>
+          <p className="text-sm text-gray-400 mt-1">Intel Computer Center — Staff Portal</p>
         </div>
 
         {/* Card */}

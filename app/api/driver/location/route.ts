@@ -6,7 +6,7 @@ import { withRole } from '@/lib/auth/middleware';
 import { parseJson, parseQuery } from '@/lib/validation/parse';
 import { deliveryQuerySchema, driverLocationSchema } from '@/lib/validation/commerce';
 
-const DRIVERS = ['admin', 'service_technician'] as const;
+const DRIVERS = ['admin', 'service_technician', 'delivery_driver'] as const;
 
 /**
  * Record where the van is.

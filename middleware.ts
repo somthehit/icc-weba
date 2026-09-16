@@ -50,6 +50,34 @@ const RULES: readonly Rule[] = [
   { path: '/api/auth/register', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/logout', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/me', match: 'exact', read: SIGNED_IN, write: SIGNED_IN },
+  // Public storefront contact form. Validation and rate limiting are enforced by
+  // the route; this rule keeps the request from falling into the admin-only fallback.
+  { path: '/api/v1/public/contact', match: 'exact', read: PUBLIC, write: PUBLIC },
+  { path: '/api/v1/public/homepage-layout', match: 'exact', read: PUBLIC, write: OWNER_ONLY },
+  // Search metadata. The storefront's `<head>` is built from this on every page,
+  // including for signed-out visitors, so reads are public — the handler drops the
+  // analytics ids and refuses `include=products` for anyone who is not staff.
+  { path: '/api/v1/seo', match: 'prefix', read: PUBLIC, write: OWNER_ONLY },
+  { path: '/api/admin/reviews', match: 'prefix', read: ['admin', 'sales'], write: ['admin', 'sales'] },
+  { path: '/api/reviews/', match: 'prefix', read: ['admin', 'sales'], write: ['admin', 'sales'] },
+
+  // Uploads. A valid session is all this layer insists on; the route handler owns
+  // the per-purpose role check, because the answer differs by what is being
+  // uploaded — a customer may replace their own avatar but not add a product
+  // image, while inventory staff may do the reverse. Without an explicit rule the
+  // deny-by-default fallback makes this admin-only, which silently blocks both
+  // customers and catalogue staff.
+  { path: '/api/v1/uploads', match: 'exact', read: SIGNED_IN, write: SIGNED_IN },
+
+  // Role definitions. Stated explicitly rather than left to the admin-only
+  // fallback: defining who can do what is the most sensitive control in the
+  // console, so it should be visibly pinned to the owner rather than inherited.
+  { path: '/api/v1/roles', match: 'prefix', read: OWNER_ONLY, write: OWNER_ONLY },
+
+  // Accounting. Sales may read the COD settlement log (they field "was my deposit
+  // recorded?"), but posting to the ledger is owner-only — the handler narrows the
+  // write side to admin as well.
+  { path: '/api/v1/accounting', match: 'prefix', read: SALES, write: OWNER_ONLY },
 
   // Public catalogue: the storefront reads it without a session, staff edit it.
   { path: '/api/products', match: 'prefix', read: PUBLIC, write: CATALOG_EDITORS },

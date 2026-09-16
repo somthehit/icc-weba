@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { STORE_INFO } from '@/lib/data/initial-data';
-import { 
-  Star, 
-  CheckCircle2, 
-  MessageSquare, 
-  ThumbsUp, 
-  Sparkles, 
-  Share2, 
+import {
+  Star,
+  CheckCircle2,
+  MessageSquare,
+  ThumbsUp,
+  Sparkles,
+  Share2,
   ExternalLink,
   Search,
   Filter,
@@ -48,7 +48,7 @@ const INITIAL_GOOGLE_REVIEWS: GoogleReviewItem[] = [
     rating: 5,
     relativeTime: '2 days ago',
     categoryTag: 'Laptops',
-    reviewText: 'Best computer shop in Dhangadhi! Bought a Dell Vostro laptop for my office work. Price was very fair compared to Kathmandu market and they gave me genuine bill with official brand warranty. Excellent service by Mr. Intel team.',
+    reviewText: 'Best computer shop in Dhangadhi! Bought a Dell Vostro laptop for my office work. Price was very fair compared to Kailali market and they gave me genuine bill with official brand warranty. Excellent service by Mr. Intel team.',
     likedAspects: ['Genuine Products', 'Official Warranty', 'Good Pricing'],
     verifiedCustomer: true,
     ownerResponse: {
@@ -190,7 +190,7 @@ export const GoogleReviews: React.FC = () => {
 
   const filteredReviews = reviewsList.filter((r) => {
     const matchesCat = activeCategory === 'All' || r.categoryTag === activeCategory;
-    const matchesQuery = 
+    const matchesQuery =
       !searchQuery.trim() ||
       r.authorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.reviewText.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -275,7 +275,7 @@ export const GoogleReviews: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Intel Computer & Electronics — Main Road, Near Campus Chowk, Dhangadhi • <span className="text-emerald-600 font-semibold">{lastSyncTime}</span>
+              Intel Computer Center — Main Road, Near Campus Chowk, Dhangadhi • <span className="text-emerald-600 font-semibold">{lastSyncTime}</span>
             </p>
           </div>
         </div>
@@ -317,11 +317,10 @@ export const GoogleReviews: React.FC = () => {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeCategory === cat
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
-              }`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${activeCategory === cat
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+                }`}
             >
               {cat}
             </button>
@@ -450,7 +449,7 @@ export const GoogleReviews: React.FC = () => {
                 <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
                 <h4 className="font-bold text-slate-900 text-sm">Thank You for Reviewing!</h4>
                 <p className="text-slate-600 text-xs">
-                  Your review has been submitted to Intel Computer & Electronics (Dhangadhi Branch).
+                  Your review has been submitted to Intel Computer Center (Dhangadhi Branch).
                 </p>
               </div>
             ) : (

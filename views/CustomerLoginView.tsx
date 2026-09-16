@@ -75,7 +75,7 @@ export const CustomerLoginView: React.FC = () => {
           <div className="w-16 h-16 bg-[#0056b3] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20">
             <ShieldCheck className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-black text-[#1a1a1a]">Intel Computer & Electronics</h1>
+          <h1 className="text-2xl font-black text-[#1a1a1a]">Intel Computer Center</h1>
           <p className="text-sm text-gray-500 mt-1">Sign in to your customer account</p>
         </div>
 

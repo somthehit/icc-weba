@@ -2,29 +2,29 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { 
-  X, 
-  Trash2, 
-  Plus, 
-  Minus, 
-  ShoppingCart, 
-  ArrowRight, 
-  Truck, 
-  CheckCircle2, 
-  ShieldCheck 
+import {
+  X,
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingCart,
+  ArrowRight,
+  Truck,
+  CheckCircle2,
+  ShieldCheck
 } from 'lucide-react';
 
 export const CartDrawer: React.FC = () => {
-  const { 
-    cart, 
-    isCartDrawerOpen, 
-    setIsCartDrawerOpen, 
-    removeFromCart, 
-    updateCartQuantity, 
-    getCartSubtotal, 
-    getCartDiscount, 
-    getCartTotal, 
-    navigateTo 
+  const {
+    cart,
+    isCartDrawerOpen,
+    setIsCartDrawerOpen,
+    removeFromCart,
+    updateCartQuantity,
+    getCartSubtotal,
+    getCartDiscount,
+    getCartTotal,
+    navigateTo
   } = useStore();
 
   if (!isCartDrawerOpen) return null;
@@ -63,7 +63,7 @@ export const CartDrawer: React.FC = () => {
           ) : (
             <div className="flex items-center gap-1.5 text-green-700 font-bold text-[11px]">
               <CheckCircle2 className="w-4 h-4" />
-              <span>You qualify for FREE Kathmandu Valley Delivery!</span>
+              <span>You qualify for FREE Sudurpashchim Delivery!</span>
             </div>
           )}
           <div className="w-full bg-blue-200 h-1.5 rounded-full overflow-hidden">

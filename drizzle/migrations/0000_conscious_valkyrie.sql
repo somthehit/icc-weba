@@ -338,7 +338,7 @@ CREATE TABLE "payment_method_settings" (
 --> statement-breakpoint
 CREATE TABLE "store_profile" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"store_name" varchar(150) DEFAULT 'ICE Computers & Electronics' NOT NULL,
+	"store_name" varchar(150) DEFAULT 'Intel Computer Center' NOT NULL,
 	"contact_email" varchar(200),
 	"contact_phone" varchar(15),
 	"logo_url" varchar(500),

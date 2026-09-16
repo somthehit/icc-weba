@@ -250,6 +250,18 @@ export const useProductForm = ({
   const addImageRow = () =>
     setImageRows((rows) => [...rows, { key: genAdminId('img'), url: '', altText: '' }]);
 
+  /**
+   * Appends one row per uploaded URL.
+   *
+   * The gallery's bulk upload needs this because `addImageRow` creates a blank row
+   * without handing back its key, so there is no way to fill in a URL afterwards.
+   */
+  const appendImageRows = (urls: string[]) =>
+    setImageRows((rows) => [
+      ...rows,
+      ...urls.map((url) => ({ key: genAdminId('img'), url, altText: '' })),
+    ]);
+
   const removeImageRow = (key: string) =>
     setImageRows((rows) => rows.filter((row) => row.key !== key));
 
@@ -702,6 +714,7 @@ export const useProductForm = ({
     primaryImageRow,
     previewImage,
     addImageRow,
+    appendImageRows,
     removeImageRow,
     patchImageRow,
     moveImageRow,

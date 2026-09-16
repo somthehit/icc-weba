@@ -13,10 +13,20 @@ import { paymentMethodEnum, notificationEventEnum, provinceEnum } from './enums'
 // Single-row table holding store-wide configuration (read the one row your app expects)
 export const storeProfile = pgTable('store_profile', {
   id: serial('id').primaryKey(),
-  storeName: varchar('store_name', { length: 150 }).notNull().default('ICE Computers & Electronics'),
+  storeName: varchar('store_name', { length: 150 }).notNull().default('Intel Computer Center'),
+  tagline: varchar('tagline', { length: 300 }),
   contactEmail: varchar('contact_email', { length: 200 }),
   contactPhone: varchar('contact_phone', { length: 15 }),
+  legalName: varchar('legal_name', { length: 200 }),
+  panVatNumber: varchar('pan_vat_number', { length: 20 }),
   logoUrl: varchar('logo_url', { length: 500 }),
+  darkLogoUrl: varchar('dark_logo_url', { length: 500 }),
+  faviconUrl: varchar('favicon_url', { length: 500 }),
+  invoiceLogoUrl: varchar('invoice_logo_url', { length: 500 }),
+  address: varchar('address', { length: 500 }),
+  openingHours: varchar('opening_hours', { length: 200 }),
+  announcementText: varchar('announcement_text', { length: 300 }),
+  announcementEnabled: boolean('announcement_enabled').notNull().default(true),
   province: provinceEnum('province'),
   district: varchar('district', { length: 100 }),
   municipality: varchar('municipality', { length: 150 }),
@@ -26,6 +36,13 @@ export const storeProfile = pgTable('store_profile', {
     .notNull()
     .default('13.00'),
   pricesIncludeVat: boolean('prices_include_vat').notNull().default(true),
+  multiCurrencyEnabled: boolean('multi_currency_enabled').notNull().default(false),
+  calendar: varchar('calendar', { length: 3 }).notNull().default('AD'),
+  guestCheckoutEnabled: boolean('guest_checkout_enabled').notNull().default(true),
+  minimumOrderAmount: numeric('minimum_order_amount', { precision: 12, scale: 2 }).notNull().default('0'),
+  stockLockMinutes: numeric('stock_lock_minutes', { precision: 6, scale: 0 }).notNull().default('15'),
+  unpaidOrderCancelMinutes: numeric('unpaid_order_cancel_minutes', { precision: 6, scale: 0 }).notNull().default('30'),
+  configuration: jsonb('configuration').$type<Record<string, unknown>>().notNull().default({}),
   freeDeliveryThreshold: numeric('free_delivery_threshold', { precision: 12, scale: 2 })
     .notNull()
     .default('50000.00'),

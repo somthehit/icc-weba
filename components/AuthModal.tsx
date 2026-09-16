@@ -2,17 +2,17 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { 
-  X, 
-  Heart, 
-  Lock, 
-  Mail, 
-  User, 
-  ShieldCheck, 
-  CheckCircle2, 
-  ArrowRight, 
+import {
+  X,
+  Heart,
+  Lock,
+  Mail,
+  User,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowRight,
   Loader2,
-  AlertCircle 
+  AlertCircle
 } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
@@ -101,7 +101,7 @@ export const AuthModal: React.FC = () => {
             {activeTab === 'login' ? 'Sign In to Your Account' : 'Create Customer Account'}
           </h2>
           <p className="text-xs text-gray-500 max-w-xs mx-auto">
-            Sync your wishlist, track orders in Kathmandu Valley, and access the AI Hardware Consultant.
+            Sync your wishlist, track orders across Sudurpashchim, and access the AI Hardware Consultant.
           </p>
         </div>
 
@@ -151,18 +151,16 @@ export const AuthModal: React.FC = () => {
           <button
             onClick={() => setActiveTab('login')}
             type="button"
-            className={`flex-1 py-2 rounded-lg transition-all ${
-              activeTab === 'login' ? 'bg-white text-[#0056b3] shadow-sm' : 'text-gray-500 hover:text-gray-800'
-            }`}
+            className={`flex-1 py-2 rounded-lg transition-all ${activeTab === 'login' ? 'bg-white text-[#0056b3] shadow-sm' : 'text-gray-500 hover:text-gray-800'
+              }`}
           >
             Sign In
           </button>
           <button
             onClick={() => setActiveTab('register')}
             type="button"
-            className={`flex-1 py-2 rounded-lg transition-all ${
-              activeTab === 'register' ? 'bg-white text-[#0056b3] shadow-sm' : 'text-gray-500 hover:text-gray-800'
-            }`}
+            className={`flex-1 py-2 rounded-lg transition-all ${activeTab === 'register' ? 'bg-white text-[#0056b3] shadow-sm' : 'text-gray-500 hover:text-gray-800'
+              }`}
           >
             Register Account
           </button>
