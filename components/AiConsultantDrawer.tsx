@@ -181,9 +181,6 @@ How can I assist you today?
               <div>
                 <h3 className="font-extrabold text-sm flex items-center gap-2">
                   <span>Intel AI Consultant</span>
-                  <span className="text-[10px] bg-blue-500/30 text-blue-200 font-bold px-2 py-0.5 rounded-full border border-blue-400/30">
-                    {selectedModel}
-                  </span>
                 </h3>
                 <p className="text-[11px] text-blue-200/80">Kailali Retail, Engineering & Maps Grounded</p>
               </div>

@@ -468,9 +468,6 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                   <div>
                     <div className="font-bold text-sm flex items-center gap-2">
                       <span>Intel AI Consultant</span>
-                      <span className="text-[10px] bg-blue-500/20 text-blue-300 font-bold px-2 py-0.5 rounded-full border border-blue-400/20">
-                        {chatModel}
-                      </span>
                     </div>
                     <p className="text-[11px] text-slate-400">
                       Active Role: <strong className="text-blue-300">{chatRole.replace(/_/g, ' ')}</strong>
