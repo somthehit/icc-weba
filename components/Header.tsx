@@ -74,7 +74,7 @@ export const Header: React.FC = () => {
       </div>}
 
       {/* 2. Main Header Bar */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-2 flex items-center justify-between gap-2 lg:gap-3 min-w-0">
+      <div className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-2 flex items-center justify-between gap-2 lg:gap-3 min-w-0">
         {/* Brand Logo */}
         <div className="flex items-center gap-2 shrink-0">
           <button 
@@ -98,48 +98,48 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden lg:flex items-center gap-3 xl:gap-5 text-[13px] font-semibold text-gray-600 shrink-0">
+        <nav className="hidden lg:flex items-center gap-3 xl:gap-5 text-[13px] font-semibold text-gray-600 shrink-0 whitespace-nowrap">
           <button 
             onClick={() => navigateTo('home')} 
-            className={`transition-colors ${currentPage === 'home' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
+            className={`transition-colors whitespace-nowrap ${currentPage === 'home' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
           >
             Home
           </button>
           <button 
             onClick={() => navigateTo('shop')} 
-            className={`transition-colors ${currentPage === 'shop' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
+            className={`transition-colors whitespace-nowrap ${currentPage === 'shop' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
           >
             Shop
           </button>
           <button 
             onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)} 
-            className="hover:text-[#0056b3] transition-colors flex items-center gap-1 relative"
+            className="hover:text-[#0056b3] transition-colors flex items-center gap-1 relative whitespace-nowrap"
           >
             <span>Categories</span>
             <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isCategoryDropdownOpen ? 'rotate-90' : ''}`} />
           </button>
           <button 
             onClick={() => navigateTo('services')} 
-            className={`transition-colors ${currentPage === 'services' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
+            className={`transition-colors whitespace-nowrap ${currentPage === 'services' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
           >
             Services
           </button>
           <button 
             onClick={() => navigateTo('brands')} 
-            className={`transition-colors ${currentPage === 'brands' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
+            className={`transition-colors whitespace-nowrap ${currentPage === 'brands' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
           >
             Brands
           </button>
           <button 
             onClick={() => navigateTo('about')} 
-            className={`transition-colors ${currentPage === 'about' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
+            className={`transition-colors whitespace-nowrap ${currentPage === 'about' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
           >
             About
           </button>
         </nav>
 
         {/* Live Realtime Multi-Category Search */}
-        <div className="hidden md:block flex-1 min-w-0 max-w-[200px] lg:max-w-xs xl:max-w-sm mx-1 lg:mx-2">
+        <div className="hidden md:block flex-1 min-w-[140px] max-w-[200px] lg:max-w-xs xl:max-w-sm mx-1 lg:mx-2">
           <RealtimeSearch placeholder="Search..." />
         </div>
 
@@ -148,21 +148,21 @@ export const Header: React.FC = () => {
           {/* AI Advisor Launcher */}
           <button
             onClick={() => setIsAiAssistantOpen(true)}
-            className="hidden sm:flex lg:hidden xl:flex items-center gap-1.5 bg-gradient-to-r from-[#4C7CFF] to-[#7C5CFF] text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 bg-gradient-to-r from-[#4C7CFF] to-[#7C5CFF] text-white text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition-all cursor-pointer shrink-0"
             title="AI Consultant"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Advisor</span>
+            <span className="hidden sm:inline">AI Advisor</span>
           </button>
 
           {/* Book Service Quick CTA */}
           <button
             onClick={() => setIsServiceModalOpen(true)}
-            className="hidden sm:flex lg:hidden xl:flex items-center gap-1.5 border border-gray-200 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full hover:border-[#4C7CFF] hover:text-[#4C7CFF] transition-all cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 border border-gray-200 text-gray-600 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-full hover:border-[#4C7CFF] hover:text-[#4C7CFF] transition-all cursor-pointer shrink-0"
             title="Book Repair"
           >
             <Wrench className="w-3.5 h-3.5" />
-            <span>Service</span>
+            <span className="hidden md:inline">Service</span>
           </button>
 
           {/* Wishlist */}
@@ -213,7 +213,7 @@ export const Header: React.FC = () => {
           className="absolute left-0 right-0 bg-white border-b border-gray-200 shadow-xl z-40 py-4 px-8"
           onMouseLeave={() => setIsCategoryDropdownOpen(false)}
         >
-          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="max-w-[1536px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((cat) => (
               <div
                 key={cat.id}

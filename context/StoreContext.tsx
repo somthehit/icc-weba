@@ -132,7 +132,7 @@ interface StoreContextType {
   logoutUser: () => void;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  registerWithEmail: (name: string, email: string, pass: string, phone: string) => Promise<{ success: boolean; error?: string }>;
+  registerWithEmail: (name: string, email: string, pass: string, phone: string, address?: { province: string; district: string; municipality: string; wardNo: string; tole?: string; houseNumber?: string }) => Promise<{ success: boolean; error?: string }>;
   checkAuth: () => Promise<void>;
 
   // Actions
@@ -544,7 +544,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const registerWithEmail = async (userName: string, userEmail: string, password: string, userPhone: string) => {
+  const registerWithEmail = async (userName: string, userEmail: string, password: string, userPhone: string, address?: { province: string; district: string; municipality: string; wardNo: string; tole?: string; houseNumber?: string }) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -554,6 +554,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           email: userEmail,
           password,
           phone: userPhone || undefined,
+          address: address || undefined,
         }),
       });
 

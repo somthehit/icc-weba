@@ -270,8 +270,14 @@ export interface SavedAddress {
   district: string;
   municipality: string;
   wardNo: string;
+  tole: string | null;
   streetAddress: string | null;
+  houseNumber: string | null;
   landmark: string | null;
+  postalCode: string | null;
+  deliveryInstructions: string | null;
+  latitude: number | null;
+  longitude: number | null;
   isDefault: boolean;
 }
 

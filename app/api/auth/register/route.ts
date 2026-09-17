@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { users } from '@/db/schema';
+import { users, addresses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { hashPassword, signToken } from '@/lib/auth/utils';
 import { AUTH_COOKIE, JWT_MAX_AGE_SECONDS } from '@/lib/auth/jwt';
@@ -9,12 +9,9 @@ import { registerSchema } from '@/lib/validation/schemas';
 
 export async function POST(request: NextRequest) {
   try {
-    // `registerSchema` has no `role` field, so a request asking for
-    // `role: 'admin'` gets a customer account like everyone else. Staff accounts
-    // are created from the admin console, never from this public endpoint.
     const parsed = await parseJson(request, registerSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, email, password, phone } = parsed.data;
+    const { name, email, password, phone, address } = parsed.data;
 
     const [existingUser] = await db
       .select({ id: users.id })
@@ -28,30 +25,50 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashPassword(password);
 
-    const [user] = await db
-      .insert(users)
-      .values({
-        name,
-        email,
-        phone,
-        passwordHash,
-        role: 'customer',
-      })
-      .returning({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        phone: users.phone,
-        role: users.role,
-      });
+    const result = await db.transaction(async (tx) => {
+      const [user] = await tx
+        .insert(users)
+        .values({
+          name,
+          email,
+          phone,
+          passwordHash,
+          role: 'customer',
+        })
+        .returning({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          role: users.role,
+        });
 
-    const token = await signToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
+      if (address) {
+        await tx.insert(addresses).values({
+          userId: user.id,
+          label: 'Home',
+          fullName: name,
+          phone: phone || '',
+          province: address.province,
+          district: address.district,
+          municipality: address.municipality,
+          wardNo: address.wardNo,
+          tole: address.tole || null,
+          houseNumber: address.houseNumber || null,
+          isDefault: true,
+        });
+      }
+
+      return user;
     });
 
-    const response = NextResponse.json({ success: true, user }, { status: 201 });
+    const token = await signToken({
+      userId: result.id,
+      email: result.email,
+      role: result.role,
+    });
+
+    const response = NextResponse.json({ success: true, user: result }, { status: 201 });
 
     response.cookies.set(AUTH_COOKIE, token, {
       httpOnly: true,

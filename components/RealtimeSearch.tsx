@@ -285,7 +285,7 @@ export const RealtimeSearch: React.FC<RealtimeSearchProps> = ({
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full bg-slate-100/80 hover:bg-slate-100 border border-transparent focus:border-[#0056b3]/30 focus:bg-white rounded-full py-2.5 pl-10 pr-20 text-xs sm:text-sm text-[#1a1a1a] placeholder:text-gray-400 focus:ring-2 focus:ring-[#0056b3]/20 transition-all outline-none font-medium"
+          className="w-full bg-slate-100/80 hover:bg-slate-100 border border-transparent focus:border-[#0056b3]/30 focus:bg-white rounded-full py-2 pl-9 pr-12 sm:pr-14 text-xs sm:text-sm text-[#1a1a1a] placeholder:text-gray-400 focus:ring-2 focus:ring-[#0056b3]/20 transition-all outline-none font-medium"
         />
 
         {/* Clear & Keyboard shortcut indicator */}
@@ -306,7 +306,7 @@ export const RealtimeSearch: React.FC<RealtimeSearchProps> = ({
           )}
 
           {!isMobile && !searchQuery && (
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-mono font-bold text-gray-400 bg-white border border-gray-200 rounded-md shadow-xs pointer-events-none">
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-bold text-gray-400 bg-white border border-gray-200 rounded-md shadow-xs pointer-events-none">
               ⌘K
             </kbd>
           )}
@@ -315,7 +315,11 @@ export const RealtimeSearch: React.FC<RealtimeSearchProps> = ({
 
       {/* Realtime Search Results Popover Overlay */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden divide-y divide-gray-100 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className={`absolute top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden divide-y divide-gray-100 animate-in fade-in slide-in-from-top-1 duration-150 ${
+          isMobile
+            ? 'left-0 right-0'
+            : 'left-1/2 -translate-x-1/2 w-[460px] sm:w-[520px] lg:w-[560px] max-w-[90vw]'
+        }`}>
           
           {/* STATE 1: ACTIVE QUERY HAS RESULTS */}
           {cleanQuery && totalResultsCount > 0 && (

@@ -101,8 +101,14 @@ const addressFields = {
   district: z.string().trim().min(2, 'District is required').max(100),
   municipality: z.string().trim().min(2, 'Municipality or VDC is required').max(150),
   wardNo: z.string().trim().min(1, 'Ward number is required').max(10),
+  tole: z.string().trim().max(255).optional(),
   streetAddress: z.string().trim().max(255).optional(),
+  houseNumber: z.string().trim().max(50).optional(),
   landmark: z.string().trim().max(255).optional(),
+  postalCode: z.string().trim().max(10).optional(),
+  deliveryInstructions: z.string().trim().max(500).optional(),
+  latitude: z.coerce.number().min(-90).max(90).optional(),
+  longitude: z.coerce.number().min(-180).max(180).optional(),
   isDefault: z.boolean(),
 };
 

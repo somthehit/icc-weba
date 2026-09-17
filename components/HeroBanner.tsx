@@ -150,7 +150,7 @@ export const HeroBanner: React.FC = () => {
   return (
     <section
       id="hero-redesign-section"
-      className="relative bg-white text-slate-900 overflow-hidden my-2 max-w-7xl mx-auto rounded-3xl border border-slate-200/80 px-6 lg:px-12 py-5 lg:py-6 select-none shadow-xs"
+      className="relative bg-white text-slate-900 overflow-hidden my-2 max-w-[1536px] mx-auto rounded-3xl border border-slate-200/80 px-6 lg:px-12 py-5 lg:py-6 select-none shadow-xs"
     >
       {/* Background Subtle Radial Glow */}
       <div

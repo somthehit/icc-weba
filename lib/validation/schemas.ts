@@ -53,11 +53,23 @@ export const loginSchema = z.object({
  * what let anyone create themselves an admin account. Staff accounts are created
  * from the admin console instead.
  */
+const addressSchema = z
+  .object({
+    province: z.enum(['koshi', 'madhesh', 'bagmati', 'gandaki', 'lumbini', 'karnali', 'sudurpashchim'] as const),
+    district: z.string().trim().min(2, 'District is required').max(100),
+    municipality: z.string().trim().min(2, 'Municipality is required').max(150),
+    wardNo: z.string().trim().min(1, 'Ward number is required').max(10),
+    tole: z.string().trim().max(255).optional(),
+    houseNumber: z.string().trim().max(50).optional(),
+  })
+  .optional();
+
 export const registerSchema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(150),
   email: emailSchema,
   password: passwordSchema,
   phone: nepaliPhoneSchema.optional(),
+  address: addressSchema,
 });
 
 /** Staff-created accounts, where setting a role is legitimate. */
