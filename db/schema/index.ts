@@ -41,3 +41,4 @@ export * from './driver-tracking';
 export * from './customers';
 export * from './inquiries';
 export * from './roles';
+export * from './notifications';

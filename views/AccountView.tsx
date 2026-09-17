@@ -1,8 +1,28 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { Order, ShippingAddress } from '@/types';
+import { Order, SavedAddress } from '@/types';
+import {
+  fetchAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  fetchNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  updateProfile,
+  sendOtp,
+  verifyOtp,
+} from '@/lib/api/storefront';
+import {
+  NEPAL_PROVINCES,
+  getDistrictsForProvince,
+  getMunicipalitiesForDistrict,
+  getWardCount,
+  wardOptions,
+} from '@/lib/nepal/locations';
+import { provinceLabel } from '@/lib/nepal/provinces';
 import {
   Package,
   Heart,
@@ -23,7 +43,13 @@ import {
   AlertCircle,
   HelpCircle,
   X,
-  Phone
+  Phone,
+  Home,
+  Building2,
+  StickyNote,
+  Star,
+  Loader2,
+  ChevronDown,
 } from 'lucide-react';
 
 export const AccountView: React.FC = () => {
@@ -52,78 +78,416 @@ export const AccountView: React.FC = () => {
   const [profileLoading, setProfileLoading] = useState(false);
 
   // Address State (Nepal Address Model)
-  const [addresses, setAddresses] = useState<ShippingAddress[]>([
-    {
-      fullName: 'Valued Customer (Anish Thapa)',
-      phone: '+977-9851084291',
-      province: 'Bagmati Province',
-      district: 'Kailali',
-      municipality: 'Kailali Metropolitan City',
-      ward: '10',
-      addressLine: 'New Baneshwor, Near Civil Bank',
-      landmark: 'Opposite Everest Hotel Plaza',
-      isDefault: true,
-    },
-    {
-      fullName: 'Office Address',
-      phone: '+977-9801234567',
-      province: 'Bagmati Province',
-      district: 'Lalitpur',
-      municipality: 'Lalitpur Metropolitan City',
-      ward: '3',
-      addressLine: 'Pulchowk Main Road, Ward 3',
-      landmark: 'Near Engineering Campus Gate',
-      isDefault: false,
-    }
-  ]);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [addressesLoading, setAddressesLoading] = useState(true);
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const [isAddAddressOpen, setIsAddAddressOpen] = useState(false);
-  const [newAddr, setNewAddr] = useState<ShippingAddress>({
-    fullName: 'Anish Thapa',
-    phone: '9851084291',
-    province: 'Bagmati Province',
-    district: 'Kailali',
-    municipality: 'Kailali Metropolitan City',
-    ward: '1',
-    addressLine: 'New Road Plaza',
-    landmark: 'Bishal Bazar',
+  // Notifications State
+  const [notifications, setNotifications] = useState<Array<{
+    id: string;
+    title: string;
+    message: string;
+    time: string;
+    unread: boolean;
+    type?: string;
+  }>>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+
+  // Profile Edit State
+  const [isProfileEditing, setIsProfileEditing] = useState(false);
+  const [profileEditForm, setProfileEditForm] = useState({ name: '', phone: '' });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [otpState, setOtpState] = useState<{
+    step: 'idle' | 'sending' | 'verify' | 'verified' | 'error';
+    phone: string;
+    otp: string;
+    error: string;
+    countdown: number;
+  }>({ step: 'idle', phone: '', otp: '', error: '', countdown: 0 });
+
+  // Address form state
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null);
+  const [addressForm, setAddressForm] = useState({
+    label: 'Home',
+    fullName: '',
+    phone: '',
+    province: '',
+    district: '',
+    municipality: '',
+    ward: '',
+    tole: '',
+    streetAddress: '',
+    houseNumber: '',
+    landmark: '',
+    postalCode: '',
+    deliveryInstructions: '',
+    isDefault: false,
   });
+  const [addressSubmitting, setAddressSubmitting] = useState(false);
+  const [addressFormErrors, setAddressFormErrors] = useState<Record<string, string>>({});
+
+  // Delete confirmation
+  const [deletingAddressId, setDeletingAddressId] = useState<number | null>(null);
+
+  // Fetch addresses from the dedicated API endpoint
+  const loadAddresses = useCallback(async () => {
+    if (!isUserLoggedIn) {
+      setAddresses([]);
+      setAddressesLoading(false);
+      return;
+    }
+    setAddressesLoading(true);
+    setAddressError(null);
+    try {
+      const result = await fetchAddresses();
+      if (result.ok) {
+        setAddresses(result.data);
+      } else {
+        setAddresses([]);
+      }
+    } catch {
+      setAddresses([]);
+    } finally {
+      setAddressesLoading(false);
+    }
+  }, [isUserLoggedIn]);
 
   useEffect(() => {
-    if (!isUserLoggedIn || !currentUser?.id) return;
-    let cancelled = false;
-    fetch(`/api/users/${currentUser.id}`)
-      .then((response) => response.ok ? response.json() : null)
-      .then((data) => { if (!cancelled && data) { setProfileData(data); if (Array.isArray(data.addresses)) setAddresses(data.addresses.map((address: any) => ({ fullName: address.fullName, phone: address.phone, province: address.province, district: address.district, municipality: address.municipality, ward: address.wardNo, addressLine: address.streetAddress || '', landmark: address.landmark || '', isDefault: address.isDefault }))); } })
-      .catch(() => undefined)
-      .finally(() => { if (!cancelled) setProfileLoading(false); });
-    return () => { cancelled = true; };
+    loadAddresses();
+  }, [loadAddresses]);
+
+  // Fetch notifications
+  const loadNotifications = useCallback(async () => {
+    if (!isUserLoggedIn) {
+      setNotifications([]);
+      setNotificationsLoading(false);
+      return;
+    }
+    setNotificationsLoading(true);
+    try {
+      const result = await fetchNotifications();
+      if (result.ok) {
+        setNotifications(result.data.notifications);
+      }
+    } catch {
+      // Silently fail — notifications are non-critical
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [isUserLoggedIn]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  // Fetch full profile data
+  const loadProfile = useCallback(async () => {
+    if (!isUserLoggedIn || !currentUser?.id) {
+      setProfileData(null);
+      return;
+    }
+    setProfileLoading(true);
+    try {
+      const response = await fetch(`/api/users/${currentUser.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProfileData(data);
+      }
+    } catch {
+      // Use currentUser as fallback
+    } finally {
+      setProfileLoading(false);
+    }
   }, [isUserLoggedIn, currentUser?.id]);
 
-  // Notifications List
-  const [notifications] = useState([
-    {
-      id: 'n1',
-      title: 'Order Out for Delivery!',
-      message: 'Order ICE-2026-8942 is out for delivery with Rider Sujan (+977 9851012345).',
-      time: '10 mins ago',
-      unread: true,
-    },
-    {
-      id: 'n2',
-      title: 'Official Warranty Registered',
-      message: 'Your 1-Year Brand Warranty for Dell Inspiron 15 is active in Kailali.',
-      time: 'Yesterday',
-      unread: false,
-    },
-    {
-      id: 'n3',
-      title: 'Price Drop Alert',
-      message: 'An item in your wishlist (ASUS ROG Strix Monitor) is now NPR 3,000 off!',
-      time: '2 days ago',
-      unread: false,
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  // Toast auto-dismiss
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  // Derive districts/municipalities/wards from selected province/district/municipality
+  const formDistricts = addressForm.province
+    ? getDistrictsForProvince(addressForm.province)
+    : [];
+  const formMunicipalities =
+    addressForm.province && addressForm.district
+      ? getMunicipalitiesForDistrict(addressForm.province, addressForm.district)
+      : [];
+  const formWardCount =
+    addressForm.province && addressForm.district && addressForm.municipality
+      ? getWardCount(addressForm.province, addressForm.district, addressForm.municipality)
+      : 0;
+  const formWardOptions = formWardCount > 0 ? wardOptions(formWardCount) : [];
+
+  const resetAddressForm = () => {
+    setAddressForm({
+      label: 'Home',
+      fullName: '',
+      phone: '',
+      province: '',
+      district: '',
+      municipality: '',
+      ward: '',
+      tole: '',
+      streetAddress: '',
+      houseNumber: '',
+      landmark: '',
+      postalCode: '',
+      deliveryInstructions: '',
+      isDefault: addresses.length === 0,
+    });
+    setAddressFormErrors({});
+    setEditingAddress(null);
+  };
+
+  const openAddAddress = () => {
+    resetAddressForm();
+    setIsAddressModalOpen(true);
+  };
+
+  const openEditAddress = (addr: SavedAddress) => {
+    setEditingAddress(addr);
+    setAddressForm({
+      label: addr.label || 'Home',
+      fullName: addr.fullName,
+      phone: addr.phone,
+      province: addr.province,
+      district: addr.district,
+      municipality: addr.municipality,
+      ward: addr.wardNo,
+      tole: addr.tole || '',
+      streetAddress: addr.streetAddress || '',
+      houseNumber: addr.houseNumber || '',
+      landmark: addr.landmark || '',
+      postalCode: addr.postalCode || '',
+      deliveryInstructions: addr.deliveryInstructions || '',
+      isDefault: addr.isDefault,
+    });
+    setAddressFormErrors({});
+    setIsAddressModalOpen(true);
+  };
+
+  const validateAddressForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!addressForm.fullName.trim()) errors.fullName = 'Name is required';
+    if (!addressForm.phone.trim()) errors.phone = 'Phone is required';
+    else {
+      const cleaned = addressForm.phone.replace(/[\s-]/g, '').replace(/^(\+?977)/, '');
+      if (!/^9[678]\d{8}$/.test(cleaned)) errors.phone = 'Enter a valid 10-digit Nepali mobile number';
     }
-  ]);
+    if (!addressForm.province) errors.province = 'Province is required';
+    if (!addressForm.district.trim()) errors.district = 'District is required';
+    if (!addressForm.municipality.trim()) errors.municipality = 'Municipality is required';
+    if (!addressForm.ward.trim()) errors.ward = 'Ward number is required';
+    setAddressFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSaveAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateAddressForm()) return;
+    setAddressSubmitting(true);
+
+    try {
+      const payload = {
+        label: addressForm.label,
+        fullName: addressForm.fullName.trim(),
+        phone: addressForm.phone.replace(/[\s-]/g, '').replace(/^(\+?977)/, ''),
+        province: addressForm.province,
+        district: addressForm.district.trim(),
+        municipality: addressForm.municipality.trim(),
+        wardNo: addressForm.ward.trim(),
+        tole: addressForm.tole.trim() || undefined,
+        streetAddress: addressForm.streetAddress.trim() || undefined,
+        houseNumber: addressForm.houseNumber.trim() || undefined,
+        landmark: addressForm.landmark.trim() || undefined,
+        postalCode: addressForm.postalCode.trim() || undefined,
+        deliveryInstructions: addressForm.deliveryInstructions.trim() || undefined,
+        isDefault: addressForm.isDefault,
+      };
+
+      if (editingAddress) {
+        const result = await updateAddress(editingAddress.id, payload);
+        if (!result.ok) {
+          setAddressFormErrors({ submit: result.error || 'Failed to update address.' });
+          setAddressSubmitting(false);
+          return;
+        }
+        setToast({ message: 'Address updated successfully.', type: 'success' });
+      } else {
+        const result = await createAddress(payload);
+        if (!result.ok) {
+          setAddressFormErrors({ submit: result.error || 'Failed to save address.' });
+          setAddressSubmitting(false);
+          return;
+        }
+        setToast({ message: 'Address saved successfully.', type: 'success' });
+      }
+
+      setIsAddressModalOpen(false);
+      resetAddressForm();
+      await loadAddresses();
+    } catch {
+      setAddressFormErrors({ submit: 'Network error. Please try again.' });
+    } finally {
+      setAddressSubmitting(false);
+    }
+  };
+
+  const handleSetDefault = async (addr: SavedAddress) => {
+    if (addr.isDefault) return;
+    try {
+      const result = await updateAddress(addr.id, { isDefault: true });
+      if (result.ok) {
+        setToast({ message: 'Default address updated.', type: 'success' });
+        await loadAddresses();
+      } else {
+        setToast({ message: result.error || 'Failed to update default address.', type: 'error' });
+      }
+    } catch {
+      setToast({ message: 'Network error.', type: 'error' });
+    }
+  };
+
+  const handleDeleteAddress = async () => {
+    if (deletingAddressId === null) return;
+    try {
+      const result = await deleteAddress(deletingAddressId);
+      if (result.ok) {
+        setToast({ message: 'Address deleted.', type: 'success' });
+        await loadAddresses();
+      } else {
+        setToast({ message: result.error || 'Failed to delete address.', type: 'error' });
+      }
+    } catch {
+      setToast({ message: 'Network error.', type: 'error' });
+    } finally {
+      setDeletingAddressId(null);
+    }
+  };
+
+  /** Format an address for display in Nepal style. */
+  const formatAddress = (addr: SavedAddress): string[] => {
+    const lines: string[] = [];
+    const parts: string[] = [];
+    if (addr.tole) parts.push(addr.tole);
+    if (addr.streetAddress) parts.push(addr.streetAddress);
+    if (parts.length > 0) lines.push(parts.join(', '));
+    lines.push(`Ward No. ${addr.wardNo}`);
+    lines.push(addr.municipality);
+    lines.push(`${addr.district}, ${provinceLabel(addr.province)}`);
+    return lines;
+  };
+
+  // Handle notification actions
+  const handleMarkNotificationRead = async (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
+    );
+    await markNotificationRead(id);
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    await markAllNotificationsRead();
+  };
+
+  // Profile edit handlers
+  const openProfileEdit = () => {
+    setProfileEditForm({
+      name: profileData?.name || currentUser?.name || '',
+      phone: profileData?.phone || currentUser?.phone || '',
+    });
+    setIsProfileEditing(true);
+    setOtpState({ step: 'idle', phone: '', otp: '', error: '', countdown: 0 });
+  };
+
+  const handleSaveProfile = async () => {
+    setProfileSaving(true);
+    try {
+      const result = await updateProfile({
+        name: profileEditForm.name,
+        phone: profileEditForm.phone,
+      });
+      if (result.ok) {
+        setToast({ message: 'Profile updated successfully', type: 'success' });
+        setIsProfileEditing(false);
+        // Refresh profile data
+        await loadProfile();
+        // Update currentUser in context if name changed
+        if (profileEditForm.name) {
+          // The context will update on next auth check
+        }
+      } else {
+        setToast({ message: result.error || 'Failed to update profile', type: 'error' });
+      }
+    } catch {
+      setToast({ message: 'Network error. Please try again.', type: 'error' });
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    const phone = profileEditForm.phone.replace(/[\s-]/g, '').replace(/^(\+?977)/, '');
+    if (!/^9[678]\d{8}$/.test(phone)) {
+      setOtpState((prev) => ({ ...prev, error: 'Enter a valid 10-digit Nepali mobile number' }));
+      return;
+    }
+    setOtpState((prev) => ({ ...prev, step: 'sending', error: '' }));
+    try {
+      const result = await sendOtp(phone);
+      if (result.ok) {
+        setOtpState((prev) => ({
+          ...prev,
+          step: 'verify',
+          phone,
+          countdown: 60,
+        }));
+        // Start countdown
+        const interval = setInterval(() => {
+          setOtpState((prev) => {
+            if (prev.countdown <= 1) {
+              clearInterval(interval);
+              return { ...prev, countdown: 0 };
+            }
+            return { ...prev, countdown: prev.countdown - 1 };
+          });
+        }, 1000);
+      } else {
+        setOtpState((prev) => ({ ...prev, step: 'idle', error: result.error }));
+      }
+    } catch {
+      setOtpState((prev) => ({ ...prev, step: 'idle', error: 'Network error. Please try again.' }));
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpState.otp.length !== 6) {
+      setOtpState((prev) => ({ ...prev, error: 'Enter the 6-digit code' }));
+      return;
+    }
+    setOtpState((prev) => ({ ...prev, error: '' }));
+    try {
+      const result = await verifyOtp(otpState.phone, otpState.otp);
+      if (result.ok) {
+        setOtpState((prev) => ({ ...prev, step: 'verified', error: '' }));
+        setToast({ message: 'Phone number verified successfully', type: 'success' });
+      } else {
+        setOtpState((prev) => ({ ...prev, error: result.error || 'Invalid code' }));
+      }
+    } catch {
+      setOtpState((prev) => ({ ...prev, error: 'Network error. Please try again.' }));
+    }
+  };
 
   const wishlistedProducts = products.filter((p) => wishlist.includes(p.id));
 
@@ -140,28 +504,6 @@ export const AccountView: React.FC = () => {
     navigateTo('cart');
   };
 
-  const handleAddAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isUserLoggedIn) return;
-    const response = await fetch('/api/addresses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        label: 'Home', fullName: newAddr.fullName, phone: newAddr.phone,
-        province: newAddr.province.toLowerCase().replace(/\s+province$/, ''),
-        district: newAddr.district, municipality: newAddr.municipality, wardNo: newAddr.ward,
-        streetAddress: newAddr.addressLine, landmark: newAddr.landmark, isDefault: addresses.length === 0,
-      }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      window.alert(data.error || 'This address is outside our delivery coverage.');
-      return;
-    }
-    setAddresses([...addresses, { ...newAddr, isDefault: addresses.length === 0 }]);
-    setIsAddAddressOpen(false);
-  };
-
   const handleReturnSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setReturnSuccessMsg(`Return/Exchange request submitted for Order ${showReturnModal?.id}. Support team will contact you within 24 hours.`);
@@ -172,7 +514,7 @@ export const AccountView: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-8 text-xs">
+    <div className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-8 space-y-8 text-xs">
       {/* 1. Header Profile Banner */}
       <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -300,7 +642,11 @@ export const AccountView: React.FC = () => {
         >
           <Bell className="w-4 h-4" />
           <span>Notifications</span>
-          <span className="w-2 h-2 rounded-full bg-red-500" />
+          {notifications.filter((n) => n.unread).length > 0 && (
+            <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+              {notifications.filter((n) => n.unread).length}
+            </span>
+          )}
         </button>
 
         <button
@@ -403,130 +749,451 @@ export const AccountView: React.FC = () => {
 
       {/* TAB 2: SAVED ADDRESSES */}
       {activeTab === 'addresses' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-extrabold text-sm text-[#1a1a1a]">Your Delivery Locations in Nepal</h3>
+        <div className="space-y-5">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h3 className="font-extrabold text-sm text-[#1a1a1a]">Saved Addresses</h3>
+              <p className="text-gray-500 text-[11px] mt-0.5">Manage your delivery addresses across Nepal</p>
+            </div>
             <button
-              onClick={() => setIsAddAddressOpen(true)}
-              className="bg-[#0056b3] hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-1.5"
+              onClick={openAddAddress}
+              className="bg-[#0056b3] hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 text-xs shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Add New Address</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {addresses.map((addr, idx) => (
-              <div key={idx} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-2 relative">
-                {addr.isDefault && (
-                  <span className="absolute top-4 right-4 bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded text-[10px] uppercase">
-                    Default Address
-                  </span>
-                )}
-                <div className="font-bold text-sm text-[#1a1a1a]">{addr.fullName}</div>
-                <div className="text-gray-500 flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-[#0056b3]" />
-                  <span>{addr.phone}</span>
-                </div>
-                <div className="text-gray-600 space-y-0.5">
-                  <p>{addr.addressLine}, Ward {addr.ward}</p>
-                  <p>{addr.municipality}, {addr.district}, {addr.province}</p>
-                  {addr.landmark && <p className="text-gray-400 text-[11px]">Landmark: {addr.landmark}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Loading */}
+          {addressesLoading && (
+            <div className="flex items-center justify-center py-12 text-gray-400 gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-xs">Loading addresses...</span>
+            </div>
+          )}
 
-          {/* Modal for adding address */}
-          {isAddAddressOpen && (
-            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-                <div className="flex justify-between items-center border-b pb-3">
-                  <h3 className="font-extrabold text-sm text-[#1a1a1a]">Add Nepal Delivery Address</h3>
-                  <button onClick={() => setIsAddAddressOpen(false)} className="text-gray-400 hover:text-gray-600">
+          {/* Error */}
+          {!addressesLoading && addressError && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-2 text-xs text-red-700">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{addressError}</span>
+              <button onClick={loadAddresses} className="ml-auto text-red-800 font-bold hover:underline">Retry</button>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!addressesLoading && !addressError && addresses.length === 0 && (
+            <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center space-y-3">
+              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto">
+                <MapPin className="w-7 h-7 text-[#0056b3]" />
+              </div>
+              <p className="font-bold text-sm text-[#1a1a1a]">No saved addresses yet</p>
+              <p className="text-gray-500 text-xs max-w-xs mx-auto">Add a delivery address to speed up checkout and track your orders.</p>
+              <button
+                onClick={openAddAddress}
+                className="bg-[#0056b3] hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs inline-flex items-center gap-1.5 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Your First Address
+              </button>
+            </div>
+          )}
+
+          {/* Address Cards Grid */}
+          {!addressesLoading && !addressError && addresses.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {addresses.map((addr) => (
+                <div
+                  key={addr.id}
+                  className={`bg-white p-5 rounded-2xl border shadow-sm space-y-3 relative transition-all ${
+                    addr.isDefault ? 'border-[#0056b3]/30 ring-1 ring-[#0056b3]/10' : 'border-gray-100'
+                  }`}
+                >
+                  {/* Top Row: Label + Default Badge */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                        addr.label === 'Office'
+                          ? 'bg-purple-100 text-purple-700'
+                          : addr.label === 'Other'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-blue-50 text-[#0056b3]'
+                      }`}>
+                        {addr.label === 'Office' ? <Building2 className="w-3 h-3" /> : <Home className="w-3 h-3" />}
+                        {addr.label || 'Home'}
+                      </span>
+                    </div>
+                    {addr.isDefault && (
+                      <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded text-[10px] uppercase">
+                        <Star className="w-3 h-3 fill-current" />
+                        Default
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Name + Phone */}
+                  <div>
+                    <div className="font-bold text-sm text-[#1a1a1a]">{addr.fullName}</div>
+                    <div className="text-gray-500 flex items-center gap-1 mt-0.5">
+                      <Phone className="w-3 h-3 text-[#0056b3]" />
+                      <span className="text-xs">{addr.phone}</span>
+                    </div>
+                  </div>
+
+                  {/* Formatted Address */}
+                  <div className="text-gray-600 text-xs leading-relaxed space-y-0.5">
+                    {formatAddress(addr).map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                    {addr.houseNumber && <p className="text-gray-500">House No. {addr.houseNumber}</p>}
+                    {addr.landmark && <p className="text-gray-400 text-[11px]">Landmark: {addr.landmark}</p>}
+                    {addr.postalCode && <p className="text-gray-400 text-[11px]">Postal Code: {addr.postalCode}</p>}
+                    {addr.deliveryInstructions && (
+                      <p className="text-[#0056b3] text-[11px] italic flex items-start gap-1">
+                        <StickyNote className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                        {addr.deliveryInstructions}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                    <button
+                      onClick={() => openEditAddress(addr)}
+                      className="flex items-center gap-1 text-[11px] font-bold text-gray-600 hover:text-[#0056b3] transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setDeletingAddressId(addr.id)}
+                      className="flex items-center gap-1 text-[11px] font-bold text-gray-600 hover:text-red-600 transition-colors px-2 py-1 rounded-lg hover:bg-red-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </button>
+                    {!addr.isDefault && (
+                      <button
+                        onClick={() => handleSetDefault(addr)}
+                        className="ml-auto flex items-center gap-1 text-[11px] font-bold text-[#0056b3] hover:bg-blue-50 transition-colors px-2 py-1 rounded-lg"
+                      >
+                        <Star className="w-3.5 h-3.5" />
+                        Set as Default
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Address Form Modal */}
+          {isAddressModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 pt-[5vh] overflow-y-auto">
+              <div className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <h3 className="font-extrabold text-sm text-[#1a1a1a]">
+                    {editingAddress ? 'Edit Address' : 'Add New Address'}
+                  </h3>
+                  <button
+                    onClick={() => { setIsAddressModalOpen(false); resetAddressForm(); }}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
+                  >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <form onSubmit={handleAddAddress} className="space-y-3">
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Receiver Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={newAddr.fullName}
-                      onChange={(e) => setNewAddr({ ...newAddr, fullName: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-semibold"
-                    />
+                {addressFormErrors.submit && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{addressFormErrors.submit}</span>
                   </div>
+                )}
 
+                <form onSubmit={handleSaveAddress} className="space-y-3.5">
+                  {/* Address Label */}
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1">Nepali Mobile Phone</label>
-                    <input
-                      type="text"
-                      required
-                      value={newAddr.phone}
-                      onChange={(e) => setNewAddr({ ...newAddr, phone: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-semibold"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-bold text-gray-700 block mb-1">Province</label>
-                      <select
-                        value={newAddr.province}
-                        onChange={(e) => setNewAddr({ ...newAddr, province: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-semibold"
-                      >
-                        <option value="Bagmati Province">Bagmati Province</option>
-                        <option value="Gandaki Province">Gandaki Province</option>
-                        <option value="Koshi Province">Koshi Province</option>
-                        <option value="Lumbini Province">Lumbini Province</option>
-                      </select>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Address Label</label>
+                    <div className="flex gap-2">
+                      {['Home', 'Office', 'Other'].map((lbl) => (
+                        <button
+                          key={lbl}
+                          type="button"
+                          onClick={() => setAddressForm({ ...addressForm, label: lbl })}
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                            addressForm.label === lbl
+                              ? 'bg-[#0056b3] text-white border-[#0056b3]'
+                              : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          {lbl}
+                        </button>
+                      ))}
                     </div>
+                  </div>
 
+                  {/* Full Name + Phone */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">District</label>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">Full Name *</label>
                       <input
                         type="text"
-                        required
-                        value={newAddr.district}
-                        onChange={(e) => setNewAddr({ ...newAddr, district: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-semibold"
+                        value={addressForm.fullName}
+                        onChange={(e) => setAddressForm({ ...addressForm, fullName: e.target.value })}
+                        placeholder="e.g. Madhavi Dahit"
+                        className={`w-full bg-gray-50 border rounded-xl p-2.5 text-xs font-semibold outline-none transition-all ${
+                          addressFormErrors.fullName ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-200 focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3]'
+                        }`}
+                      />
+                      {addressFormErrors.fullName && <p className="text-[10px] text-red-600 mt-1">{addressFormErrors.fullName}</p>}
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">Mobile Phone *</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-xs text-gray-400 font-semibold">+977</span>
+                        <input
+                          type="text"
+                          value={addressForm.phone}
+                          onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
+                          placeholder="98XXXXXXXX"
+                          className={`w-full bg-gray-50 border rounded-xl p-2.5 pl-12 text-xs font-semibold outline-none transition-all ${
+                            addressFormErrors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-200 focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3]'
+                          }`}
+                        />
+                      </div>
+                      {addressFormErrors.phone && <p className="text-[10px] text-red-600 mt-1">{addressFormErrors.phone}</p>}
+                    </div>
+                  </div>
+
+                  {/* Province → District → Municipality → Ward */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">Province *</label>
+                      <select
+                        value={addressForm.province}
+                        onChange={(e) => setAddressForm({
+                          ...addressForm,
+                          province: e.target.value,
+                          district: '',
+                          municipality: '',
+                          ward: '',
+                        })}
+                        className={`w-full bg-gray-50 border rounded-xl p-2.5 text-xs font-semibold outline-none appearance-none pr-8 transition-all ${
+                          addressFormErrors.province ? 'border-red-400' : 'border-gray-200 focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3]'
+                        }`}
+                      >
+                        <option value="">Select Province</option>
+                        {NEPAL_PROVINCES.map((p) => (
+                          <option key={p.code} value={p.code}>{p.label}</option>
+                        ))}
+                      </select>
+                      {addressFormErrors.province && <p className="text-[10px] text-red-600 mt-1">{addressFormErrors.province}</p>}
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">District *</label>
+                      <select
+                        value={addressForm.district}
+                        onChange={(e) => setAddressForm({
+                          ...addressForm,
+                          district: e.target.value,
+                          municipality: '',
+                          ward: '',
+                        })}
+                        disabled={!addressForm.province}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none disabled:opacity-50 focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                      >
+                        <option value="">Select District</option>
+                        {formDistricts.map((d) => (
+                          <option key={d.name} value={d.name}>{d.name}</option>
+                        ))}
+                      </select>
+                      {addressFormErrors.district && <p className="text-[10px] text-red-600 mt-1">{addressFormErrors.district}</p>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">Municipality / Gaunpalika *</label>
+                      <select
+                        value={addressForm.municipality}
+                        onChange={(e) => setAddressForm({
+                          ...addressForm,
+                          municipality: e.target.value,
+                          ward: '',
+                        })}
+                        disabled={!addressForm.district}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none disabled:opacity-50 focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                      >
+                        <option value="">Select Municipality</option>
+                        {formMunicipalities.map((m) => (
+                          <option key={m.name} value={m.name}>{m.name}</option>
+                        ))}
+                      </select>
+                      {addressFormErrors.municipality && <p className="text-[10px] text-red-600 mt-1">{addressFormErrors.municipality}</p>}
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">Ward No. *</label>
+                      {formWardOptions.length > 0 ? (
+                        <select
+                          value={addressForm.ward}
+                          onChange={(e) => setAddressForm({ ...addressForm, ward: e.target.value })}
+                          disabled={!addressForm.municipality}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none disabled:opacity-50 focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                        >
+                          <option value="">Select Ward</option>
+                          {formWardOptions.map((w) => (
+                            <option key={w} value={w}>{w}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={addressForm.ward}
+                          onChange={(e) => setAddressForm({ ...addressForm, ward: e.target.value })}
+                          placeholder="e.g. 4"
+                          disabled={!addressForm.municipality}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none disabled:opacity-50 focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                        />
+                      )}
+                      {addressFormErrors.ward && <p className="text-[10px] text-red-600 mt-1">{addressFormErrors.ward}</p>}
+                    </div>
+                  </div>
+
+                  {/* Tole, Street, House Number */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">Tole / Area</label>
+                      <input
+                        type="text"
+                        value={addressForm.tole}
+                        onChange={(e) => setAddressForm({ ...addressForm, tole: e.target.value })}
+                        placeholder="e.g. Hasanpur"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">Street / Road</label>
+                      <input
+                        type="text"
+                        value={addressForm.streetAddress}
+                        onChange={(e) => setAddressForm({ ...addressForm, streetAddress: e.target.value })}
+                        placeholder="e.g. Main Road"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
                       />
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">House No.</label>
+                      <input
+                        type="text"
+                        value={addressForm.houseNumber}
+                        onChange={(e) => setAddressForm({ ...addressForm, houseNumber: e.target.value })}
+                        placeholder="e.g. 42"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1 text-xs">Postal Code</label>
+                      <input
+                        type="text"
+                        value={addressForm.postalCode}
+                        onChange={(e) => setAddressForm({ ...addressForm, postalCode: e.target.value })}
+                        placeholder="e.g. 10900"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Landmark */}
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1">Municipality / Gaunpalika</label>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Landmark</label>
                     <input
                       type="text"
-                      required
-                      value={newAddr.municipality}
-                      onChange={(e) => setNewAddr({ ...newAddr, municipality: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-semibold"
+                      value={addressForm.landmark}
+                      onChange={(e) => setAddressForm({ ...addressForm, landmark: e.target.value })}
+                      placeholder="e.g. Near Dhangadhi Mall, opposite Bank of Nepal"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
                     />
                   </div>
 
+                  {/* Delivery Instructions */}
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1">Street / Tole / Area</label>
-                    <input
-                      type="text"
-                      required
-                      value={newAddr.addressLine}
-                      onChange={(e) => setNewAddr({ ...newAddr, addressLine: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-xl p-2.5 text-xs font-semibold"
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Delivery Instructions</label>
+                    <textarea
+                      rows={2}
+                      value={addressForm.deliveryInstructions}
+                      onChange={(e) => setAddressForm({ ...addressForm, deliveryInstructions: e.target.value })}
+                      placeholder="e.g. Call before delivery, leave at reception, etc."
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none resize-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full bg-[#0056b3] text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors"
-                  >
-                    Save Delivery Address
-                  </button>
+                  {/* Set as Default */}
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={addressForm.isDefault}
+                      onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
+                      className="w-4 h-4 rounded border-gray-300 text-[#0056b3] focus:ring-[#0056b3]"
+                    />
+                    <span className="text-xs font-semibold text-gray-700">Set as default delivery address</span>
+                  </label>
+
+                  {/* Submit */}
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setIsAddressModalOpen(false); resetAddressForm(); }}
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl text-xs transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={addressSubmitting}
+                      className="flex-1 bg-[#0056b3] hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+                    >
+                      {addressSubmitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                      <span>{editingAddress ? 'Update Address' : 'Save Address'}</span>
+                    </button>
+                  </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* Delete Confirmation Dialog */}
+          {deletingAddressId !== null && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+                <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto">
+                  <Trash2 className="w-6 h-6 text-red-500" />
+                </div>
+                <div className="text-center space-y-1">
+                  <h3 className="font-extrabold text-sm text-[#1a1a1a]">Delete Address?</h3>
+                  <p className="text-gray-500 text-xs">This action cannot be undone. The address will be permanently removed from your account.</p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setDeletingAddressId(null)}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAddress}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
+                  >
+                    Delete Address
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -575,37 +1242,218 @@ export const AccountView: React.FC = () => {
       {/* TAB 4: NOTIFICATIONS */}
       {activeTab === 'notifications' && (
         <div className="bg-white p-6 rounded-3xl border border-gray-100 space-y-4">
-          <h3 className="font-extrabold text-sm text-[#1a1a1a]">Order & Activity Notifications</h3>
-          <div className="divide-y divide-gray-100">
-            {notifications.map((n) => (
-              <div key={n.id} className="py-3 flex items-start gap-3">
-                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${n.unread ? 'bg-[#0056b3]' : 'bg-gray-300'}`} />
-                <div className="flex-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-xs text-[#1a1a1a]">{n.title}</span>
-                    <span className="text-[10px] text-gray-400">{n.time}</span>
-                  </div>
-                  <p className="text-gray-600 text-[11px] mt-0.5">{n.message}</p>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-sm text-[#1a1a1a]">Order & Activity Notifications</h3>
+            {notifications.some((n) => n.unread) && (
+              <button
+                onClick={handleMarkAllNotificationsRead}
+                className="text-[11px] font-bold text-[#0056b3] hover:underline"
+              >
+                Mark all as read
+              </button>
+            )}
           </div>
+
+          {notificationsLoading ? (
+            <div className="flex items-center justify-center py-8 text-gray-400 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs">Loading notifications...</span>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="text-center py-8 space-y-2">
+              <Bell className="w-8 h-8 text-gray-300 mx-auto" />
+              <p className="text-gray-500 text-xs">No notifications yet</p>
+              <p className="text-gray-400 text-[11px]">Order updates and alerts will appear here</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {notifications.map((n) => (
+                <div
+                  key={n.id}
+                  className={`py-3 flex items-start gap-3 cursor-pointer hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors ${
+                    n.unread ? 'bg-blue-50/50' : ''
+                  }`}
+                  onClick={() => n.unread && handleMarkNotificationRead(n.id)}
+                >
+                  <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${n.unread ? 'bg-[#0056b3]' : 'bg-gray-300'}`} />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-xs text-[#1a1a1a]">{n.title}</span>
+                      <span className="text-[10px] text-gray-400">{n.time}</span>
+                    </div>
+                    <p className="text-gray-600 text-[11px] mt-0.5">{n.message}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {/* TAB 5: PROFILE */}
       {activeTab === 'profile' && (
         <div className="bg-white p-6 rounded-3xl border border-gray-100 space-y-4 max-w-lg">
-          <h3 className="font-bold text-sm text-[#1a1a1a]">Customer Account Details</h3>
-          <div className="space-y-2 text-gray-700">
-            {profileLoading ? <div className="text-gray-400">Loading your profile...</div> : <>
-              <div><strong>Full Name:</strong> {profileData?.name || currentUser?.name || 'Not available'}</div>
-              <div><strong>Email:</strong> {profileData?.email || currentUser?.email || 'Not available'}</div>
-              <div><strong>Mobile Phone:</strong> {profileData?.phone || currentUser?.phone || 'Not added'}</div>
-              <div><strong>Primary City:</strong> {addresses[0] ? `${addresses[0].district}, Nepal` : 'No saved address'}</div>
-              <div><strong>Loyalty Status:</strong> {isUserLoggedIn ? 'Verified Tech Member' : 'Not Signed In'}</div>
-            </>}
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm text-[#1a1a1a]">Customer Account Details</h3>
+            {!isProfileEditing && (
+              <button
+                onClick={openProfileEdit}
+                className="text-[11px] font-bold text-[#0056b3] hover:underline flex items-center gap-1"
+              >
+                <Edit className="w-3 h-3" />
+                Edit Profile
+              </button>
+            )}
           </div>
+
+          {profileLoading ? (
+            <div className="flex items-center gap-2 text-gray-400 py-4">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs">Loading your profile...</span>
+            </div>
+          ) : isProfileEditing ? (
+            <div className="space-y-4">
+              {/* Name */}
+              <div>
+                <label className="font-bold text-gray-700 block mb-1 text-xs">Full Name</label>
+                <input
+                  type="text"
+                  value={profileEditForm.name}
+                  onChange={(e) => setProfileEditForm({ ...profileEditForm, name: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label className="font-bold text-gray-700 block mb-1 text-xs">Mobile Phone</label>
+                {otpState.step === 'verify' ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">+977</span>
+                      <input
+                        type="text"
+                        value={otpState.otp}
+                        onChange={(e) => setOtpState((prev) => ({ ...prev, otp: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                        placeholder="Enter 6-digit code"
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                      />
+                    </div>
+                    {otpState.error && <p className="text-[10px] text-red-600">{otpState.error}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleVerifyOtp}
+                        className="flex-1 bg-[#0056b3] text-white font-bold py-2 rounded-xl text-xs hover:bg-blue-700 transition-colors"
+                      >
+                        Verify Code
+                      </button>
+                      <button
+                        onClick={() => setOtpState({ step: 'idle', phone: '', otp: '', error: '', countdown: 0 })}
+                        className="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-xl text-xs hover:bg-gray-200 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {otpState.countdown > 0 && (
+                      <p className="text-[10px] text-gray-400 text-center">
+                        Resend code in {otpState.countdown}s
+                      </p>
+                    )}
+                    {otpState.countdown === 0 && otpState.step === 'verify' && (
+                      <button
+                        onClick={handleSendOtp}
+                        className="text-[10px] text-[#0056b3] font-bold hover:underline w-full text-center"
+                      >
+                        Resend Code
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-semibold">+977</span>
+                      <input
+                        type="text"
+                        value={profileEditForm.phone}
+                        onChange={(e) => setProfileEditForm({ ...profileEditForm, phone: e.target.value })}
+                        placeholder="98XXXXXXXX"
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-2.5 pl-10 text-xs font-semibold outline-none focus:ring-2 focus:ring-[#0056b3]/20 focus:border-[#0056b3] transition-all"
+                      />
+                    </div>
+                    {otpState.error && <p className="text-[10px] text-red-600">{otpState.error}</p>}
+                    {otpState.step === 'verified' ? (
+                      <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Phone verified
+                      </p>
+                    ) : (
+                      <button
+                        onClick={handleSendOtp}
+                        disabled={otpState.step === 'sending' || !profileEditForm.phone}
+                        className="text-[10px] text-[#0056b3] font-bold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {otpState.step === 'sending' ? 'Sending...' : 'Send Verification Code'}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Save/Cancel */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => { setIsProfileEditing(false); setOtpState({ step: 'idle', phone: '', otp: '', error: '', countdown: 0 }); }}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={profileSaving}
+                  className="flex-1 bg-[#0056b3] hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+                >
+                  {profileSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 text-gray-700">
+              <div className="space-y-2">
+                <div><strong>Full Name:</strong> {profileData?.name || currentUser?.name || 'Not available'}</div>
+                <div><strong>Email:</strong> {profileData?.email || currentUser?.email || 'Not available'}</div>
+                <div><strong>Mobile Phone:</strong> {profileData?.phone || currentUser?.phone || 'Not added'}</div>
+                <div><strong>Loyalty Status:</strong> {isUserLoggedIn ? 'Verified Tech Member' : 'Not Signed In'}</div>
+              </div>
+
+              {/* Default Address */}
+              {addresses.length > 0 && (
+                <div className="pt-3 border-t border-gray-100">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <MapPin className="w-3.5 h-3.5 text-[#0056b3]" />
+                    <strong className="text-xs">Default Address</strong>
+                    {addresses.find((a) => a.isDefault) && (
+                      <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">Default</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-600 leading-relaxed pl-5">
+                    {(() => {
+                      const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0];
+                      return formatAddress(defaultAddr).map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ));
+                    })()}
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('addresses')}
+                    className="text-[10px] text-[#0056b3] font-bold hover:underline mt-2 pl-5"
+                  >
+                    Manage Addresses
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -794,6 +1642,16 @@ export const AccountView: React.FC = () => {
               </form>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-[60] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-xs font-bold text-white transition-all animate-in slide-in-from-bottom-4 ${
+          toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          <span>{toast.message}</span>
         </div>
       )}
     </div>

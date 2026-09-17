@@ -327,6 +327,52 @@ export const fetchOrder = (id: number) => request<DbOrderDetail>(`/api/orders?id
 export const fetchOrderByNumber = (orderNumber: string) =>
   request<DbOrderDetail>(`/api/orders?orderNumber=${encodeURIComponent(orderNumber)}`);
 
+/* -------------------------------------------------------- notifications */
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  unread: boolean;
+  type?: string;
+}
+
+export const fetchNotifications = () =>
+  request<{ notifications: NotificationItem[] }>('/api/notifications');
+
+export const markNotificationRead = (id: string) =>
+  request<{ success: true }>('/api/notifications', {
+    method: 'PUT',
+    body: JSON.stringify({ id }),
+  });
+
+export const markAllNotificationsRead = () =>
+  request<{ success: true }>('/api/notifications', {
+    method: 'PUT',
+    body: JSON.stringify({ markAll: true }),
+  });
+
+/* --------------------------------------------------------- profile / OTP */
+
+export const updateProfile = (input: { name?: string; phone?: string }) =>
+  request<{ success: true; user: { id: number; name: string; email: string; phone: string | null } }>('/api/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+
+export const sendOtp = (phone: string) =>
+  request<{ success: true; message: string }>('/api/auth/otp/send', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+
+export const verifyOtp = (phone: string, code: string) =>
+  request<{ success: true; message: string }>('/api/auth/otp/verify', {
+    method: 'POST',
+    body: JSON.stringify({ phone, code }),
+  });
+
 /* --------------------------------------------------------- catalog (admin) */
 
 /**
