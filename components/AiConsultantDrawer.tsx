@@ -382,7 +382,7 @@ How can I assist you today?
 
                   <div className="flex items-center justify-between mt-2 pt-1 border-t border-black/5 text-[9px]">
                     <span className={msg.sender === 'user' ? 'text-blue-200' : 'text-slate-400'}>
-                      {msg.modelUsed ? `${msg.modelUsed} • ` : ''}{msg.timestamp}
+                      {msg.timestamp}
                     </span>
 
                     {msg.sender === 'assistant' && (

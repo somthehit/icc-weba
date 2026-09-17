@@ -218,7 +218,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
         aspectRatio: imageAspectRatio,
       });
 
-      setImageSuccessNotice('Image successfully created with Gemini 3.1 Flash Image and saved to your gallery!');
+      setImageSuccessNotice('Image successfully created with Intel CC AI and saved to your gallery!');
     } catch (err: any) {
       console.error(err);
       setImageError(err.message || 'Image generation failed. Please check your prompt and try again.');
@@ -283,13 +283,13 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
             <div className="space-y-2 max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1 rounded-full text-xs font-bold">
                 <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                <span>Next-Gen Gemini Intelligence Suite</span>
+                <span>Next-Gen Intell CC AI Studio & Hardware Intelligence</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                 Intel Computer AI Studio & Hardware Intelligence
               </h1>
               <p className="text-xs sm:text-sm text-blue-100/80 leading-relaxed">
-                Harness multi-model Gemini reasoning (3.5-flash, 3.1-pro-preview, 3.1-flash-lite), Google Maps Grounding for Kailali tech centers, and 3.1-flash-image for custom hardware image creation and editing.
+                Harness multi-model Intel CC AI Studio & Hardware Intelligence, Google Maps Grounding for Kailali tech centers, and 3.1-flash-image for custom hardware image creation and editing.
               </p>
             </div>
 
@@ -344,7 +344,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                 <div>
                   <h3 className="font-extrabold text-sm text-slate-900 mb-1 flex items-center gap-2">
                     <Zap className="w-4 h-4 text-amber-500" />
-                    <span>Gemini Model Tier</span>
+                    <span>Model Intelligence</span>
                   </h3>
                   <p className="text-[11px] text-slate-500 mb-3">Select appropriate model intelligence:</p>
 
@@ -543,7 +543,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
 
                         <div className="flex items-center justify-between mt-2.5 pt-1 border-t border-black/5 text-[9px]">
                           <span className={msg.sender === 'user' ? 'text-blue-200' : 'text-slate-400'}>
-                            {msg.modelUsed ? `${msg.modelUsed} • ` : ''}{msg.timestamp}
+                            {msg.timestamp}
                           </span>
 
                           {msg.sender === 'assistant' && (
@@ -857,7 +857,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                   {isImageGenerating ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Gemini 3.1 Flash Image is Synthesizing...</span>
+                      <span>Intel AI Image is Synthesizing...</span>
                     </>
                   ) : (
                     <>
@@ -901,7 +901,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                         <div className="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center mx-auto animate-pulse">
                           <Sparkles className="w-7 h-7 text-amber-400 animate-spin" />
                         </div>
-                        <h4 className="font-bold text-sm">Rendering with Gemini 3.1 Flash Image</h4>
+                        <h4 className="font-bold text-sm">Rendering with Intel CC AI Image</h4>
                         <p className="text-xs text-slate-400 max-w-xs mx-auto">
                           Processing hardware lighting, textures, and geometry prompts...
                         </p>
@@ -1013,7 +1013,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                     <span>Google Maps Grounding Navigator</span>
                   </h2>
                   <p className="text-xs text-slate-500 mt-1">
-                    Powered by <strong>gemini-3.5-flash</strong> with the official Google Maps Tool grounding for Kailali Valley, New Road, and authorized IT centers across Nepal.
+                    Powered by <strong>Intel CC AI</strong> with the official Google Maps Tool grounding for Kailali Valley, New Road, and authorized IT centers across Nepal.
                   </p>
                 </div>
 
@@ -1085,7 +1085,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
                   <Loader2 className="w-8 h-8 animate-spin text-[#0056b3] mx-auto" />
                   <h4 className="font-bold text-sm text-slate-800">Grounding via Google Maps Data...</h4>
                   <p className="text-xs text-slate-500">
-                    Gemini 3.5 Flash is extracting verified place records, URIs, and localized context for Kailali.
+                    Intel CC is extracting verified place records, URIs, and localized context for Kailali.
                   </p>
                 </div>
               ) : mapsResults ? (
