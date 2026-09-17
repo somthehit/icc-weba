@@ -48,6 +48,7 @@ const RULES: readonly Rule[] = [
   // Sign-in surface. Rate limited below rather than access controlled.
   { path: '/api/auth/login', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/register', match: 'exact', read: PUBLIC, write: PUBLIC },
+  { path: '/api/auth/google', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/logout', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/me', match: 'exact', read: SIGNED_IN, write: SIGNED_IN },
   // Public storefront contact form. Validation and rate limiting are enforced by
@@ -161,7 +162,7 @@ const AI_BUDGET: Budget = { limit: 20, windowMs: 5 * 60 * 1000 };
 const WRITE_BUDGET: Budget = { limit: 60, windowMs: 60 * 1000 };
 
 function budgetFor(pathname: string, method: string): Budget | null {
-  if (pathname === '/api/auth/login' || pathname === '/api/auth/register') return LOGIN_BUDGET;
+  if (pathname === '/api/auth/login' || pathname === '/api/auth/register' || pathname === '/api/auth/google') return LOGIN_BUDGET;
   // Both of these spend somebody else's metered quota on our key, so they are
   // capped on reads too — a public GET that proxies a billed API is farmable.
   if (pathname.startsWith('/api/gemini')) return AI_BUDGET;

@@ -31,6 +31,7 @@ import {
 } from '@/lib/data/initial-data';
 import { computeProductEffectivePrice } from '@/lib/offers/offerUtils';
 import { DB_STATUS, orderRowIds, toUiOrder, type DbOrderDetail } from '@/lib/adapters/orders';
+import { auth, googleProvider, signInWithPopup } from '@/lib/firebase';
 import {
   addCartLine,
   archiveProductRequest,
@@ -475,7 +476,49 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const loginWithGoogle = async () => {
-    return { success: false, error: 'Google sign-in not configured. Please use email.' };
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = result.user;
+
+      if (!firebaseUser.email) {
+        return { success: false, error: 'Google account has no email address.' };
+      }
+
+      // Send the Firebase user info to our server to find-or-create the user
+      // and get back a custom JWT cookie.
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+          email: firebaseUser.email,
+          avatarUrl: firebaseUser.photoURL,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Google sign-in failed.' };
+      }
+
+      adoptSession(data.user);
+      setIsAuthModalOpen(false);
+
+      return { success: true };
+    } catch (error: unknown) {
+      // Firebase throws a specific error when the user closes the popup.
+      if (error && typeof error === 'object' && 'code' in error) {
+        const firebaseError = error as { code: string };
+        if (firebaseError.code === 'auth/popup-closed-by-user') {
+          return { success: false, error: 'Sign-in cancelled.' };
+        }
+        if (firebaseError.code === 'auth/popup-blocked') {
+          return { success: false, error: 'Pop-up was blocked by your browser. Please allow pop-ups for this site.' };
+        }
+      }
+      return { success: false, error: 'Google sign-in failed. Please try again.' };
+    }
   };
 
   const loginWithEmail = async (userEmail: string, password: string) => {

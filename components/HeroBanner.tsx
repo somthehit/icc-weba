@@ -150,7 +150,7 @@ export const HeroBanner: React.FC = () => {
   return (
     <section
       id="hero-redesign-section"
-      className="relative bg-white text-slate-900 overflow-hidden my-4 max-w-7xl mx-auto rounded-3xl border border-slate-200/80 px-6 lg:px-12 py-10 lg:py-12 select-none shadow-xs"
+      className="relative bg-white text-slate-900 overflow-hidden my-2 max-w-7xl mx-auto rounded-3xl border border-slate-200/80 px-6 lg:px-12 py-5 lg:py-6 select-none shadow-xs"
     >
       {/* Background Subtle Radial Glow */}
       <div
@@ -183,9 +183,9 @@ export const HeroBanner: React.FC = () => {
         </g>
       </svg>
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
         {/* Left Column: Hero Content */}
-        <div className="lg:col-span-7 space-y-5">
+        <div className="lg:col-span-7 space-y-4">
           {/* Eyebrow with pulsing blue/cyan status dot */}
           <div className="inline-flex items-center gap-2.5 font-mono text-xs tracking-wider text-blue-600 uppercase font-bold bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
             <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse flex-shrink-0" />
@@ -205,7 +205,7 @@ export const HeroBanner: React.FC = () => {
           </p>
 
           {/* CTA Action Buttons */}
-          <div className="flex flex-wrap items-center gap-3.5 pt-2">
+          <div className="flex flex-wrap items-center gap-3 pt-1">
             <button
               onClick={() => navigateTo('shop')}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base py-3 px-6 rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 shadow-sm flex items-center gap-2 cursor-pointer"
@@ -222,7 +222,7 @@ export const HeroBanner: React.FC = () => {
           </div>
 
           {/* Trust Features Strip */}
-          <div className="pt-5 border-t border-slate-100 flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs text-slate-600">
+          <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs text-slate-600">
             <span className="inline-flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-blue-600 stroke-[2.5]" />
               Official NP Warranty
@@ -260,19 +260,19 @@ export const HeroBanner: React.FC = () => {
           </svg>
 
           {/* Spec Card Container */}
-          <div className="relative z-10 bg-slate-50 border border-slate-200/90 rounded-[22px] p-5 sm:p-6 shadow-lg shadow-slate-200/50">
+          <div className="relative z-10 bg-slate-50 border border-slate-200/90 rounded-[22px] p-3 sm:p-4 shadow-lg shadow-slate-200/50">
             {/* Discount Badge */}
             <div className="absolute top-4 right-4 z-20 bg-red-500 text-white font-mono font-bold text-xs px-2.5 py-1 rounded-full shadow-xs">
               {current.badge}
             </div>
 
             {/* Card Label */}
-            <div className="font-mono text-[11px] font-semibold tracking-widest uppercase text-slate-500 mb-3">
+            <div className="font-mono text-[11px] font-semibold tracking-widest uppercase text-slate-500 mb-2">
               {current.cardLabel}
             </div>
 
             {/* Virtual Device Display Screen */}
-            <div className="relative rounded-t-xl rounded-b aspect-video bg-slate-950 border border-slate-800 overflow-hidden p-4 flex flex-col justify-center shadow-inner">
+            <div className="relative rounded-t-xl rounded-b h-36 bg-slate-950 border border-slate-800 overflow-hidden p-4 flex flex-col justify-center shadow-inner">
               {/* Radial Highlight in Screen */}
               <div
                 className="absolute -top-12 -left-8 w-44 h-44 rounded-full pointer-events-none"
@@ -292,7 +292,7 @@ export const HeroBanner: React.FC = () => {
 
             {/* Device Metallic Base */}
             <div
-              className="h-2 rounded-b-lg mx-2.5 mb-3.5 shadow-2xs border-t border-slate-300"
+              className="h-2 rounded-b-lg mx-2.5 mb-2.5 shadow-2xs border-t border-slate-300"
               style={{
                 background: 'linear-gradient(90deg, #e2e8f0, #cbd5e1 50%, #e2e8f0)',
               }}
@@ -302,14 +302,14 @@ export const HeroBanner: React.FC = () => {
             <div className="font-mono text-[11px] font-bold tracking-wider text-slate-500 uppercase">
               {current.brand}
             </div>
-            <div className="font-sans font-extrabold text-lg text-slate-900 mb-3 truncate">
+            <div className="font-sans font-extrabold text-lg text-slate-900 mb-2 truncate">
               {current.model}
             </div>
 
             {/* Spec Matrix Table */}
-            <div className="border-t border-slate-200 divide-y divide-slate-200 mb-3.5">
+            <div className="border-t border-slate-200 divide-y divide-slate-200 mb-2.5">
               {current.specs.map((spec, i) => (
-                <div key={i} className="flex justify-between items-center py-1.5 font-mono text-xs">
+                <div key={i} className="flex justify-between items-center py-1 font-mono text-xs">
                   <span className="text-slate-500 tracking-wide font-medium">{spec.k}</span>
                   <span className="text-slate-900 font-semibold text-right">{spec.v}</span>
                 </div>
@@ -317,7 +317,7 @@ export const HeroBanner: React.FC = () => {
             </div>
 
             {/* Pricing Section */}
-            <div className="flex items-baseline gap-2.5 mb-3">
+            <div className="flex items-baseline gap-2.5 mb-2">
               <span className="font-mono text-xs text-slate-400 line-through">
                 NPR {current.mrp.toLocaleString()}
               </span>
@@ -327,7 +327,7 @@ export const HeroBanner: React.FC = () => {
             </div>
 
             {/* Stock Progress Status */}
-            <div className="mb-4">
+            <div className="mb-3">
               <div className="flex justify-between font-mono text-[11px] text-slate-500 mb-1">
                 <span className="font-semibold text-slate-700">{current.stockLeft} units left</span>
                 <span>{current.location}</span>
@@ -368,7 +368,7 @@ export const HeroBanner: React.FC = () => {
       </div>
 
       {/* Hero Carousel Navigation Footer */}
-      <div className="relative z-10 mt-8 pt-4 border-t border-slate-100 flex items-center justify-between">
+      <div className="relative z-10 mt-6 pt-3 border-t border-slate-100 flex items-center justify-between">
         {/* Slide Dots Indicator */}
         <div className="flex items-center gap-2">
           {HERO_SLIDES.map((_, idx) => (

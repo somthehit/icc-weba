@@ -60,7 +60,7 @@ export const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
       {/* 1. Top Announcement Bar */}
-      {announcementVisible && <div className="bg-[#1B3A8C] text-[#DCE6FF] py-2 px-4 md:px-10 text-xs font-mono tracking-wide flex justify-between items-center">
+      {announcementVisible && <div className="bg-[#1B3A8C] text-[#DCE6FF] py-2 px-4 md:px-8 text-xs font-mono tracking-wide flex justify-between items-center overflow-hidden">
         <div>
           <strong className="text-white font-semibold">{announcement}</strong>
         </div>
@@ -70,19 +70,13 @@ export const Header: React.FC = () => {
           <button onClick={() => navigateTo('track-order')} className="opacity-90 hover:opacity-100 hover:text-white transition-opacity">Track Order</button>
           <span className="opacity-35">|</span>
           <button onClick={() => navigateTo('contact')} className="opacity-90 hover:opacity-100 hover:text-white transition-opacity">Support</button>
-          <button 
-            onClick={() => isAdminLoggedIn ? navigateTo('admin') : navigateTo('admin-login')}
-            className="bg-white/12 hover:bg-white/20 text-white px-2.5 py-0.5 rounded-md font-mono transition-colors"
-          >
-            {isAdminLoggedIn ? 'Admin Panel' : 'Admin'}
-          </button>
         </div>
       </div>}
 
       {/* 2. Main Header Bar */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-2 flex items-center justify-between gap-2 lg:gap-3 min-w-0">
         {/* Brand Logo */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 text-[#1a1a1a] hover:text-[#0056b3] rounded-lg hover:bg-gray-100 transition-colors"
@@ -97,14 +91,14 @@ export const Header: React.FC = () => {
             title={siteSettings.storeName}
           >
             <BrandLogo key={siteSettings.logoUrl} logoUrl={siteSettings.logoUrl} storeName={siteSettings.storeName} />
-            <span className="font-extrabold text-xl sm:text-2xl text-[#0056b3] tracking-tight hover:text-[#004494] transition-colors">
+            <span className="font-extrabold text-base sm:text-lg md:text-xl text-[#0056b3] tracking-tight hover:text-[#004494] transition-colors whitespace-nowrap max-w-[150px] sm:max-w-[200px] md:max-w-[220px] lg:max-w-none truncate">
               {siteSettings.storeName}
             </span>
           </div>
         </div>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden lg:flex items-center gap-6 text-[13px] font-semibold text-gray-600">
+        <nav className="hidden lg:flex items-center gap-3 xl:gap-5 text-[13px] font-semibold text-gray-600 shrink-0">
           <button 
             onClick={() => navigateTo('home')} 
             className={`transition-colors ${currentPage === 'home' ? 'text-[#0056b3]' : 'hover:text-[#0056b3]'}`}
@@ -145,16 +139,16 @@ export const Header: React.FC = () => {
         </nav>
 
         {/* Live Realtime Multi-Category Search */}
-        <div className="hidden md:block flex-1 max-w-lg mx-4">
-          <RealtimeSearch placeholder="Search products, services, categories..." />
+        <div className="hidden md:block flex-1 min-w-0 max-w-[200px] lg:max-w-xs xl:max-w-sm mx-1 lg:mx-2">
+          <RealtimeSearch placeholder="Search..." />
         </div>
 
         {/* Right Action Icons */}
-        <div className="flex items-center gap-4 text-[#1a1a1a]">
+        <div className="flex items-center gap-1.5 sm:gap-2 xl:gap-3 text-[#1a1a1a] shrink-0">
           {/* AI Advisor Launcher */}
           <button
             onClick={() => setIsAiAssistantOpen(true)}
-            className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-[#4C7CFF] to-[#7C5CFF] text-white text-[13px] font-semibold px-4 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition-all cursor-pointer transform hover:-translate-y-0.5"
+            className="hidden sm:flex lg:hidden xl:flex items-center gap-1.5 bg-gradient-to-r from-[#4C7CFF] to-[#7C5CFF] text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition-all cursor-pointer"
             title="AI Consultant"
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -164,7 +158,7 @@ export const Header: React.FC = () => {
           {/* Book Service Quick CTA */}
           <button
             onClick={() => setIsServiceModalOpen(true)}
-            className="hidden sm:flex items-center gap-1.5 border border-gray-300 text-gray-800 text-[13px] font-semibold px-4 py-2 rounded-full hover:border-[#4C7CFF] hover:text-[#4C7CFF] transition-all cursor-pointer transform hover:-translate-y-0.5"
+            className="hidden sm:flex lg:hidden xl:flex items-center gap-1.5 border border-gray-200 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full hover:border-[#4C7CFF] hover:text-[#4C7CFF] transition-all cursor-pointer"
             title="Book Repair"
           >
             <Wrench className="w-3.5 h-3.5" />
@@ -208,7 +202,7 @@ export const Header: React.FC = () => {
             title={isUserLoggedIn ? 'Open profile' : 'Sign in'}
           >
             {isUserLoggedIn && currentUser?.avatarUrl ? <img src={currentUser.avatarUrl} alt={currentUser.name} className="h-8 w-8 rounded-full object-cover" /> : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0056b3] text-xs font-black text-white">{isUserLoggedIn && currentUser ? currentUser.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() : <User className="w-5 h-5" />}</span>}
-            {isUserLoggedIn && currentUser && <span className="hidden max-w-[100px] truncate text-xs font-bold sm:inline">{currentUser.name}</span>}
+            {isUserLoggedIn && currentUser && <span className="hidden max-w-[70px] lg:max-w-[80px] xl:max-w-[100px] truncate text-xs font-bold sm:inline">{currentUser.name}</span>}
           </button>
         </div>
       </div>
@@ -270,7 +264,7 @@ function BrandLogo({ logoUrl, storeName }: { logoUrl: string; storeName: string 
       .toUpperCase();
 
     return (
-      <span className="hidden h-14 w-20 shrink-0 items-center justify-center rounded-xl bg-[#0056b3] text-base font-black tracking-wider text-white sm:flex">
+      <span className="hidden h-16 w-24 shrink-0 items-center justify-center rounded-xl bg-[#0056b3] text-base font-black tracking-wider text-white sm:flex">
         {initials}
       </span>
     );

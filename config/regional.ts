@@ -129,7 +129,7 @@ export const SUDURPASHCHIM_CONFIG = {
   ] as DistrictCoverage[],
 
   bannerMessage:
-    '🚚 Fast Express Delivery Across All 9 Districts of Sudurpashchim Province! (Nepal-wide delivery coming soon)',
+    '🚚 Fast delivery across all 9 Sudurpashchim districts • Nepal-wide coming soon',
   nationwideTeaser: 'Nepal-wide delivery coming soon — Phase 2',
   seoDefaultSuffix:
     '| Best Electronics & Tech Store in Sudurpashchim (Dhangadhi & Mahendranagar)',
