@@ -78,7 +78,7 @@ export const AdminLoginView: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@intel.com.np"
+                  placeholder="[EMAIL_ADDRESS]"
                   className="w-full bg-[#0F1420] border border-white/10 rounded-xl py-3 px-4 pl-11 text-sm text-white placeholder:text-gray-500 focus:ring-2 focus:ring-[#4C63FF]/30 focus:border-[#4C63FF] outline-none transition-all"
                 />
                 <Mail className="w-4 h-4 text-gray-500 absolute left-3.5 top-3.5" />

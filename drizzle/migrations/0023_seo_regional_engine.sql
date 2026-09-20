@@ -151,7 +151,7 @@ VALUES
    'dell dealer dhangadhi, hikvision dealer sudurpashchim', false, true, '0.7', 'weekly', 4),
   ('about', 'About & Contact', '/about',
    'About Us & Store Location in Dhangadhi | Intel Computer Center',
-   'Visit our showroom at Main Road, Near Campus Chowk, Dhangadhi. Call +977-91-521890 for sales, service and corporate IT procurement across Sudurpashchim.',
+   'Visit our showroom at Main Road, Near Campus Chowk, Dhangadhi. Call +977-91-525287 for sales, service and corporate IT procurement across Sudurpashchim.',
    'computer store near me dhangadhi, intel computer center contact', false, true, '0.7', 'monthly', 5),
   ('faq', 'FAQ & Support', '/faq',
    'Delivery, Warranty & Payment FAQs | Intel Computer Center Dhangadhi',
