@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { ShippingAddress, PaymentMethod, Order } from '@/types';
+import { InvoiceModal } from '@/components/InvoiceModal';
 import { PROVINCE_LABELS } from '@/lib/nepal/provinces';
 import {
   SERVICED_PROVINCE_CODES,
@@ -50,6 +51,7 @@ export const CheckoutView: React.FC = () => {
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   const subtotal = getCartSubtotal();
   const discount = getCartDiscount();
@@ -169,13 +171,29 @@ export const CheckoutView: React.FC = () => {
               Track Order Live
             </button>
             <button
+              onClick={() => setShowInvoiceModal(true)}
+              className="bg-[#0056b3] hover:bg-[#004494] text-white font-bold py-3 px-6 rounded-xl shadow flex items-center gap-1.5"
+            >
+              <FileText className="w-4 h-4" />
+              <span>View Official Tax Invoice</span>
+            </button>
+            <button
               onClick={() => window.print()}
               className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 px-6 rounded-xl border border-slate-300 flex items-center gap-1.5"
             >
               <Printer className="w-4 h-4" />
-              <span>Print Invoice Receipt</span>
+              <span>Print Slip</span>
             </button>
           </div>
+
+          {/* Official Nepal Tax Invoice Modal */}
+          {completedOrder && (
+            <InvoiceModal
+              order={completedOrder}
+              isOpen={showInvoiceModal}
+              onClose={() => setShowInvoiceModal(false)}
+            />
+          )}
         </div>
       ) : (
         /* STEPS 1-3 FORM */

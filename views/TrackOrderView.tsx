@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { Order } from '@/types';
+import { InvoiceModal } from '@/components/InvoiceModal';
 import { 
   Search, 
   Package, 
@@ -11,7 +12,9 @@ import {
   Clock, 
   MapPin, 
   Phone, 
-  AlertCircle 
+  AlertCircle,
+  FileText,
+  Printer
 } from 'lucide-react';
 
 export const TrackOrderView: React.FC = () => {
@@ -21,6 +24,7 @@ export const TrackOrderView: React.FC = () => {
   const [phoneInput, setPhoneInput] = useState('');
   const [searchedOrder, setSearchedOrder] = useState<Order | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,6 +176,31 @@ export const TrackOrderView: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Invoice & Action Row */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 bg-slate-50 p-4 rounded-2xl">
+            <div className="space-y-0.5">
+              <div className="font-bold text-slate-800 text-xs">Official Commercial Tax Invoice</div>
+              <div className="text-[11px] text-slate-500">Includes 13% VAT breakdown, payment method verification and official store PAN.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowInvoiceModal(true)}
+              className="bg-[#0056b3] hover:bg-[#004494] text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow flex items-center gap-1.5 transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              <span>View / Print Tax Invoice</span>
+            </button>
+          </div>
+
+          {/* Tax Invoice Modal */}
+          {searchedOrder && (
+            <InvoiceModal
+              order={searchedOrder}
+              isOpen={showInvoiceModal}
+              onClose={() => setShowInvoiceModal(false)}
+            />
+          )}
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { STORE_INFO } from '@/lib/data/initial-data';
+import { STORE_INFO, INITIAL_SITE_SETTINGS } from '@/lib/data/initial-data';
 import { GoogleMapEmbed } from '@/components/GoogleMapEmbed';
 import { GoogleReviews } from '@/components/GoogleReviews';
 import { SeoHead } from '@/context/SeoContext';
@@ -66,7 +66,7 @@ export const AboutContactView: React.FC = () => {
         </span>
         <h1 className="text-3xl md:text-4xl font-black">{siteSettings.storeName} — Dhangadhi</h1>
         <p className="text-blue-100 text-sm max-w-2xl leading-relaxed">
-          {siteSettings.tagline}. Located at {siteSettings.address}, we are a certified technology store and total hardware solutions provider for individuals, corporate offices, schools, and government institutions across Far-West Nepal.
+          {siteSettings.tagline}. Located at {siteSettings.address || INITIAL_SITE_SETTINGS.address}, we are a certified technology store and total hardware solutions provider for individuals, corporate offices, schools, and government institutions across Far-West Nepal.
         </p>
       </div>
 
@@ -92,7 +92,11 @@ export const AboutContactView: React.FC = () => {
               <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-bold text-slate-900">Store Address:</div>
-                <div>{siteSettings.address}</div>
+                <div>
+                  {(siteSettings.address && !siteSettings.address.includes('Campus Chowk')) 
+                    ? siteSettings.address 
+                    : 'Ratopool, Dhangadhi, Nepal'}
+                </div>
                 <div className="text-[11px] text-slate-400 font-mono mt-0.5">GPS Coordinates: {STORE_INFO.address.mapCoordinates}</div>
               </div>
             </div>
@@ -101,18 +105,30 @@ export const AboutContactView: React.FC = () => {
               <Phone className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-bold text-slate-900">Telephone Hotlines:</div>
-                <div>Support Phone: <a href={`tel:${siteSettings.phone}`} className="font-bold text-blue-700">{siteSettings.phone}</a></div>
-                <div>Mobile / WhatsApp: <a href={`tel:${siteSettings.whatsappNumber}`} className="font-bold text-blue-700">{siteSettings.whatsappNumber}</a></div>
+                <div>
+                  Support Phone: <a href="tel:091-525287" className="font-bold text-blue-700">
+                    {siteSettings.phone && !siteSettings.phone.includes('521890') && !siteSettings.phone.includes('+091') 
+                      ? siteSettings.phone 
+                      : '091-525287'}
+                  </a>
+                </div>
+                <div>
+                  Mobile / WhatsApp: <a href="https://wa.me/9779848424859" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-700">
+                    {siteSettings.whatsappNumber && !siteSettings.whatsappNumber.includes('9851034291') 
+                      ? siteSettings.whatsappNumber 
+                      : '+977-9848424859'}
+                  </a>
+                </div>
               </div>
             </div>
-
+ 
             <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
               <Mail className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="font-bold text-slate-900">Email Addresses:</div>
-                <div>General Inquiry: {siteSettings.email}</div>
-                <div>Sales & Quotation: {siteSettings.email}</div>
-                <div>Technical Support: {siteSettings.email}</div>
+                <div>General Inquiry: <span className="font-medium text-slate-800">{siteSettings.email || INITIAL_SITE_SETTINGS.email}</span></div>
+                <div>Sales & Quotation: <span className="font-medium text-slate-800">{siteSettings.email || INITIAL_SITE_SETTINGS.email}</span></div>
+                <div>Technical Support: <span className="font-medium text-slate-800">{siteSettings.email || INITIAL_SITE_SETTINGS.email}</span></div>
               </div>
             </div>
 

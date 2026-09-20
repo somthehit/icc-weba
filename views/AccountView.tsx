@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { Order, SavedAddress } from '@/types';
+import { InvoiceModal } from '@/components/InvoiceModal';
 import {
   fetchAddresses,
   createAddress,
@@ -1525,71 +1526,12 @@ export const AccountView: React.FC = () => {
         </div>
       )}
 
-      {/* TAX INVOICE PRINT MODAL */}
-      {showInvoiceModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl border">
-            <div className="flex justify-between items-center border-b pb-3">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#0056b3]" />
-                <h3 className="font-extrabold text-base text-[#1a1a1a]">Nepal Official Tax Invoice</h3>
-              </div>
-              <button onClick={() => setShowInvoiceModal(null)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="text-center space-y-1 border-b pb-4">
-              <h2 className="font-black text-lg text-[#0056b3]">Intel Computer Center</h2>
-              <p className="text-gray-500">Ratopool, Dhangadhi, Nepal</p>
-              <p className="text-gray-500 font-mono">VAT/PAN No: 302910482 | Tel: 091-525287 / 9848424859</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-[11px] bg-gray-50 p-3 rounded-2xl">
-              <div>
-                <strong>Invoice No:</strong> INV-{showInvoiceModal.id}<br />
-                <strong>Order Ref:</strong> {showInvoiceModal.id}<br />
-                <strong>Date:</strong> {showInvoiceModal.createdAt.split('T')[0]}
-              </div>
-              <div>
-                <strong>Customer Name:</strong> {showInvoiceModal.shippingAddress.fullName}<br />
-                <strong>Phone:</strong> {showInvoiceModal.shippingAddress.phone}<br />
-                <strong>Payment Status:</strong> VERIFIED / PAID
-              </div>
-            </div>
-
-            <div className="divide-y divide-gray-200 border rounded-2xl overflow-hidden">
-              <div className="bg-gray-100 p-2 font-bold flex justify-between">
-                <span>Description</span>
-                <span>Qty x Rate = Total</span>
-              </div>
-              {showInvoiceModal.items.map((it, idx) => (
-                <div key={idx} className="p-2 flex justify-between">
-                  <span>{it.productName}</span>
-                  <span>{it.quantity} x {it.price.toLocaleString()} = NPR {(it.price * it.quantity).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-1 text-right font-bold text-xs pt-2">
-              <div>Subtotal: NPR {showInvoiceModal.subtotal.toLocaleString()}</div>
-              <div>13% VAT: Included in price</div>
-              <div className="text-base text-[#0056b3] font-black">Grand Total: NPR {showInvoiceModal.totalAmount.toLocaleString()}</div>
-            </div>
-
-            <div className="flex justify-between items-center pt-4 border-t">
-              <span className="text-[10px] text-gray-400">Computer Generated Tax Receipt - No Signature Required</span>
-              <button
-                onClick={() => window.print()}
-                className="bg-[#1a1a1a] hover:bg-black text-white font-bold py-2 px-5 rounded-xl flex items-center gap-1.5"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print Tax Invoice</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* TAX INVOICE MODAL */}
+      <InvoiceModal
+        order={showInvoiceModal}
+        isOpen={Boolean(showInvoiceModal)}
+        onClose={() => setShowInvoiceModal(null)}
+      />
 
       {/* RETURN MODAL */}
       {showReturnModal && (

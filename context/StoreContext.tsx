@@ -313,9 +313,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           storeName: profile.storeName || current.storeName,
           tagline: profile.tagline || current.tagline,
           logoUrl: profile.logoUrl || current.logoUrl,
-          phone: profile.contactPhone || current.phone,
-          email: profile.contactEmail || current.email,
-          address: profile.address || current.address,
+          phone: (profile.contactPhone && !profile.contactPhone.includes('521890')) ? profile.contactPhone : current.phone,
+          email: (profile.contactEmail && !profile.contactEmail.includes('icecomputers')) ? profile.contactEmail : current.email,
+          address: (profile.address && !profile.address.includes('Campus Chowk')) ? profile.address : current.address,
           openingHours: profile.openingHours || current.openingHours,
           announcementText: profile.announcementText || current.announcementText,
           announcementEnabled: profile.announcementEnabled ?? current.announcementEnabled,
@@ -409,7 +409,44 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (savedServices) setServiceRequests(JSON.parse(savedServices));
 
         const savedSettings = localStorage.getItem(`${LOCAL_STORAGE_KEY_PREFIX}site_settings`);
-        if (savedSettings) setSiteSettings(JSON.parse(savedSettings));
+        if (savedSettings) {
+          try {
+            const parsed = JSON.parse(savedSettings);
+            // Auto-migrate stale cached contact numbers / address in visitor browsers
+            if (
+              !parsed.whatsappNumber || 
+              parsed.whatsappNumber === '+9779851034291' || 
+              parsed.whatsappNumber === '+977-9851034291' || 
+              parsed.whatsappNumber.includes('9851034291')
+            ) {
+              parsed.whatsappNumber = INITIAL_SITE_SETTINGS.whatsappNumber;
+            }
+            if (
+              !parsed.phone || 
+              parsed.phone.includes('521890') || 
+              parsed.phone.includes('+977+091') || 
+              parsed.phone === '+977-1-4261890'
+            ) {
+              parsed.phone = INITIAL_SITE_SETTINGS.phone;
+            }
+            if (
+              !parsed.address || 
+              parsed.address.includes('Campus Chowk') || 
+              parsed.address.includes('New Road Plaza')
+            ) {
+              parsed.address = INITIAL_SITE_SETTINGS.address;
+            }
+            if (
+              !parsed.email || 
+              parsed.email.includes('icecomputers')
+            ) {
+              parsed.email = INITIAL_SITE_SETTINGS.email;
+            }
+            setSiteSettings((current) => ({ ...current, ...parsed }));
+          } catch {
+            setSiteSettings(INITIAL_SITE_SETTINGS);
+          }
+        }
       } catch (e) {
         console.error('Error loading state from localStorage:', e);
       } finally {

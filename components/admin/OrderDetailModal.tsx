@@ -5,9 +5,11 @@ import React, { useState } from 'react';
 import type { DeliveryRider, Order, OrderStatus } from '@/types';
 
 import { getNextLogicalStatus } from './shared';
+import { InvoiceModal } from '@/components/InvoiceModal';
 import {
   CheckCircle2,
   ClipboardList,
+  FileText,
   History,
   Mail,
   MapPin,
@@ -62,6 +64,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   logAuditAction,
 }) => {
   const [modalActiveTab, setModalActiveTab] = useState<'timeline' | 'details' | 'notes'>('timeline');
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [modalNewStaffNote, setModalNewStaffNote] = useState('');
   const [modalStatusNote, setModalStatusNote] = useState('');
   const [modalStatusLocation, setModalStatusLocation] = useState(
@@ -154,6 +157,14 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowInvoiceModal(true)}
+              className="bg-[#0056b3] text-white hover:bg-[#004494] font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-sm"
+              title="View & Print Official Tax Invoice"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Tax Invoice</span>
+            </button>
             <button
               onClick={() => setWaybillOrder(order)}
               className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5"
@@ -597,13 +608,22 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
         {/* Modal Footer */}
         <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
-          <button
-            onClick={() => setWaybillOrder(order)}
-            className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Print Shipping Waybill</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowInvoiceModal(true)}
+              className="bg-[#0056b3] text-white hover:bg-[#004494] font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Print Tax Invoice</span>
+            </button>
+            <button
+              onClick={() => setWaybillOrder(order)}
+              className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print Shipping Waybill</span>
+            </button>
+          </div>
 
           <button
             onClick={onClose}
@@ -612,6 +632,13 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             Close Window
           </button>
         </div>
+
+        {/* Official Tax Invoice Modal */}
+        <InvoiceModal
+          order={order}
+          isOpen={showInvoiceModal}
+          onClose={() => setShowInvoiceModal(false)}
+        />
 
       </div>
     </div>
