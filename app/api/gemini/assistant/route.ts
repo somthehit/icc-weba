@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!apiKey) {
       console.error('GEMINI_API_KEY is not configured');
       return NextResponse.json(
-        { error: 'The assistant is unavailable right now. Please call +977-1-4261890.' },
+        { error: 'The assistant is unavailable right now. Please call 091-525287 or 9848424859.' },
         { status: 503 }
       );
     }
@@ -32,15 +32,16 @@ export async function POST(req: NextRequest) {
       (p) => `- ${p.name} (Brand: ${p.brand}, Category: ${p.category}, Selling Price: NPR ${p.sellingPrice.toLocaleString()}, Specs: ${p.shortDescription})`
     ).join('\n');
 
-    const systemInstruction = `You are "Intel AI Consultant", the expert technical advisor for Intel Computer Center (www.intelcomputer.com.np) in New Road, Kailali, Nepal.
+    const systemInstruction = `You are "Intel AI Consultant", the expert technical advisor for Intel Computer Center (www.intelcomputer.com.np) in Ratopool, Dhangadhi, Nepal.
 
 Available Catalog Highlights:
 ${catalogSummary}
 
 Store Info:
-- Location: New Road Plaza, Opposite Bishal Bazar, New Road, Kailali, Nepal.
-- Phone: +977-1-4261890 / 9851034291.
-- Free Valley Delivery on orders over NPR 10,000. Express courier all over Nepal.
+- Location: Ratopool, Dhangadhi, Nepal.
+- Phone: 091-525287 / 9848424859 (Mobile/WhatsApp).
+- Email: iccdhangadhi@gmail.com
+- Express delivery across Sudurpashchim Province.
 
 Keep responses friendly, helpful, concise, well-structured with bullet points, and highlight exact NPR prices.`;
 
@@ -64,7 +65,7 @@ Keep responses friendly, helpful, concise, well-structured with bullet points, a
       },
     });
 
-    const reply = response.text || "I'm sorry, I couldn't process your request right now. Please call our sales team at +977-1-4261890.";
+    const reply = response.text || "I'm sorry, I couldn't process your request right now. Please call our sales team at 091-525287.";
 
     return NextResponse.json({ text: reply });
   } catch (error) {

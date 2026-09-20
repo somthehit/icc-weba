@@ -151,7 +151,7 @@ How can I assist you today?
         {
           id: generateMsgId('err'),
           sender: 'assistant',
-          text: 'I apologize, but I encountered a network issue. You can also reach our Kailali store directly at **+977-1-4261890** or WhatsApp **+977-9851034291**.',
+          text: 'I apologize, but I encountered a network issue. You can also reach our Dhangadhi store directly at **091-525287** or WhatsApp **+977-9848424859**.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);

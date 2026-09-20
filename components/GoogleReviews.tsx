@@ -275,7 +275,7 @@ export const GoogleReviews: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Intel Computer Center — Main Road, Near Campus Chowk, Dhangadhi • <span className="text-emerald-600 font-semibold">{lastSyncTime}</span>
+              Intel Computer Center — Ratopool, Dhangadhi • <span className="text-emerald-600 font-semibold">{lastSyncTime}</span>
             </p>
           </div>
         </div>

@@ -44,7 +44,7 @@ export const CheckoutView: React.FC = () => {
     district: SUDURPASHCHIM_CONFIG.headquartersDistrict,
     municipality: 'Dhangadhi Sub-Metropolitan City',
     ward: '5',
-    addressLine: 'Main Road, Near Campus Chowk',
+    addressLine: 'Ratopool',
     landmark: 'Opposite Nepal Bank',
   });
 
@@ -404,7 +404,7 @@ export const CheckoutView: React.FC = () => {
                       </div>
                     </div>
                     <span className="font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded text-[10px]">
-                      eSewa ID: 9851034291
+                      eSewa ID: 9848424859
                     </span>
                   </label>
 
@@ -422,7 +422,7 @@ export const CheckoutView: React.FC = () => {
                       </div>
                     </div>
                     <span className="font-black text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded text-[10px]">
-                      Khalti ID: 9851034291
+                      Khalti ID: 9848424859
                     </span>
                   </label>
 

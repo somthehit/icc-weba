@@ -38,7 +38,7 @@ export const Footer: React.FC = () => {
               Physical Store
             </span>
             <p className="text-gray-200 text-xs sm:text-sm font-normal">
-              {siteSettings.address || 'Main Road, Near Campus Chowk, Dhangadhi, Nepal'}
+              {siteSettings.address || 'Ratopool, Dhangadhi, Nepal'}
             </p>
           </div>
 
@@ -48,7 +48,7 @@ export const Footer: React.FC = () => {
               Sales & Support
             </span>
             <p className="text-gray-200 text-xs sm:text-sm font-normal">
-              {siteSettings.phone || '+977-91-521890'} | {siteSettings.email || 'info@icecomputers.com.np'}
+              {siteSettings.phone || '091-525287'} | {siteSettings.email || 'iccdhangadhi@gmail.com'}
             </p>
           </div>
 

@@ -74,7 +74,7 @@ export const AboutContactView: React.FC = () => {
       <div>
         <div className="mb-4">
           <h2 className="text-xl font-black text-slate-900">Google Map Store Location</h2>
-          <p className="text-slate-500 text-xs">Main Road, Near Campus Chowk, Dhangadhi, Kailali, Nepal</p>
+          <p className="text-slate-500 text-xs">Ratopool, Dhangadhi, Kailali, Nepal</p>
         </div>
         <GoogleMapEmbed />
       </div>

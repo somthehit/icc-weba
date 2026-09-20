@@ -52,7 +52,7 @@ const memoryCache: CacheStore = {
 const DEFAULT_FALLBACK_PROFILE: GooglePlaceProfile = {
   placeId: 'ChIJ-intel-computer-dhangadhi',
   placeName: 'Intel Computer Center',
-  address: 'Main Road, Near Campus Chowk, Dhangadhi 10900, Nepal',
+  address: 'Ratopool, Dhangadhi 10900, Nepal',
   rating: 4.9,
   userRatingsTotal: 248,
   lastUpdated: new Date().toISOString(),

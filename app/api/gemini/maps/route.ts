@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     if (!apiKey) {
       console.error('GEMINI_API_KEY is not configured');
       return NextResponse.json(
-        { error: 'Location search is unavailable right now. Please call +977-1-4261890.' },
+        { error: 'Location search is unavailable right now. Please call 091-525287.' },
         { status: 503 }
       );
     }
@@ -27,13 +27,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const userPrompt = query || `Locate electronics stores, computer repair labs, and tech markets around New Road, Bishal Bazar, and Kailali Valley Nepal. Mention exact landmarks, approximate distances, and contact guidelines.`;
+    const userPrompt = query || `Locate electronics stores, computer repair labs, and tech markets around Ratopool, Dhangadhi, Kailali, Nepal. Mention exact landmarks, approximate distances, and contact guidelines.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.5-flash',
       contents: userPrompt,
       config: {
-        systemInstruction: `You are the Official Geospatial & Local Directory Assistant for Intel Computer Center (Remix Intel), located at New Road Plaza, Opposite Bishal Bazar, New Road, Kailali, Nepal. Provide accurate location details, directions, landmarks, nearby parking areas, and transit routes across Kailali Valley and Nepal. When mentioning places, be precise.`,
+        systemInstruction: `You are the Official Geospatial & Local Directory Assistant for Intel Computer Center, located at Ratopool, Dhangadhi, Nepal. Provide accurate location details, directions, landmarks, nearby parking areas, and transit routes across Dhangadhi and Sudurpashchim Province. When mentioning places, be precise.`,
         tools: [{ googleMaps: {} }],
         toolConfig: {
           retrievalConfig: {

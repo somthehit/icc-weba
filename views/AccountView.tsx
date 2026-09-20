@@ -1541,8 +1541,8 @@ export const AccountView: React.FC = () => {
 
             <div className="text-center space-y-1 border-b pb-4">
               <h2 className="font-black text-lg text-[#0056b3]">Intel Computer Center</h2>
-              <p className="text-gray-500">New Road Plaza, Opposite Bishal Bazar, Kailali, Nepal</p>
-              <p className="text-gray-500 font-mono">VAT/PAN No: 302910482 | Tel: +977-1-4261890</p>
+              <p className="text-gray-500">Ratopool, Dhangadhi, Nepal</p>
+              <p className="text-gray-500 font-mono">VAT/PAN No: 302910482 | Tel: 091-525287 / 9848424859</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-[11px] bg-gray-50 p-3 rounded-2xl">

@@ -140,7 +140,7 @@ Select your preferred specialist persona or model above, or explore the **AI Ima
         {
           id: `err-${Date.now()}`,
           sender: 'assistant',
-          text: `An error occurred while connecting to the Gemini server: ${err.message || 'Unknown issue'}. You can contact Intel Computer Kailali directly at +977-1-4261890.`,
+          text: `An error occurred while connecting to the Gemini server: ${err.message || 'Unknown issue'}. You can contact Intel Computer Dhangadhi directly at 091-525287 or WhatsApp 9848424859.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
