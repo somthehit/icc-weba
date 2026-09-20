@@ -48,8 +48,25 @@ export async function GET(request: NextRequest) {
         vatRatePercent: storeProfile.vatRatePercent,
         pricesIncludeVat: storeProfile.pricesIncludeVat,
         freeDeliveryThreshold: storeProfile.freeDeliveryThreshold,
+        configuration: storeProfile.configuration,
       }).from(storeProfile).limit(1);
-      return NextResponse.json({ profile: profile || null });
+
+      if (profile) {
+        const config = (profile.configuration as Record<string, unknown>) || {};
+        const sanitizedProfile = {
+          ...profile,
+          googleMapEmbedUrl: (config.googleMapEmbedUrl as string) || undefined,
+          googleMapLocationUrl: (config.googleMapLocationUrl as string) || undefined,
+          googleMapLatitude: (config.googleMapLatitude as number) || undefined,
+          googleMapLongitude: (config.googleMapLongitude as number) || undefined,
+          googlePlaceId: (config.googlePlaceId as string) || undefined,
+          // Redact secrets if any in configuration
+          configuration: redactConfiguration(profile.configuration),
+        };
+        return NextResponse.json({ profile: sanitizedProfile });
+      }
+
+      return NextResponse.json({ profile: null });
     }
 
     if (query.data.type === 'payments') {

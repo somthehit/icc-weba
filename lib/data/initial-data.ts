@@ -34,8 +34,11 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
   facebookUrl: 'https://facebook.com/icecomputers.np',
   instagramUrl: 'https://instagram.com/icecomputers.np',
   whatsappNumber: '+977-9848424859',
-  googleMapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d101348.57094050164!2d80.6060457!3d28.6954264!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39a1ed0ffb42cc37%3A0x7fe89470a724b11c!2sDhangadhi!5e1!3m2!1sen!2snp!4v1786581737660!5m2!1sen!2snp',
-  googlePlaceId: 'ChIJN8xC-23toTkRHLE0p3CU6H8',
+  googleMapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3513.8!2d80.5741854!3d28.7042772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39a1ecc54e5d142f%3A0xb7bf1d9769481700!2sIntel+computer+center!5e0!3m2!1sen!2snp!4v1726830000000!5m2!1sen!2snp',
+  googleMapLocationUrl: 'https://maps.app.goo.gl/vRUaFjDbk9s8YiAy6',
+  googleMapLatitude: 28.7042726,
+  googleMapLongitude: 80.576736,
+  googlePlaceId: 'ChIJLxRdTsvsoTkRAHcIaZcdv7c',
   footerNotice: '© 2026 Intel Computer Center. All Rights Reserved. Official Nepal Warranty Authorized Retailer.',
 };
 
@@ -58,8 +61,9 @@ export const STORE_INFO = {
     district: 'Kailali',
     province: 'Sudurpashchim Province',
     country: 'Nepal',
-    mapCoordinates: '28.6954° N, 80.6060° E',
-    embedMapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d101348.57094050164!2d80.6060457!3d28.6954264!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39a1ed0ffb42cc37%3A0x7fe89470a724b11c!2sDhangadhi!5e1!3m2!1sen!2snp!4v1786581737660!5m2!1sen!2snp',
+    mapCoordinates: '28.7043° N, 80.5767° E',
+    googleMapsUrl: 'https://maps.app.goo.gl/vRUaFjDbk9s8YiAy6',
+    embedMapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3513.8!2d80.5741854!3d28.7042772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39a1ecc54e5d142f%3A0xb7bf1d9769481700!2sIntel+computer+center!5e0!3m2!1sen!2snp!4v1726830000000!5m2!1sen!2snp',
   },
   openingHours: 'Sunday - Friday: 9:30 AM - 7:00 PM | Saturday: Closed / Technical Appointments Only',
   // Sudurpashchim-only, matching `config/regional.ts`. The previous copy promised

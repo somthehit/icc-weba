@@ -308,6 +308,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .then((data) => {
         const profile = data?.profile;
         if (!profile) return;
+        const config = (profile.configuration as Record<string, unknown>) || {};
         setSiteSettings((current) => ({
           ...current,
           storeName: profile.storeName || current.storeName,
@@ -319,6 +320,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           openingHours: profile.openingHours || current.openingHours,
           announcementText: profile.announcementText || current.announcementText,
           announcementEnabled: profile.announcementEnabled ?? current.announcementEnabled,
+          googleMapEmbedUrl: (profile.googleMapEmbedUrl || config.googleMapEmbedUrl || current.googleMapEmbedUrl) as string,
+          googleMapLocationUrl: (profile.googleMapLocationUrl || config.googleMapLocationUrl || current.googleMapLocationUrl) as string,
+          googleMapLatitude: (profile.googleMapLatitude ?? config.googleMapLatitude ?? current.googleMapLatitude) as number | undefined,
+          googleMapLongitude: (profile.googleMapLongitude ?? config.googleMapLongitude ?? current.googleMapLongitude) as number | undefined,
+          googlePlaceId: (profile.googlePlaceId || config.googlePlaceId || current.googlePlaceId) as string,
         }));
       })
       .catch(() => undefined);
@@ -412,7 +418,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (savedSettings) {
           try {
             const parsed = JSON.parse(savedSettings);
-            // Auto-migrate stale cached contact numbers / address in visitor browsers
+            // Auto-migrate stale cached contact numbers / address / maps in visitor browsers
             if (
               !parsed.whatsappNumber || 
               parsed.whatsappNumber === '+9779851034291' || 
@@ -441,6 +447,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               parsed.email.includes('icecomputers')
             ) {
               parsed.email = INITIAL_SITE_SETTINGS.email;
+            }
+            if (
+              !parsed.googleMapEmbedUrl ||
+              parsed.googleMapEmbedUrl.includes('101348.57094050164') ||
+              parsed.googleMapEmbedUrl.includes('0x39a1ed0ffb42cc37')
+            ) {
+              parsed.googleMapEmbedUrl = INITIAL_SITE_SETTINGS.googleMapEmbedUrl;
+              parsed.googleMapLocationUrl = INITIAL_SITE_SETTINGS.googleMapLocationUrl;
             }
             setSiteSettings((current) => ({ ...current, ...parsed }));
           } catch {

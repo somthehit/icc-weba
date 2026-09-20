@@ -343,6 +343,9 @@ export interface SiteSettings {
   instagramUrl: string;
   whatsappNumber: string;
   googleMapEmbedUrl: string;
+  googleMapLocationUrl?: string;
+  googleMapLatitude?: number;
+  googleMapLongitude?: number;
   googlePlaceId: string;
   footerNotice: string;
 }

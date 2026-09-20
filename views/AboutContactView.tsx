@@ -74,7 +74,7 @@ export const AboutContactView: React.FC = () => {
       <div>
         <div className="mb-4">
           <h2 className="text-xl font-black text-slate-900">Google Map Store Location</h2>
-          <p className="text-slate-500 text-xs">Ratopool, Dhangadhi, Kailali, Nepal</p>
+          <p className="text-slate-500 text-xs">{siteSettings.address || INITIAL_SITE_SETTINGS.address}</p>
         </div>
         <GoogleMapEmbed />
       </div>
@@ -84,7 +84,7 @@ export const AboutContactView: React.FC = () => {
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-6">
           <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
             <Building2 className="w-5 h-5 text-blue-600" />
-            <span>Store Information & Contact Details</span>
+            <span>Store Information &amp; Contact Details</span>
           </h2>
 
           <div className="space-y-3 text-slate-700">
@@ -106,7 +106,7 @@ export const AboutContactView: React.FC = () => {
               <div>
                 <div className="font-bold text-slate-900">Telephone Hotlines:</div>
                 <div>
-                  Support Phone: <a href="tel:091-525287" className="font-bold text-blue-700">
+                  Support Phone: <a href={`tel:${siteSettings.phone || '091-525287'}`} className="font-bold text-blue-700">
                     {siteSettings.phone && !siteSettings.phone.includes('521890') && !siteSettings.phone.includes('+091') 
                       ? siteSettings.phone 
                       : '091-525287'}
