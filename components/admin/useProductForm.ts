@@ -402,6 +402,24 @@ export const useProductForm = ({
       fail('warrantyMonths', 'Warranty length must be between 0 and 240 months.');
     }
 
+    if (prodForm.isPhysicalProduct) {
+      if (prodForm.weightKg.trim() && !(toNumber(prodForm.weightKg) >= 0)) {
+        fail('weightKg', 'Weight must be a positive number or zero.');
+      }
+      if (prodForm.lengthCm.trim() && !(toNumber(prodForm.lengthCm) >= 0)) {
+        fail('lengthCm', 'Length must be a positive number or zero.');
+      }
+      if (prodForm.widthCm.trim() && !(toNumber(prodForm.widthCm) >= 0)) {
+        fail('widthCm', 'Width must be a positive number or zero.');
+      }
+      if (prodForm.heightCm.trim() && !(toNumber(prodForm.heightCm) >= 0)) {
+        fail('heightCm', 'Height must be a positive number or zero.');
+      }
+      if (prodForm.fixedShippingFee.trim() && !(toNumber(prodForm.fixedShippingFee) >= 0)) {
+        fail('fixedShippingFee', 'Fixed shipping fee must be a valid non-negative amount.');
+      }
+    }
+
     const order = PRODUCT_TABS.map((tab) => tab.id);
     const firstTab =
       Object.keys(errors)
@@ -470,6 +488,14 @@ export const useProductForm = ({
       whatsInTheBox: linesToList(prodForm.boxContentsText),
       metaTitle: prodForm.metaTitle.trim() || undefined,
       metaDescription: prodForm.metaDescription.trim() || undefined,
+      isPhysicalProduct: prodForm.isPhysicalProduct,
+      requiresShipping: prodForm.isPhysicalProduct ? prodForm.requiresShipping : false,
+      weightKg: prodForm.weightKg.trim() ? toNumber(prodForm.weightKg) : undefined,
+      lengthCm: prodForm.lengthCm.trim() ? toNumber(prodForm.lengthCm) : undefined,
+      widthCm: prodForm.widthCm.trim() ? toNumber(prodForm.widthCm) : undefined,
+      heightCm: prodForm.heightCm.trim() ? toNumber(prodForm.heightCm) : undefined,
+      isFreeShipping: prodForm.isFreeShipping,
+      fixedShippingFee: prodForm.fixedShippingFee.trim() ? toNumber(prodForm.fixedShippingFee) : undefined,
       status,
       // One switch, not two. `lib/pricing/quote.ts` refuses to sell anything whose
       // `isActive` is false *or* whose status is not `active`, so a draft left
@@ -570,6 +596,14 @@ export const useProductForm = ({
       isBestSeller: Boolean(p.isBestSeller),
       isTrending: Boolean(p.isTrending),
       isDealOfDay: Boolean(p.isDealOfDay),
+      isPhysicalProduct: p.isPhysicalProduct ?? true,
+      requiresShipping: p.requiresShipping ?? true,
+      weightKg: p.weightKg != null ? String(p.weightKg) : '',
+      lengthCm: p.lengthCm != null ? String(p.lengthCm) : '',
+      widthCm: p.widthCm != null ? String(p.widthCm) : '',
+      heightCm: p.heightCm != null ? String(p.heightCm) : '',
+      isFreeShipping: Boolean(p.isFreeShipping),
+      fixedShippingFee: p.fixedShippingFee != null ? String(p.fixedShippingFee) : '',
     });
     setImageRows(
       (p.images.length > 0 ? p.images : ['']).map((url) => ({
@@ -627,6 +661,14 @@ export const useProductForm = ({
       isBestSeller: row.isBestSeller,
       isTrending: row.isTrending,
       isDealOfDay: row.isDealOfDay,
+      isPhysicalProduct: row.isPhysicalProduct ?? true,
+      requiresShipping: row.requiresShipping ?? true,
+      weightKg: decimalToInput(row.weightKg),
+      lengthCm: decimalToInput(row.lengthCm),
+      widthCm: decimalToInput(row.widthCm),
+      heightCm: decimalToInput(row.heightCm),
+      isFreeShipping: Boolean(row.isFreeShipping),
+      fixedShippingFee: decimalToInput(row.fixedShippingFee),
     });
 
     const loadedImages: ImageDraft[] =

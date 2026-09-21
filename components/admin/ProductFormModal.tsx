@@ -17,15 +17,19 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  Box,
   Check,
   Info,
   Loader2,
+  Package,
   Percent,
   Plus,
+  Scale,
   Star,
   Tag,
   Trash2,
   TrendingUp,
+  Truck,
   Upload,
   X,
   Image as ImageIcon,
@@ -727,6 +731,259 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                 </>
               )}
 
+              {/* ================================== SHIPPING & DELIVERY */}
+              {activeProductTab === 'shipping' && (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-gray-700">Shipping & Delivery Configuration</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Configure physical parcel weight, volumetric dimensions, and rate overrides for accurate checkout fare calculation.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Physical vs Digital toggle */}
+                  <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50/50 space-y-3">
+                    <ToggleRow
+                      label="Physical Product (Requires Shipping)"
+                      description="When enabled, this item requires physical delivery and checkout will calculate courier freight by weight and zone."
+                      checked={prodForm.isPhysicalProduct}
+                      onChange={(checked) => {
+                        patchProdForm({
+                          isPhysicalProduct: checked,
+                          requiresShipping: checked,
+                        });
+                      }}
+                    />
+
+                    {!prodForm.isPhysicalProduct && (
+                      <div className="flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-blue-900 text-[11px]">
+                        <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-600" />
+                        <div>
+                          <p className="font-bold">Digital / Service Product</p>
+                          <p className="text-blue-800 leading-relaxed mt-0.5">
+                            This product will skip all shipping fee calculations at checkout. Ideal for software licenses, digital vouchers, and in-store service repairs.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {prodForm.isPhysicalProduct && (
+                    <>
+                      {/* Presets */}
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 font-bold">
+                          Quick Presets (Fill weight & dimensions)
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            { label: 'Laptop', weight: '2.5', l: '38', w: '26', h: '3' },
+                            { label: 'Smartphone', weight: '0.4', l: '18', w: '10', h: '5' },
+                            { label: 'Monitor / TV', weight: '6.5', l: '60', w: '40', h: '15' },
+                            { label: 'Accessory / Mouse', weight: '0.2', l: '12', w: '8', h: '4' },
+                            { label: 'Desktop / Tower', weight: '11.0', l: '48', w: '42', h: '22' },
+                          ].map((preset) => (
+                            <button
+                              key={preset.label}
+                              type="button"
+                              onClick={() => {
+                                clearProductFieldError('weightKg');
+                                clearProductFieldError('lengthCm');
+                                clearProductFieldError('widthCm');
+                                clearProductFieldError('heightCm');
+                                patchProdForm({
+                                  weightKg: preset.weight,
+                                  lengthCm: preset.l,
+                                  widthCm: preset.w,
+                                  heightCm: preset.h,
+                                });
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 hover:border-blue-300 hover:text-[#0056b3] hover:bg-blue-50/30 transition-colors shadow-2xs"
+                            >
+                              <Box className="w-3 h-3 text-gray-400" />
+                              <span>{preset.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Weight & Dimensions */}
+                      <div className="rounded-2xl border border-gray-200 p-4 bg-white space-y-4">
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <FormField
+                            label="Actual Weight (kg)"
+                            htmlFor="prod-weight-kg"
+                            error={productFieldErrors.weightKg}
+                            hint="Gross parcel weight in kilograms (e.g. 2.5 for 2500g)."
+                          >
+                            <div className="relative">
+                              <input
+                                id="prod-weight-kg"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={prodForm.weightKg}
+                                onChange={(e) => {
+                                  clearProductFieldError('weightKg');
+                                  patchProdForm({ weightKg: e.target.value });
+                                }}
+                                placeholder="2.5"
+                                className={`${inputClass(Boolean(productFieldErrors.weightKg))} font-mono pr-10`}
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none">
+                                kg
+                              </span>
+                            </div>
+                          </FormField>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-gray-700">
+                              Package Dimensions (L × W × H in cm)
+                            </label>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.1"
+                                  value={prodForm.lengthCm}
+                                  onChange={(e) => {
+                                    clearProductFieldError('lengthCm');
+                                    patchProdForm({ lengthCm: e.target.value });
+                                  }}
+                                  placeholder="L (cm)"
+                                  title="Length in cm"
+                                  className={`${inputClass(Boolean(productFieldErrors.lengthCm))} font-mono text-center text-xs px-1`}
+                                />
+                              </div>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.1"
+                                  value={prodForm.widthCm}
+                                  onChange={(e) => {
+                                    clearProductFieldError('widthCm');
+                                    patchProdForm({ widthCm: e.target.value });
+                                  }}
+                                  placeholder="W (cm)"
+                                  title="Width in cm"
+                                  className={`${inputClass(Boolean(productFieldErrors.widthCm))} font-mono text-center text-xs px-1`}
+                                />
+                              </div>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.1"
+                                  value={prodForm.heightCm}
+                                  onChange={(e) => {
+                                    clearProductFieldError('heightCm');
+                                    patchProdForm({ heightCm: e.target.value });
+                                  }}
+                                  placeholder="H (cm)"
+                                  title="Height in cm"
+                                  className={`${inputClass(Boolean(productFieldErrors.heightCm))} font-mono text-center text-xs px-1`}
+                                />
+                              </div>
+                            </div>
+                            <p className="text-[11px] text-gray-500">
+                              Used for volumetric air/road weight calculation (IATA divisor 5000).
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Volumetric calculation chip */}
+                        {(() => {
+                          const actW = Number(prodForm.weightKg) || 0;
+                          const l = Number(prodForm.lengthCm) || 0;
+                          const w = Number(prodForm.widthCm) || 0;
+                          const h = Number(prodForm.heightCm) || 0;
+                          const volW = l > 0 && w > 0 && h > 0 ? (l * w * h) / 5000 : 0;
+                          const chgW = Math.max(actW, volW);
+
+                          if (actW === 0 && volW === 0) return null;
+
+                          return (
+                            <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                              <div className="flex items-center gap-2">
+                                <Scale className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-600">Volumetric: </span>
+                                  <span className="font-mono font-bold text-gray-900">
+                                    {volW > 0 ? `${volW.toFixed(2)} kg` : '—'}
+                                  </span>
+                                  <span className="text-gray-400 mx-1.5">|</span>
+                                  <span className="text-gray-600">Actual: </span>
+                                  <span className="font-mono font-bold text-gray-900">
+                                    {actW > 0 ? `${actW.toFixed(2)} kg` : '—'}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 bg-blue-600 text-white font-bold px-2.5 py-1 rounded-lg text-[11px] w-fit shadow-xs">
+                                <span>Chargeable Weight:</span>
+                                <span className="font-mono">{chgW.toFixed(2)} kg</span>
+                                {volW > actW && actW > 0 && (
+                                  <span className="text-[9px] bg-blue-800 text-blue-100 px-1 py-0.5 rounded font-normal ml-1">
+                                    Volumetric applied
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Overrides: Free Shipping & Fixed Fee */}
+                      <div className="rounded-2xl border border-gray-200 p-4 bg-white space-y-4">
+                        <p className="text-xs font-bold text-gray-900 uppercase tracking-wider font-mono">
+                          Shipping Charge Overrides
+                        </p>
+
+                        <ToggleRow
+                          label="Free Shipping"
+                          description="When enabled, delivery charges for this product are 100% waived across all delivery zones."
+                          checked={prodForm.isFreeShipping}
+                          onChange={(checked) => patchProdForm({ isFreeShipping: checked })}
+                        />
+
+                        {!prodForm.isFreeShipping && (
+                          <div className="pt-2 border-t border-gray-100">
+                            <FormField
+                              label="Fixed Shipping Fee (Optional Flat Rate)"
+                              htmlFor="prod-fixed-shipping"
+                              error={productFieldErrors.fixedShippingFee}
+                              hint="Leave blank to use dynamic weight/zone tariff. If set, this exact NPR amount will be charged regardless of distance/weight."
+                            >
+                              <div className="relative max-w-xs">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none">
+                                  NPR
+                                </span>
+                                <input
+                                  id="prod-fixed-shipping"
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  value={prodForm.fixedShippingFee}
+                                  onChange={(e) => {
+                                    clearProductFieldError('fixedShippingFee');
+                                    patchProdForm({ fixedShippingFee: e.target.value });
+                                  }}
+                                  placeholder="e.g. 150"
+                                  className={`${inputClass(Boolean(productFieldErrors.fixedShippingFee))} font-mono pl-12`}
+                                />
+                              </div>
+                            </FormField>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
               {/* ======================================== SPECIFICATIONS */}
               {activeProductTab === 'specs' && (
                 <>
@@ -1185,6 +1442,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                     <span className="text-gray-500">Margin</span>
                     <span className="font-bold text-gray-800">
                       {marginPercent === null ? 'No cost price' : `${marginPercent}%`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-gray-500">Shipping</span>
+                    <span className="font-bold text-gray-800">
+                      {!prodForm.isPhysicalProduct
+                        ? 'Digital (Free)'
+                        : prodForm.isFreeShipping
+                          ? 'Free Shipping'
+                          : prodForm.fixedShippingFee.trim()
+                            ? `${npr(Number(prodForm.fixedShippingFee))} Flat`
+                            : prodForm.weightKg.trim()
+                              ? `${prodForm.weightKg} kg`
+                              : 'Standard'}
                     </span>
                   </div>
                   <div className="flex justify-between gap-2">

@@ -261,7 +261,14 @@ export const INITIAL_PRODUCTS: Product[] = [
       { key: 'Battery', value: '80Whr Battery with Super Rapid Charge Pro' },
     ],
     tags: ['Gaming Laptop', 'Lenovo', 'RTX 4070', 'Core i9', 'Flagship', 'Kailali Gaming'],
-    whatsInTheBox: ['Lenovo Legion Pro 5 Laptop', '300W Slim AC Adapter', 'Legion Gaming Mouse & Bag', 'Warranty Card']
+    whatsInTheBox: ['Lenovo Legion Pro 5 Laptop', '300W Slim AC Adapter', 'Legion Gaming Mouse & Bag', 'Warranty Card'],
+    isPhysicalProduct: true,
+    requiresShipping: true,
+    weightKg: 2.5,
+    lengthCm: 38,
+    widthCm: 26,
+    heightCm: 3,
+    isFreeShipping: false,
   },
   {
     id: 'p-dell-inspiron-15',
@@ -312,7 +319,14 @@ export const INITIAL_PRODUCTS: Product[] = [
       { key: 'Operating System', value: 'Windows 11 Home Genuine' },
     ],
     tags: ['Laptop', 'Dell', 'Core i5', 'Students', 'Office', 'New Road Nepal'],
-    whatsInTheBox: ['Dell Inspiron 15 Laptop', '65W Power Adapter & Cable', 'Dell Official Laptop Bag', 'User Manual & Warranty Card']
+    whatsInTheBox: ['Dell Inspiron 15 Laptop', '65W Power Adapter & Cable', 'Dell Official Laptop Bag', 'User Manual & Warranty Card'],
+    isPhysicalProduct: true,
+    requiresShipping: true,
+    weightKg: 1.65,
+    lengthCm: 36,
+    widthCm: 24,
+    heightCm: 2.5,
+    isFreeShipping: false,
   },
   {
     id: 'p-asus-rog-rtx4070-super',
@@ -349,7 +363,14 @@ export const INITIAL_PRODUCTS: Product[] = [
       { key: 'Dimensions', value: '338.9 x 149.4 x 63.9 mm' },
     ],
     tags: ['GPU', 'ASUS ROG', 'RTX 4070 Super', 'Gaming PC', 'NVIDIA'],
-    whatsInTheBox: ['ASUS ROG Strix RTX 4070 Super GPU', 'ROG Graphics Card Holder', '16-Pin Adapter Cable', 'Velcro Hook-and-Loop Ties']
+    whatsInTheBox: ['ASUS ROG Strix RTX 4070 Super GPU', 'ROG Graphics Card Holder', '16-Pin Adapter Cable', 'Velcro Hook-and-Loop Ties'],
+    isPhysicalProduct: true,
+    requiresShipping: true,
+    weightKg: 1.8,
+    lengthCm: 35,
+    widthCm: 16,
+    heightCm: 7,
+    isFreeShipping: true,
   },
   {
     id: 'p-macbook-air-m3-13',
@@ -1794,17 +1815,41 @@ export const TECHNICAL_SERVICES = [
  * table, the SEO `areaServed` list and the checkout fee cannot drift apart.
  */
 export const INITIAL_DELIVERY_ZONES: DeliveryZone[] = SUDURPASHCHIM_CONFIG.keyDistricts.map(
-  (district, index) => ({
-    id: `dz-${index + 1}`,
-    province: SUDURPASHCHIM_CONFIG.primaryProvinceShort,
-    district: district.name,
-    municipality: district.hubs.join(' / '),
-    fee: district.flatFee,
-    etaDays: district.estTime,
-    codAvailable: district.codAvailable,
-    // Free delivery kicks in sooner where the run is cheap.
-    freeShippingThreshold: district.sameDay ? 5000 : district.estimatedDays >= 4 ? 20000 : 10000,
-  }),
+  (district, index) => {
+    const isRemote = district.estimatedDays >= 4;
+    const isHill = district.estimatedDays >= 3 && !isRemote;
+    const addPerKg = district.sameDay ? 30 : isRemote ? 70 : isHill ? 50 : 40;
+    const remoteSurcharge = isRemote ? 50 : 0;
+    const minHours = district.sameDay ? 12 : district.estimatedDays * 24 - 12;
+    const maxHours = district.estimatedDays * 24;
+
+    return {
+      id: `dz-${index + 1}`,
+      province: SUDURPASHCHIM_CONFIG.primaryProvinceShort,
+      district: district.name,
+      municipality: district.hubs.join(' / '),
+      municipalities: district.hubs,
+      fee: district.flatFee,
+      baseRate: district.flatFee,
+      baseWeightKg: 1.0,
+      additionalPerKgRate: addPerKg,
+      volumetricDivisor: 5000,
+      minEtaHours: minHours,
+      maxEtaHours: maxHours,
+      etaDays: district.estTime,
+      codAvailable: district.codAvailable,
+      codFeeFlat: district.codAvailable ? (district.sameDay ? 0 : 20) : 0,
+      codFeePercent: 0,
+      // Free delivery kicks in sooner where the run is cheap.
+      freeShippingThreshold: district.sameDay ? 5000 : isRemote ? 20000 : 10000,
+      remoteSurcharge,
+      hubBranch: district.sameDay
+        ? 'Dhangadhi Central Hub'
+        : `${district.name} Regional Station`,
+      isRemoteArea: isRemote,
+      isActive: true,
+    };
+  },
 );
 
 export const INITIAL_RIDERS: DeliveryRider[] = [

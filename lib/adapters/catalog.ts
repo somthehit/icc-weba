@@ -81,6 +81,14 @@ export interface DbProductRow {
   /** Per-SKU search metadata, set from the console's Product SEO Matrix. */
   metaTitle?: string | null;
   metaDescription?: string | null;
+  isPhysicalProduct?: boolean | null;
+  requiresShipping?: boolean | null;
+  weightKg?: string | number | null;
+  lengthCm?: string | number | null;
+  widthCm?: string | number | null;
+  heightCm?: string | number | null;
+  isFreeShipping?: boolean | null;
+  fixedShippingFee?: string | number | null;
   /** Ordered image URLs (primary first). */
   images?: string[] | null;
   specs?: Array<{ specKey: string; specValue: string }> | null;
@@ -158,6 +166,15 @@ export function mapDbProductToProduct(row: DbProductRow): Product {
     // Null rather than '' so the resolver can tell "no override" from "cleared".
     metaTitle: row.metaTitle ?? null,
     metaDescription: row.metaDescription ?? null,
+    // Shipping & Delivery attributes
+    isPhysicalProduct: row.isPhysicalProduct ?? true,
+    requiresShipping: row.requiresShipping ?? true,
+    weightKg: row.weightKg !== null && row.weightKg !== undefined ? num(row.weightKg) : null,
+    lengthCm: row.lengthCm !== null && row.lengthCm !== undefined ? num(row.lengthCm) : null,
+    widthCm: row.widthCm !== null && row.widthCm !== undefined ? num(row.widthCm) : null,
+    heightCm: row.heightCm !== null && row.heightCm !== undefined ? num(row.heightCm) : null,
+    isFreeShipping: row.isFreeShipping ?? false,
+    fixedShippingFee: row.fixedShippingFee !== null && row.fixedShippingFee !== undefined ? num(row.fixedShippingFee) : null,
   };
 }
 

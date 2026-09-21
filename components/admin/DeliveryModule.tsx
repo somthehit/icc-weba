@@ -18,6 +18,7 @@ import type { DeliveryRider, DeliveryZone, Order } from '@/types';
 
 import { DispatchOrderModal } from './DispatchOrderModal';
 import { TrackingTimelineModal } from './TrackingTimelineModal';
+import { ZoneFareModal } from './ZoneFareModal';
 import {
   SHIPMENT_STATUS_CLASS,
   SHIPMENT_STATUS_LABEL,
@@ -34,25 +35,42 @@ import {
   type ShipmentTrackingLog,
   type ThirdPartyPartner,
 } from './deliveryShared';
+import {
+  calculateShippingCost,
+  formatCodChargeLabel,
+  type TariffRule,
+} from '@/lib/delivery/tariff';
 
 import {
+  AlertCircle,
   AlertTriangle,
   Banknote,
   Bike,
+  Calculator,
+  Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Coins,
+  Copy,
+  Edit3,
   Landmark,
   Link2,
   MapPin,
   MessageSquare,
+  MoreVertical,
   Package,
   Phone,
   Plus,
   Printer,
+  RotateCcw,
   Search,
+  Sliders,
+  Sparkles,
   Truck,
   Wallet,
   X,
+  Zap,
 } from 'lucide-react';
 
 export interface DeliveryModuleProps {
@@ -164,6 +182,8 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
   // ---- Zones ---------------------------------------------------------------
   /** Zones added in this session. Kept apart from the prop so a refetch cannot drop them. */
   const [addedZones, setAddedZones] = useState<AdminDeliveryZone[]>([]);
+  /** Overrides for existing/seeded zones edited in this session. */
+  const [zoneOverrides, setZoneOverrides] = useState<Record<string, Partial<AdminDeliveryZone>>>({});
   /**
    * Enable/disable state by zone id.
    *
@@ -172,6 +192,33 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
    */
   const [zoneEnabled, setZoneEnabled] = useState<Record<string, boolean>>({});
   const [isZoneModalOpen, setZoneModalOpen] = useState(false);
+  const [editingZone, setEditingZone] = useState<AdminDeliveryZone | null>(null);
+
+  // Inline editing state for quick row edits
+  const [inlineEditingId, setInlineEditingId] = useState<string | null>(null);
+  const [inlineForm, setInlineForm] = useState<{
+    fee: number;
+    additionalPerKgRate: number;
+    freeShippingThreshold: number;
+    codAvailable: boolean;
+    remoteSurcharge: number;
+  }>({
+    fee: 100,
+    additionalPerKgRate: 30,
+    freeShippingThreshold: 5000,
+    codAvailable: true,
+    remoteSurcharge: 0,
+  });
+  const [zoneActionMenuId, setZoneActionMenuId] = useState<string | null>(null);
+  const [isQuickTesterOpen, setIsQuickTesterOpen] = useState(false);
+
+  // Standalone tester inputs:
+  const [testerZoneId, setTesterZoneId] = useState<string>('');
+  const [testerWeightKg, setTesterWeightKg] = useState('2.5');
+  const [testerDimensions, setTesterDimensions] = useState({ l: 30, w: 20, h: 15 });
+  const [testerOrderVal, setTesterOrderVal] = useState('2500');
+  const [testerIsCod, setTesterIsCod] = useState(true);
+  const [testerIsRemote, setTesterIsRemote] = useState(false);
 
   // ---- Dispatch board -----------------------------------------------------
   const [shipmentOverrides, setShipmentOverrides] = useState<Record<string, Partial<Shipment>>>({});
@@ -187,10 +234,13 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
   const [cashReceived, setCashReceived] = useState<Record<string, string>>({});
   const [settled, setSettled] = useState<Record<string, { amount: number; at: string }>>({});
 
-  const zones: AdminDeliveryZone[] = useMemo(
-    () => [...deliveryZones, ...addedZones],
-    [deliveryZones, addedZones],
-  );
+  const zones: AdminDeliveryZone[] = useMemo(() => {
+    const combined = [...deliveryZones, ...addedZones];
+    return combined.map((z) => ({
+      ...z,
+      ...(zoneOverrides[z.id] ?? {}),
+    }));
+  }, [deliveryZones, addedZones, zoneOverrides]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -608,27 +658,141 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
     );
   };
 
-  const handleAddZone = async (zone: AdminDeliveryZone) => {
-    const response = await fetch('/api/delivery-zones', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: `${zone.province} · ${zone.district}`,
-        provinces: zone.province.toLowerCase(),
-        districts: zone.district.trim().toLowerCase(),
-        municipalities: zone.municipalities?.join(',').toLowerCase(),
-        flatFee: zone.fee,
-        estimatedDays: Number.parseInt(zone.etaDays, 10) || 1,
-        isActive: true,
-      }),
-    });
-    if (!response.ok) return;
-    const result = await response.json();
-    const saved = { ...zone, id: String(result.zone.id) };
-    setAddedZones((prev) => [...prev, saved]);
-    setZoneEnabled((prev) => ({ ...prev, [saved.id]: true }));
-    logAuditAction?.('Delivery', 'Add Delivery Zone', `Added zone ${zone.province} · ${zone.district} at ${npr(zone.fee)} standard.`);
+  const handleOpenAddModal = () => {
+    setEditingZone(null);
+    setZoneModalOpen(true);
+  };
+
+  const handleOpenEditModal = (zone: AdminDeliveryZone) => {
+    setEditingZone(zone);
+    setZoneModalOpen(true);
+    setZoneActionMenuId(null);
+  };
+
+  const handleSaveZone = async (zone: AdminDeliveryZone) => {
+    const isExisting = zones.some((z) => z.id === zone.id);
+    if (isExisting) {
+      setZoneOverrides((prev) => ({
+        ...prev,
+        [zone.id]: { ...(prev[zone.id] ?? {}), ...zone },
+      }));
+
+      const zoneId = Number(zone.id);
+      if (Number.isInteger(zoneId)) {
+        await fetch(`/api/delivery-zones/${zoneId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: `${zone.province} · ${zone.district}`,
+            provinces: zone.province.toLowerCase(),
+            districts: zone.district.trim().toLowerCase(),
+            municipalities: zone.municipalities?.join(',').toLowerCase(),
+            flatFee: zone.fee,
+            estimatedDays: Number.parseInt(zone.etaDays, 10) || 1,
+            isActive: zone.isActive ?? true,
+          }),
+        }).catch(() => undefined);
+      }
+
+      logAuditAction?.(
+        'Delivery',
+        'Update Delivery Zone Tariff',
+        `Updated zone ${zone.province} · ${zone.district} (Base: ${npr(zone.fee)}, +${npr(zone.additionalPerKgRate ?? 0)}/kg).`,
+      );
+    } else {
+      const response = await fetch('/api/delivery-zones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${zone.province} · ${zone.district}`,
+          provinces: zone.province.toLowerCase(),
+          districts: zone.district.trim().toLowerCase(),
+          municipalities: zone.municipalities?.join(',').toLowerCase(),
+          flatFee: zone.fee,
+          estimatedDays: Number.parseInt(zone.etaDays, 10) || 1,
+          isActive: true,
+        }),
+      });
+
+      let savedId = zone.id;
+      if (response.ok) {
+        const result = await response.json();
+        if (result?.zone?.id) savedId = String(result.zone.id);
+      }
+      const saved = { ...zone, id: savedId };
+      setAddedZones((prev) => [...prev, saved]);
+      setZoneEnabled((prev) => ({ ...prev, [saved.id]: true }));
+      logAuditAction?.(
+        'Delivery',
+        'Add Delivery Zone',
+        `Added zone ${zone.province} · ${zone.district} at ${npr(zone.fee)} standard (+${npr(zone.additionalPerKgRate ?? 0)}/kg).`,
+      );
+    }
+
     setZoneModalOpen(false);
+    setEditingZone(null);
+  };
+
+  const handleStartInlineEdit = (zone: AdminDeliveryZone) => {
+    setInlineEditingId(zone.id);
+    setInlineForm({
+      fee: zone.fee ?? zone.baseRate ?? 100,
+      additionalPerKgRate: zone.additionalPerKgRate ?? 30,
+      freeShippingThreshold: zone.freeShippingThreshold ?? 5000,
+      codAvailable: zone.codAvailable ?? true,
+      remoteSurcharge: zone.remoteSurcharge ?? 0,
+    });
+    setZoneActionMenuId(null);
+  };
+
+  const handleSaveInlineEdit = async (zoneId: string) => {
+    setZoneOverrides((prev) => ({
+      ...prev,
+      [zoneId]: {
+        ...(prev[zoneId] ?? {}),
+        fee: inlineForm.fee,
+        baseRate: inlineForm.fee,
+        additionalPerKgRate: inlineForm.additionalPerKgRate,
+        freeShippingThreshold: inlineForm.freeShippingThreshold,
+        codAvailable: inlineForm.codAvailable,
+        remoteSurcharge: inlineForm.remoteSurcharge,
+      },
+    }));
+
+    const numId = Number(zoneId);
+    if (Number.isInteger(numId)) {
+      await fetch(`/api/delivery-zones/${numId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flatFee: inlineForm.fee,
+        }),
+      }).catch(() => undefined);
+    }
+
+    logAuditAction?.(
+      'Delivery',
+      'Inline Edit Zone Rates',
+      `Inline updated zone rates for ${zoneId}: Base ${npr(inlineForm.fee)}, +${npr(inlineForm.additionalPerKgRate)}/kg.`,
+    );
+    setInlineEditingId(null);
+  };
+
+  const handleCancelInlineEdit = () => {
+    setInlineEditingId(null);
+  };
+
+  const handleDuplicateZone = (zone: AdminDeliveryZone) => {
+    const copy: AdminDeliveryZone = {
+      ...zone,
+      id: `zone-copy-${Date.now()}`,
+      district: `${zone.district} (Area B)`,
+      municipality: zone.municipality,
+      municipalities: zone.municipalities ? [...zone.municipalities] : [],
+    };
+    setEditingZone(copy);
+    setZoneModalOpen(true);
+    setZoneActionMenuId(null);
   };
 
   const toggleZone = async (zone: AdminDeliveryZone) => {
@@ -636,7 +800,9 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
     const zoneId = Number(zone.id);
     if (Number.isInteger(zoneId)) {
       const response = await fetch(`/api/delivery-zones/${zoneId}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: !current }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !current }),
       });
       if (!response.ok) return;
     }
@@ -647,6 +813,33 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
       `${zone.province} · ${zone.district} ${current ? 'disabled' : 'enabled'}. Historical tariffs retained.`,
     );
   };
+
+  // Quick Standalone Rate Calculator calculation for current selected test zone
+  const activeTesterZone = useMemo(() => {
+    return zones.find((z) => z.id === testerZoneId) || zones[0];
+  }, [zones, testerZoneId]);
+
+  const quickSimResult = useMemo(() => {
+    if (!activeTesterZone) return null;
+    const rule: TariffRule = {
+      baseWeightKg: activeTesterZone.baseWeightKg ?? 1.0,
+      baseRate: activeTesterZone.fee ?? activeTesterZone.baseRate ?? 100,
+      additionalPerKgRate: activeTesterZone.additionalPerKgRate ?? 30,
+      volumetricDivisor: activeTesterZone.volumetricDivisor ?? 5000,
+      codPercent: activeTesterZone.codFeePercent ?? 0,
+      codFlatFee: activeTesterZone.codFeeFlat ?? 0,
+      freeShippingThreshold: activeTesterZone.freeShippingThreshold ?? 5000,
+      remoteSurcharge: activeTesterZone.remoteSurcharge ?? 0,
+    };
+    return calculateShippingCost(
+      Number(testerOrderVal) || 0,
+      Number(testerWeightKg) || 0,
+      testerDimensions,
+      activeTesterZone.codAvailable && testerIsCod,
+      testerIsRemote || Boolean(activeTesterZone.isRemoteArea),
+      rule,
+    );
+  }, [activeTesterZone, testerOrderVal, testerWeightKg, testerDimensions, testerIsCod, testerIsRemote]);
 
   const tabs: { id: DeliveryTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'zones', label: 'Shipping Zones', icon: <MapPin className="w-4 h-4" />, badge: zones.length },
@@ -700,81 +893,477 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
       {/* ============== TAB 1 · SHIPPING ZONES ============== */}
       {activeTab === 'zones' && (
         <div className="bg-white rounded-2xl border border-[#E6E8EE] p-6 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E6E8EE] pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E6E8EE] pb-4">
             <div>
-              <h3 className="text-sm font-bold text-[#12151C]">Nepal Shipping Zones &amp; Tariff Rates</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[#12151C]">Nepal Shipping Zones &amp; Tariff Rates</h3>
+                <span className="text-[10px] bg-[#EEF2FF] text-[#4C63FF] border border-[#C7D2FE] px-2 py-0.5 rounded-full font-bold">
+                  Weight &amp; Volumetric V2
+                </span>
+              </div>
               <p className="text-[11px] text-[#6B7280] mt-0.5">
-                Disabling a zone stops new orders from using it but keeps its rate history.
+                Double-click any row to inline-edit rates or click <span className="font-semibold text-[#4C63FF]">Edit</span> for advanced multi-tier volumetric &amp; surcharge calculation.
               </p>
             </div>
-            <button
-              onClick={() => setZoneModalOpen(true)}
-              className="bg-[#4C63FF] text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 hover:bg-[#3D52CC] transition-colors self-start"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Delivery Zone
-            </button>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setIsQuickTesterOpen(!isQuickTesterOpen)}
+                className={`text-xs font-bold py-2 px-3 rounded-xl border flex items-center gap-1.5 transition-colors ${
+                  isQuickTesterOpen
+                    ? 'bg-[#1E2433] text-white border-[#1E2433]'
+                    : 'bg-white text-[#12151C] border-[#E6E8EE] hover:bg-[#F4F5F8]'
+                }`}
+              >
+                <Calculator className="w-3.5 h-3.5 text-[#4C63FF]" />
+                {isQuickTesterOpen ? 'Hide Fare Tester' : 'Live Fare Tester'}
+              </button>
+              <button
+                onClick={handleOpenAddModal}
+                className="bg-[#4C63FF] text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 hover:bg-[#3D52CC] transition-colors shadow-sm shadow-[#4C63FF]/30"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Delivery Zone
+              </button>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          {/* Expandable Quick Live Fare Tester Widget */}
+          {isQuickTesterOpen && (
+            <div className="bg-gradient-to-br from-[#1A1F2C] to-[#12151C] text-white p-4 rounded-2xl border border-gray-700 shadow-md space-y-3">
+              <div className="flex items-center justify-between border-b border-gray-700 pb-2">
+                <div className="flex items-center gap-2">
+                  <Calculator className="w-4 h-4 text-[#8C9CFF]" />
+                  <span className="text-xs font-bold">Quick Tariff &amp; Weight Simulator</span>
+                </div>
+                <span className="text-[10px] text-gray-300 font-mono">
+                  Volumetric: (L × W × H) / 5000
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5 text-xs">
+                <div>
+                  <label className="block text-[10px] text-gray-300 font-semibold mb-1">Target Zone</label>
+                  <select
+                    value={testerZoneId || activeTesterZone?.id}
+                    onChange={(e) => setTesterZoneId(e.target.value)}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl py-1.5 px-2 text-white text-xs outline-none focus:bg-white/20"
+                  >
+                    {zones.map((z) => (
+                      <option key={z.id} value={z.id} className="text-[#12151C]">
+                        {z.province} · {z.district}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-gray-300 font-semibold mb-1">Order Value (NPR)</label>
+                  <input
+                    type="number"
+                    value={testerOrderVal}
+                    onChange={(e) => setTesterOrderVal(e.target.value)}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl py-1.5 px-2 text-white font-bold outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-gray-300 font-semibold mb-1">Actual Weight (kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={testerWeightKg}
+                    onChange={(e) => setTesterWeightKg(e.target.value)}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl py-1.5 px-2 text-white font-bold outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-gray-300 font-semibold mb-1">L × W × H (cm)</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      value={testerDimensions.l}
+                      onChange={(e) =>
+                        setTesterDimensions({ ...testerDimensions, l: Number(e.target.value) || 0 })
+                      }
+                      className="w-full bg-white/10 border border-white/20 rounded-lg py-1 px-1.5 text-center text-white text-xs"
+                      title="Length"
+                    />
+                    <span className="text-gray-400">×</span>
+                    <input
+                      type="number"
+                      value={testerDimensions.w}
+                      onChange={(e) =>
+                        setTesterDimensions({ ...testerDimensions, w: Number(e.target.value) || 0 })
+                      }
+                      className="w-full bg-white/10 border border-white/20 rounded-lg py-1 px-1.5 text-center text-white text-xs"
+                      title="Width"
+                    />
+                    <span className="text-gray-400">×</span>
+                    <input
+                      type="number"
+                      value={testerDimensions.h}
+                      onChange={(e) =>
+                        setTesterDimensions({ ...testerDimensions, h: Number(e.target.value) || 0 })
+                      }
+                      className="w-full bg-white/10 border border-white/20 rounded-lg py-1 px-1.5 text-center text-white text-xs"
+                      title="Height"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-center">
+                  <label className="flex items-center gap-1.5 text-[11px] cursor-pointer text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={testerIsCod}
+                      onChange={(e) => setTesterIsCod(e.target.checked)}
+                      className="rounded text-[#4C63FF]"
+                    />
+                    <span>COD Order</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] cursor-pointer text-gray-300 mt-1">
+                    <input
+                      type="checkbox"
+                      checked={testerIsRemote}
+                      onChange={(e) => setTesterIsRemote(e.target.checked)}
+                      className="rounded text-[#4C63FF]"
+                    />
+                    <span>Remote Surcharge</span>
+                  </label>
+                </div>
+
+                {quickSimResult && (
+                  <div className="bg-white/10 rounded-xl p-2.5 flex flex-col justify-center text-right border border-white/10">
+                    <span className="text-[10px] text-gray-400">
+                      Chargeable: {quickSimResult.chargeableWeightKg}kg {quickSimResult.isVolumetricApplied ? '(Vol)' : '(Act)'}
+                    </span>
+                    <span className="text-sm font-black text-emerald-400">
+                      {quickSimResult.isFreeShipping ? 'FREE SHIPPING' : npr(quickSimResult.totalDeliveryCharge)}
+                    </span>
+                    <span className="text-[9px] text-gray-400">
+                      Freight: {npr(quickSimResult.freightFee)} + COD: {npr(quickSimResult.codFee)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Redesigned Shipping Zones Table */}
+          <div className="overflow-x-auto border border-[#E6E8EE] rounded-xl">
+            <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-[#E6E8EE] text-[#6B7280] uppercase font-bold bg-[#F4F5F8]">
-                  <th className="py-3 px-3">Province &amp; District</th>
-                  <th className="py-3 px-3">Municipalities</th>
-                  <th className="py-3 px-3">Standard</th>
-                  <th className="py-3 px-3">Express</th>
-                  <th className="py-3 px-3">ETA</th>
-                  <th className="py-3 px-3">COD</th>
-                  <th className="py-3 px-3">Free Above</th>
-                  <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3">Action</th>
+                <tr className="border-b border-[#E6E8EE] text-[#475467] uppercase font-bold bg-[#F8FAFC] text-[11px] tracking-wide">
+                  <th className="py-3 px-3.5">Province &amp; District</th>
+                  <th className="py-3 px-3.5">Covered Areas</th>
+                  <th className="py-3 px-3.5">Base Fare (Up to 1kg)</th>
+                  <th className="py-3 px-3.5">Add. Per Kg</th>
+                  <th className="py-3 px-3.5">COD Charge</th>
+                  <th className="py-3 px-3.5">Free Shipping</th>
+                  <th className="py-3 px-3.5">Status</th>
+                  <th className="py-3 px-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F4F5F8]">
+              <tbody className="divide-y divide-[#F1F3F9]">
                 {zones.map((z) => {
                   const enabled = zoneEnabled[z.id] ?? z.isActive ?? true;
+                  const isInline = inlineEditingId === z.id;
+                  const isMenuOpen = zoneActionMenuId === z.id;
+                  const baseWeight = z.baseWeightKg ?? 1.0;
+                  const addPerKg = z.additionalPerKgRate ?? 30;
+                  const codRuleLabel = formatCodChargeLabel(z.codAvailable, z.codFeeFlat, z.codFeePercent);
+
                   return (
-                    <tr key={z.id} className={`hover:bg-[#F4F5F8] ${!enabled ? 'opacity-50' : ''}`}>
-                      <td className="py-3 px-3 font-bold text-[#12151C]">
-                        {z.province} · {z.district}
+                    <tr
+                      key={z.id}
+                      onDoubleClick={() => {
+                        if (!isInline) handleStartInlineEdit(z);
+                      }}
+                      className={`transition-colors group ${
+                        isInline ? 'bg-[#EEF2FF]/60' : !enabled ? 'opacity-50 hover:bg-[#F8FAFC]' : 'hover:bg-[#F8FAFC]'
+                      }`}
+                    >
+                      {/* Column 1: Province & District */}
+                      <td className="py-3 px-3.5">
+                        <div className="font-bold text-[#12151C] flex items-center gap-1.5">
+                          <span>
+                            {z.province} · {z.district}
+                          </span>
+                          {z.isRemoteArea && (
+                            <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                              Remote
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-[#6B7280] mt-0.5 flex items-center gap-2">
+                          <span>ETA: {z.etaDays}</span>
+                          {z.hubBranch && <span className="text-[#9AA1AF]">· {z.hubBranch}</span>}
+                        </div>
                       </td>
-                      <td className="py-3 px-3 text-[#6B7280] max-w-[200px]">
-                        {z.municipalities?.length ? z.municipalities.join(', ') : z.municipality}
+
+                      {/* Column 2: Covered Areas */}
+                      <td className="py-3 px-3.5 text-[#475467] max-w-[220px]">
+                        <div className="truncate font-medium text-[11px]" title={z.municipalities?.join(', ') || z.municipality}>
+                          {z.municipalities?.length ? z.municipalities.join(', ') : z.municipality}
+                        </div>
+                        {z.municipalities && z.municipalities.length > 2 && (
+                          <span className="text-[10px] text-[#4C63FF] font-semibold">
+                            {z.municipalities.length} coverage hubs
+                          </span>
+                        )}
                       </td>
-                      <td className="py-3 px-3 font-bold text-[#4C63FF]">{npr(z.fee)}</td>
-                      <td className="py-3 px-3 text-[#12151C]">
-                        {z.expressFee ? npr(z.expressFee) : '—'}
+
+                      {/* Column 3: Base Fare (Up to 1kg) */}
+                      <td className="py-3 px-3.5">
+                        {isInline ? (
+                          <div className="w-24">
+                            <input
+                              type="number"
+                              min="0"
+                              value={inlineForm.fee}
+                              onChange={(e) =>
+                                setInlineForm({ ...inlineForm, fee: Number(e.target.value) || 0 })
+                              }
+                              className="w-full bg-white border border-[#4C63FF] rounded-lg py-1 px-2 text-xs font-bold text-[#4C63FF] outline-none"
+                            />
+                            <span className="text-[9px] text-[#6B7280] block mt-0.5">Up to {baseWeight}kg</span>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="font-bold text-sm text-[#4C63FF]">{npr(z.fee)}</span>
+                            <span className="text-[10px] text-[#6B7280] block">
+                              Base (upto {baseWeight}kg)
+                            </span>
+                          </div>
+                        )}
                       </td>
-                      <td className="py-3 px-3 text-[#6B7280]">{z.etaDays}</td>
-                      <td className="py-3 px-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${z.codAvailable
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-rose-100 text-rose-700'
+
+                      {/* Column 4: Add. Per Kg */}
+                      <td className="py-3 px-3.5">
+                        {isInline ? (
+                          <div className="w-24">
+                            <input
+                              type="number"
+                              min="0"
+                              value={inlineForm.additionalPerKgRate}
+                              onChange={(e) =>
+                                setInlineForm({
+                                  ...inlineForm,
+                                  additionalPerKgRate: Number(e.target.value) || 0,
+                                })
+                              }
+                              className="w-full bg-white border border-[#4C63FF] rounded-lg py-1 px-2 text-xs font-bold text-[#12151C] outline-none"
+                            />
+                            <span className="text-[9px] text-[#6B7280] block mt-0.5">per extra kg</span>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="font-semibold text-[#12151C]">+ {npr(addPerKg)}</span>
+                            <span className="text-[10px] text-[#6B7280] block">/ extra kg</span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Column 5: COD Charge */}
+                      <td className="py-3 px-3.5">
+                        {isInline ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setInlineForm({
+                                ...inlineForm,
+                                codAvailable: !inlineForm.codAvailable,
+                              })
+                            }
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                              inlineForm.codAvailable
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border-rose-200'
                             }`}
-                        >
-                          {z.codAvailable ? 'COD OK' : 'PREPAID'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 font-mono text-[#12151C]">
-                        {npr(z.freeShippingThreshold)}
-                      </td>
-                      <td className="py-3 px-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'
+                          >
+                            {inlineForm.codAvailable ? 'COD Allowed' : 'Prepaid Only'}
+                          </button>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                              z.codAvailable
+                                ? codRuleLabel === 'Free (0%)'
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-blue-100 text-blue-700'
+                                : 'bg-rose-100 text-rose-700'
                             }`}
-                        >
-                          {enabled ? 'ACTIVE' : 'DISABLED'}
-                        </span>
+                          >
+                            {codRuleLabel}
+                          </span>
+                        )}
                       </td>
-                      <td className="py-3 px-3">
+
+                      {/* Column 6: Free Shipping */}
+                      <td className="py-3 px-3.5 font-mono text-[#12151C]">
+                        {isInline ? (
+                          <div className="w-24">
+                            <input
+                              type="number"
+                              min="0"
+                              value={inlineForm.freeShippingThreshold}
+                              onChange={(e) =>
+                                setInlineForm({
+                                  ...inlineForm,
+                                  freeShippingThreshold: Number(e.target.value) || 0,
+                                })
+                              }
+                              className="w-full bg-white border border-[#4C63FF] rounded-lg py-1 px-2 text-xs font-mono font-bold text-[#12151C] outline-none"
+                            />
+                            <span className="text-[9px] text-[#6B7280] block mt-0.5">threshold NPR</span>
+                          </div>
+                        ) : (
+                          <div>
+                            {z.freeShippingThreshold > 0 ? (
+                              <span className="font-semibold text-xs text-[#12151C]">
+                                Above {npr(z.freeShippingThreshold)}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">No Free Tier</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Column 7: Status */}
+                      <td className="py-3 px-3.5">
                         <button
+                          type="button"
                           onClick={() => toggleZone(z)}
-                          className="text-[11px] font-bold text-[#4C63FF] hover:underline"
+                          title={`Click to ${enabled ? 'disable' : 'enable'} zone`}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                            enabled
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200'
+                          }`}
                         >
-                          {enabled ? 'Disable' : 'Enable'}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              enabled ? 'bg-emerald-500' : 'bg-gray-400'
+                            }`}
+                          />
+                          {enabled ? 'ACTIVE' : 'DISABLED'}
                         </button>
+                      </td>
+
+                      {/* Column 8: Actions */}
+                      <td className="py-3 px-3.5 text-right">
+                        {isInline ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleSaveInlineEdit(z.id)}
+                              className="p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+                              title="Save inline changes"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCancelInlineEdit}
+                              className="p-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                              title="Cancel inline editing"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative inline-flex items-center justify-end gap-1">
+                            {/* Full Edit Modal Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditModal(z)}
+                              className="p-1.5 rounded-lg text-[#4C63FF] hover:bg-[#EEF2FF] transition-colors border border-transparent hover:border-[#C7D2FE] flex items-center gap-1 font-bold text-[11px]"
+                              title="Open advanced multi-tier modal"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Edit</span>
+                            </button>
+
+                            {/* 3-Dots Action Dropdown Menu */}
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setZoneActionMenuId(isMenuOpen ? null : z.id)
+                                }
+                                className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#12151C] hover:bg-gray-100 transition-colors"
+                                title="More actions"
+                              >
+                                <MoreVertical className="w-3.5 h-3.5" />
+                              </button>
+
+                              {isMenuOpen && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-20"
+                                    onClick={() => setZoneActionMenuId(null)}
+                                  />
+                                  <div className="absolute right-0 top-8 z-30 w-44 bg-white border border-[#E6E8EE] rounded-xl shadow-xl py-1 text-left">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenEditModal(z)}
+                                      className="w-full px-3 py-2 text-xs font-semibold text-[#12151C] hover:bg-[#F4F5F8] flex items-center gap-2"
+                                    >
+                                      <Sliders className="w-3.5 h-3.5 text-[#4C63FF]" />
+                                      Full Tariff Config
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartInlineEdit(z)}
+                                      className="w-full px-3 py-2 text-xs font-semibold text-[#12151C] hover:bg-[#F4F5F8] flex items-center gap-2"
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5 text-indigo-500" />
+                                      Quick Inline Edit
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setTesterZoneId(z.id);
+                                        setIsQuickTesterOpen(true);
+                                        setZoneActionMenuId(null);
+                                      }}
+                                      className="w-full px-3 py-2 text-xs font-semibold text-[#12151C] hover:bg-[#F4F5F8] flex items-center gap-2"
+                                    >
+                                      <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+                                      Test in Calculator
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDuplicateZone(z)}
+                                      className="w-full px-3 py-2 text-xs font-semibold text-[#12151C] hover:bg-[#F4F5F8] flex items-center gap-2"
+                                    >
+                                      <Copy className="w-3.5 h-3.5 text-gray-500" />
+                                      Duplicate Zone
+                                    </button>
+                                    <div className="border-t border-gray-100 my-1" />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        toggleZone(z);
+                                        setZoneActionMenuId(null);
+                                      }}
+                                      className={`w-full px-3 py-2 text-xs font-bold flex items-center gap-2 ${
+                                        enabled
+                                          ? 'text-rose-600 hover:bg-rose-50'
+                                          : 'text-emerald-600 hover:bg-emerald-50'
+                                      }`}
+                                    >
+                                      <RotateCcw className="w-3.5 h-3.5" />
+                                      {enabled ? 'Disable Zone' : 'Enable Zone'}
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -1311,9 +1900,14 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
 
       {/* ============== MODALS ============== */}
       {isZoneModalOpen && (
-        <AddZoneModal
-          onClose={() => setZoneModalOpen(false)}
-          onSave={handleAddZone}
+        <ZoneFareModal
+          isOpen={isZoneModalOpen}
+          onClose={() => {
+            setZoneModalOpen(false);
+            setEditingZone(null);
+          }}
+          onSave={handleSaveZone}
+          initialZone={editingZone}
           existingCount={zones.length}
         />
       )}
@@ -1342,202 +1936,3 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
   );
 };
 
-// ---------------------------------------------------------------------------
-// Add Zone modal
-//
-// Local to this module because nothing else creates a tariff row. Municipalities
-// are captured as a comma-separated string and split on save, which is what the
-// zone table renders back.
-// ---------------------------------------------------------------------------
-
-interface AddZoneModalProps {
-  onClose: () => void;
-  onSave: (zone: AdminDeliveryZone) => void;
-  existingCount: number;
-}
-
-const AddZoneModal: React.FC<AddZoneModalProps> = ({ onClose, onSave, existingCount }) => {
-  const [province, setProvince] = useState('Bagmati');
-  const [district, setDistrict] = useState('');
-  const [municipalities, setMunicipalities] = useState('');
-  const [fee, setFee] = useState('150');
-  const [expressFee, setExpressFee] = useState('300');
-  const [etaDays, setEtaDays] = useState('1-2 days');
-  const [freeThreshold, setFreeThreshold] = useState('15000');
-  const [codAvailable, setCodAvailable] = useState(true);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const list = municipalities
-      .split(',')
-      .map((m) => m.trim())
-      .filter(Boolean);
-
-    onSave({
-      id: `zone-new-${existingCount + 1}`,
-      province,
-      district: district.trim(),
-      municipality: list[0] ?? district.trim(),
-      municipalities: list,
-      fee: Number(fee) || 0,
-      expressFee: Number(expressFee) || 0,
-      etaDays: etaDays.trim(),
-      codAvailable,
-      freeShippingThreshold: Number(freeThreshold) || 0,
-      isActive: true,
-    });
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6E8EE] sticky top-0 bg-white rounded-t-3xl">
-          <h3 className="text-sm font-bold text-[#12151C]">Add Delivery Zone</h3>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6B7280] hover:bg-[#F4F5F8] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[#12151C] font-bold mb-1.5 text-xs">Province</label>
-              <select
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
-                className="w-full bg-[#F4F5F8] border border-[#E6E8EE] rounded-xl py-2.5 px-3 text-xs font-semibold text-[#12151C] outline-none focus:ring-2 focus:ring-[#4C63FF]/20 focus:bg-white focus:border-[#4C63FF]"
-              >
-                {NEPAL_PROVINCES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[#12151C] font-bold mb-1.5 text-xs">District</label>
-              <input
-                type="text"
-                required
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                placeholder="Kailali"
-                className="w-full bg-[#F4F5F8] border border-[#E6E8EE] rounded-xl py-2.5 px-3 text-xs outline-none focus:ring-2 focus:ring-[#4C63FF]/20 focus:bg-white focus:border-[#4C63FF]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[#12151C] font-bold mb-1.5 text-xs">
-              Covered Municipalities
-            </label>
-            <input
-              type="text"
-              value={municipalities}
-              onChange={(e) => setMunicipalities(e.target.value)}
-              placeholder="Kailali MC, Kirtipur MC, Budhanilkantha MC"
-              className="w-full bg-[#F4F5F8] border border-[#E6E8EE] rounded-xl py-2.5 px-3 text-xs outline-none focus:ring-2 focus:ring-[#4C63FF]/20 focus:bg-white focus:border-[#4C63FF]"
-            />
-            <p className="text-[10px] text-[#9AA1AF] mt-1">Comma separated.</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[#12151C] font-bold mb-1.5 text-xs">
-                Standard Fee (NPR)
-              </label>
-              <input
-                type="number"
-                min={0}
-                required
-                value={fee}
-                onChange={(e) => setFee(e.target.value)}
-                className="w-full bg-[#F4F5F8] border border-[#E6E8EE] rounded-xl py-2.5 px-3 text-xs font-bold outline-none focus:ring-2 focus:ring-[#4C63FF]/20 focus:bg-white focus:border-[#4C63FF]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#12151C] font-bold mb-1.5 text-xs">
-                Express Fee (NPR)
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={expressFee}
-                onChange={(e) => setExpressFee(e.target.value)}
-                className="w-full bg-[#F4F5F8] border border-[#E6E8EE] rounded-xl py-2.5 px-3 text-xs font-bold outline-none focus:ring-2 focus:ring-[#4C63FF]/20 focus:bg-white focus:border-[#4C63FF]"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[#12151C] font-bold mb-1.5 text-xs">ETA Window</label>
-              <input
-                type="text"
-                required
-                value={etaDays}
-                onChange={(e) => setEtaDays(e.target.value)}
-                placeholder="1-2 days"
-                className="w-full bg-[#F4F5F8] border border-[#E6E8EE] rounded-xl py-2.5 px-3 text-xs outline-none focus:ring-2 focus:ring-[#4C63FF]/20 focus:bg-white focus:border-[#4C63FF]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#12151C] font-bold mb-1.5 text-xs">
-                Free Delivery Above (NPR)
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={freeThreshold}
-                onChange={(e) => setFreeThreshold(e.target.value)}
-                className="w-full bg-[#F4F5F8] border border-[#E6E8EE] rounded-xl py-2.5 px-3 text-xs font-bold outline-none focus:ring-2 focus:ring-[#4C63FF]/20 focus:bg-white focus:border-[#4C63FF]"
-              />
-            </div>
-          </div>
-
-          {/* COD toggle */}
-          <div className="flex items-center justify-between bg-[#F4F5F8] rounded-xl p-4">
-            <div>
-              <div className="text-xs font-bold text-[#12151C]">Cash on Delivery</div>
-              <div className="text-[10px] text-[#6B7280]">
-                Off means this zone is prepaid only.
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setCodAvailable((v) => !v)}
-              role="switch"
-              aria-checked={codAvailable}
-              className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${codAvailable ? 'bg-emerald-500' : 'bg-[#C7CBDA]'
-                }`}
-            >
-              <span
-                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${codAvailable ? 'translate-x-5' : 'translate-x-0.5'
-                  }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-[#E6E8EE] text-xs font-bold text-[#6B7280] hover:bg-[#F4F5F8] transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-[#4C63FF] text-white text-xs font-bold shadow-lg shadow-[#4C63FF]/25 hover:bg-[#3D52CC] transition-colors"
-            >
-              Save Zone
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};

@@ -407,6 +407,14 @@ export interface ProductWriteInput {
   whatsInTheBox?: string[];
   metaTitle?: string;
   metaDescription?: string;
+  isPhysicalProduct?: boolean;
+  requiresShipping?: boolean;
+  weightKg?: number | null;
+  lengthCm?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
+  isFreeShipping?: boolean;
+  fixedShippingFee?: number | null;
   status?: 'draft' | 'active' | 'inactive' | 'discontinued';
   isActive?: boolean;
   isFeatured?: boolean;
@@ -487,6 +495,14 @@ export interface AdminProductRow {
   isNewArrival: boolean;
   isBestSeller: boolean;
   isTrending: boolean;
+  isPhysicalProduct?: boolean;
+  requiresShipping?: boolean;
+  weightKg?: string | number | null;
+  lengthCm?: string | number | null;
+  widthCm?: string | number | null;
+  heightCm?: string | number | null;
+  isFreeShipping?: boolean;
+  fixedShippingFee?: string | number | null;
   images: Array<{
     id: number;
     url: string;

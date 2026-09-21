@@ -19,6 +19,7 @@ export const PRODUCT_TABS = [
   { id: 'basic', label: 'Basic Info' },
   { id: 'images', label: 'Images' },
   { id: 'pricing', label: 'Pricing & Stock' },
+  { id: 'shipping', label: 'Shipping & Delivery' },
   { id: 'specs', label: 'Specifications' },
   { id: 'content', label: 'Description & Warranty' },
   { id: 'seo', label: 'SEO' },
@@ -112,6 +113,15 @@ export const PRODUCT_FORM_DEFAULTS = {
   isBestSeller: false,
   isTrending: false,
   isDealOfDay: false,
+  /** Shipping & Delivery configurations */
+  isPhysicalProduct: true,
+  requiresShipping: true,
+  weightKg: '',
+  lengthCm: '',
+  widthCm: '',
+  heightCm: '',
+  isFreeShipping: false,
+  fixedShippingFee: '',
 };
 
 export type ProductFormState = typeof PRODUCT_FORM_DEFAULTS;
@@ -150,6 +160,7 @@ export const COMMON_SPEC_KEYS = [
   'Ports',
   'Operating System',
   'Weight',
+  'Color',
 ] as const;
 
 /**
@@ -168,6 +179,11 @@ const FIELD_TAB: Record<string, ProductTab> = {
   costPrice: 'pricing',
   stockQuantity: 'pricing',
   lowStockThreshold: 'pricing',
+  weightKg: 'shipping',
+  lengthCm: 'shipping',
+  widthCm: 'shipping',
+  heightCm: 'shipping',
+  fixedShippingFee: 'shipping',
   warrantyMonths: 'content',
   slug: 'seo',
   metaTitle: 'seo',

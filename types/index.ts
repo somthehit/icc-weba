@@ -80,6 +80,15 @@ export interface Product {
    */
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /** Shipping & Delivery configurations */
+  isPhysicalProduct?: boolean;
+  requiresShipping?: boolean;
+  weightKg?: number | null;
+  lengthCm?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
+  isFreeShipping?: boolean;
+  fixedShippingFee?: number | null;
 }
 
 export interface CartItem {
@@ -379,10 +388,23 @@ export interface DeliveryZone {
   province: string;
   district: string;
   municipality: string;
-  fee: number;
+  municipalities?: string[];
+  fee: number; // Base rate
+  baseRate?: number;
+  baseWeightKg?: number;
+  additionalPerKgRate?: number;
+  volumetricDivisor?: number;
+  minEtaHours?: number;
+  maxEtaHours?: number;
   etaDays: string;
   codAvailable: boolean;
+  codFeeFlat?: number;
+  codFeePercent?: number;
   freeShippingThreshold: number;
+  remoteSurcharge?: number;
+  hubBranch?: string;
+  isRemoteArea?: boolean;
+  isActive?: boolean;
 }
 
 export interface DeliveryRider {
