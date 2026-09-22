@@ -1548,14 +1548,45 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ): Promise<{ ok: true; product: Product } | { ok: false; error: string }> => {
     if (productId !== undefined) {
       const numericId = Number(productId);
-      if (!Number.isInteger(numericId) || numericId <= 0) {
-        return { ok: false, error: 'This product has no database id yet, so it cannot be updated.' };
+      if (Number.isInteger(numericId) && numericId > 0) {
+        const result = await updateProductRequest(numericId, input);
+        if (!result.ok) return result;
+        const saved = result.data.product;
+        setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
+        return { ok: true, product: saved };
       }
-      const result = await updateProductRequest(numericId, input);
-      if (!result.ok) return result;
-      const saved = result.data.product;
-      setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
-      return { ok: true, product: saved };
+
+      // If productId is not a positive integer (e.g. initial-data string id like 'p-lenovo-legion-pro-5'),
+      // automatically insert it into the database so it gets a real DB ID and persists properly.
+      const createRes = await createProductRequest(input);
+      if (createRes.ok) {
+        const saved = createRes.data.product;
+        setProducts((prev) => prev.map((p) => (p.id === productId ? saved : p)));
+        return { ok: true, product: saved };
+      }
+
+      // If creation had a conflict because it already exists in DB by SKU/slug, look it up by slug to get its real DB ID
+      if (createRes.error && /already exists/i.test(createRes.error)) {
+        try {
+          const fetchRes = await fetch(`/api/products?slug=${encodeURIComponent(input.slug)}`);
+          if (fetchRes.ok) {
+            const data = await fetchRes.json();
+            const dbNumericId = Number(data.product?.id);
+            if (Number.isInteger(dbNumericId) && dbNumericId > 0) {
+              const updRes = await updateProductRequest(dbNumericId, input);
+              if (updRes.ok) {
+                const saved = updRes.data.product;
+                setProducts((prev) => prev.map((p) => (p.id === productId || p.id === saved.id ? saved : p)));
+                return { ok: true, product: saved };
+              }
+            }
+          }
+        } catch {
+          // fallback to returning createRes error
+        }
+      }
+
+      return createRes;
     }
 
     const result = await createProductRequest(input);
@@ -1570,7 +1601,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
     const numericId = Number(productId);
     if (!Number.isInteger(numericId) || numericId <= 0) {
-      return { ok: false, error: 'This product has no database id yet, so it cannot be retired.' };
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, status: 'discontinued' as const } : p)),
+      );
+      return { ok: true };
     }
     const result = await archiveProductRequest(numericId);
     if (!result.ok) return result;
