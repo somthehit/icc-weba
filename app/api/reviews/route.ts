@@ -80,10 +80,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching reviews:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch reviews' },
-      { status: 500 },
-    );
+    return NextResponse.json({
+      reviews: [],
+      total: 0,
+      averageRating: 0,
+      fallback: true,
+    });
   }
 }
 

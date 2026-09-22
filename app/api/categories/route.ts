@@ -10,6 +10,7 @@ import { getUserFromRequest } from '@/lib/auth/utils';
 import { parseJson } from '@/lib/validation/parse';
 import { createCategorySchema } from '@/lib/validation/catalog-admin';
 import { isForeignKeyViolation, isUniqueViolation } from '@/lib/db/errors';
+import { INITIAL_CATEGORIES } from '@/lib/data/initial-data';
 
 /**
  * Storefront category taxonomy, mapped to the frontend `CategoryItem` contract.
@@ -41,10 +42,13 @@ export async function GET(request: NextRequest) {
     }
 
     const rows = await queryCategories();
-    return NextResponse.json({ categories: rows.map(mapDbCategoryToCategoryItem) });
+    if (rows && rows.length > 0) {
+      return NextResponse.json({ categories: rows.map(mapDbCategoryToCategoryItem) });
+    }
+    return NextResponse.json({ categories: INITIAL_CATEGORIES });
   } catch (error) {
-    console.error('Error fetching categories:', error);
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
+    console.error('Error fetching categories, serving fallback initial data:', error);
+    return NextResponse.json({ categories: INITIAL_CATEGORIES, fallback: true });
   }
 }
 

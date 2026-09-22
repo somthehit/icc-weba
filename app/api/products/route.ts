@@ -8,6 +8,7 @@ import { parseJson } from '@/lib/validation/parse';
 import { createProductSchema } from '@/lib/validation/commerce';
 import { deriveStockStatus, replaceImages, replaceSpecs, resolveCatalogRefs } from '@/lib/catalog/write';
 import { isForeignKeyViolation, isUniqueViolation } from '@/lib/db/errors';
+import { INITIAL_PRODUCTS } from '@/lib/data/initial-data';
 
 const intParam = (v: string | null): number | undefined => {
   if (!v) return undefined;
@@ -30,11 +31,22 @@ export async function GET(request: NextRequest) {
     const slug = searchParams.get('slug');
 
     if (id !== undefined || slug) {
-      const row = id !== undefined ? await queryProduct({ id }) : await queryProduct({ slug: slug! });
-      if (!row) {
-        return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      try {
+        const row = id !== undefined ? await queryProduct({ id }) : await queryProduct({ slug: slug! });
+        if (row) {
+          return NextResponse.json({ product: mapDbProductToProduct(row) });
+        }
+      } catch (err) {
+        console.warn('DB queryProduct failed, checking INITIAL_PRODUCTS:', err);
       }
-      return NextResponse.json({ product: mapDbProductToProduct(row) });
+
+      const fallback = INITIAL_PRODUCTS.find(
+        (p) => (id !== undefined && p.id === String(id)) || (slug && p.slug === slug),
+      );
+      if (fallback) {
+        return NextResponse.json({ product: fallback });
+      }
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     const status = searchParams.get('status');
@@ -52,16 +64,25 @@ export async function GET(request: NextRequest) {
       includeSpecs: searchParams.get('includeSpecs') !== 'false',
     });
 
+    if (rows && rows.length > 0) {
+      return NextResponse.json({
+        products: rows.map(mapDbProductToProduct),
+        total,
+      });
+    }
+
+    // Fallback if DB table is empty
     return NextResponse.json({
-      products: rows.map(mapDbProductToProduct),
-      total,
+      products: INITIAL_PRODUCTS,
+      total: INITIAL_PRODUCTS.length,
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch products' },
-      { status: 500 },
-    );
+    console.error('Error fetching products from DB, serving fallback initial data:', error);
+    return NextResponse.json({
+      products: INITIAL_PRODUCTS,
+      total: INITIAL_PRODUCTS.length,
+      fallback: true,
+    });
   }
 }
 

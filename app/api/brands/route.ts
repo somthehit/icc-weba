@@ -10,6 +10,7 @@ import { getUserFromRequest } from '@/lib/auth/utils';
 import { parseJson } from '@/lib/validation/parse';
 import { createBrandSchema } from '@/lib/validation/catalog-admin';
 import { isUniqueViolation } from '@/lib/db/errors';
+import { INITIAL_BRANDS } from '@/lib/data/initial-data';
 
 /**
  * Brand list, mapped to the frontend `Brand` contract. Returns every active brand
@@ -40,10 +41,19 @@ export async function GET(request: NextRequest) {
 
     const partnersOnly = searchParams.get('partners') === 'true';
     const rows = await queryBrands({ partnersOnly });
-    return NextResponse.json({ brands: rows.map(mapDbBrandToBrand) });
+    if (rows && rows.length > 0) {
+      return NextResponse.json({ brands: rows.map(mapDbBrandToBrand) });
+    }
+    return NextResponse.json({
+      brands: partnersOnly ? INITIAL_BRANDS.filter((b) => b.isPartner) : INITIAL_BRANDS,
+    });
   } catch (error) {
-    console.error('Error fetching brands:', error);
-    return NextResponse.json({ error: 'Failed to fetch brands' }, { status: 500 });
+    console.error('Error fetching brands, serving fallback initial data:', error);
+    const partnersOnly = new URL(request.url).searchParams.get('partners') === 'true';
+    return NextResponse.json({
+      brands: partnersOnly ? INITIAL_BRANDS.filter((b) => b.isPartner) : INITIAL_BRANDS,
+      fallback: true,
+    });
   }
 }
 

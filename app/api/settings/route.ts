@@ -92,11 +92,27 @@ export async function GET(request: NextRequest) {
     const notifications = await db.select().from(notificationPreferences);
     return NextResponse.json({ notifications });
   } catch (error) {
-    console.error('Error fetching settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch settings' },
-      { status: 500 },
-    );
+    console.error('Error fetching settings, returning fallback defaults:', error);
+    return NextResponse.json({
+      profile: {
+        storeName: 'Intel Computer Center',
+        tagline: 'Your Premier Technology & Electronics Partner in Sudurpashchim',
+        contactEmail: 'iccdhangadhi@gmail.com',
+        contactPhone: '091-525287',
+        address: 'Ratopool, Dhangadhi, Nepal',
+        openingHours: 'Sun - Fri: 9:30 AM - 7:00 PM | Sat: By Appointment',
+        announcementText: '🚚 Fast Express Delivery Across All 9 Districts of Sudurpashchim Province!',
+        announcementEnabled: true,
+        logoUrl: '/logo.jpeg',
+        currency: 'NPR',
+        vatRatePercent: 13,
+        pricesIncludeVat: true,
+        freeDeliveryThreshold: null,
+      },
+      payments: [],
+      notifications: [],
+      fallback: true,
+    });
   }
 }
 

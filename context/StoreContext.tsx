@@ -27,7 +27,10 @@ import {
 import {
   INITIAL_SERVICE_REQUESTS,
   INITIAL_COUPONS,
-  INITIAL_SITE_SETTINGS
+  INITIAL_SITE_SETTINGS,
+  INITIAL_PRODUCTS,
+  INITIAL_CATEGORIES,
+  INITIAL_BRANDS,
 } from '@/lib/data/initial-data';
 import { computeProductEffectivePrice } from '@/lib/offers/offerUtils';
 import { DB_STATUS, orderRowIds, toUiOrder, type DbOrderDetail } from '@/lib/adapters/orders';
@@ -349,41 +352,74 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSavedImages((prev) => prev.filter((i) => i.id !== id));
   };
 
-  // Load the catalogue from the database. Products, categories, brands and
-  // reviews are all server-owned now, so this is the single source of truth.
+  // Load the catalogue from the API / database with fallback to initial data
   const refreshCatalog = useCallback(async () => {
     setCatalogError(null);
     try {
       const [productRes, categoryRes, brandRes, reviewRes] = await Promise.all([
-        fetch(`/api/products?limit=${CATALOG_PAGE_SIZE}`),
-        fetch('/api/categories'),
-        fetch('/api/brands'),
-        fetch('/api/reviews'),
+        fetch(`/api/products?limit=${CATALOG_PAGE_SIZE}`).catch(() => null),
+        fetch('/api/categories').catch(() => null),
+        fetch('/api/brands').catch(() => null),
+        fetch('/api/reviews').catch(() => null),
       ]);
 
-      if (!productRes.ok) throw new Error(`Products request failed (${productRes.status})`);
-      if (!categoryRes.ok) throw new Error(`Categories request failed (${categoryRes.status})`);
+      let loadedProducts: Product[] = [];
+      let loadedCategories: CategoryItem[] = [];
 
-      const productData = await productRes.json();
-      const categoryData = await categoryRes.json();
-      setProducts(Array.isArray(productData.products) ? productData.products : []);
-      setCategories(Array.isArray(categoryData.categories) ? categoryData.categories : []);
-
-      // Brands and reviews are decorative rather than structural — a failure there
-      // shouldn't blank the shop, so they degrade to empty instead of throwing.
-      if (brandRes.ok) {
-        const brandData = await brandRes.json();
-        setBrands(Array.isArray(brandData.brands) ? brandData.brands : []);
+      if (productRes && productRes.ok) {
+        try {
+          const productData = await productRes.json();
+          if (Array.isArray(productData.products) && productData.products.length > 0) {
+            loadedProducts = productData.products;
+          }
+        } catch (e) {
+          console.warn('Failed to parse products json:', e);
+        }
       }
-      if (reviewRes.ok) {
-        const reviewData = await reviewRes.json();
-        setReviews(Array.isArray(reviewData.reviews) ? reviewData.reviews : []);
+
+      if (categoryRes && categoryRes.ok) {
+        try {
+          const categoryData = await categoryRes.json();
+          if (Array.isArray(categoryData.categories) && categoryData.categories.length > 0) {
+            loadedCategories = categoryData.categories;
+          }
+        } catch (e) {
+          console.warn('Failed to parse categories json:', e);
+        }
+      }
+
+      setProducts(loadedProducts.length > 0 ? loadedProducts : INITIAL_PRODUCTS);
+      setCategories(loadedCategories.length > 0 ? loadedCategories : INITIAL_CATEGORIES);
+
+      // Brands and reviews
+      if (brandRes && brandRes.ok) {
+        try {
+          const brandData = await brandRes.json();
+          setBrands(
+            Array.isArray(brandData.brands) && brandData.brands.length > 0
+              ? brandData.brands
+              : INITIAL_BRANDS,
+          );
+        } catch {
+          setBrands(INITIAL_BRANDS);
+        }
+      } else {
+        setBrands(INITIAL_BRANDS);
+      }
+
+      if (reviewRes && reviewRes.ok) {
+        try {
+          const reviewData = await reviewRes.json();
+          setReviews(Array.isArray(reviewData.reviews) ? reviewData.reviews : []);
+        } catch {
+          setReviews([]);
+        }
       }
     } catch (error) {
-      console.error('Error loading catalogue:', error);
-      setCatalogError(
-        error instanceof Error ? error.message : 'Could not load the product catalogue.',
-      );
+      console.error('Error loading catalogue, using fallback initial data:', error);
+      setProducts(INITIAL_PRODUCTS);
+      setCategories(INITIAL_CATEGORIES);
+      setBrands(INITIAL_BRANDS);
     } finally {
       setIsCatalogLoading(false);
     }
