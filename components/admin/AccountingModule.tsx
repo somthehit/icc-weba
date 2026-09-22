@@ -177,6 +177,15 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
   const [postingJe, setPostingJe] = useState(false);
   const [jeError, setJeError] = useState('');
 
+  // Add Account / COA Modal State
+  const [showAddAccount, setShowAddAccount] = useState(false);
+  const [newAccCode, setNewAccCode] = useState('');
+  const [newAccName, setNewAccName] = useState('');
+  const [newAccType, setNewAccType] = useState<AccountType>('asset');
+  const [newAccParentId, setNewAccParentId] = useState('');
+  const [creatingAccount, setCreatingAccount] = useState(false);
+  const [createAccError, setCreateAccError] = useState('');
+
   // COD Settlement Modal State
   const [showCod, setShowCod] = useState(false);
   const [codDriver, setCodDriver] = useState('');
@@ -482,6 +491,51 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
     }
   };
 
+  const postCreateAccount = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setCreateAccError('');
+
+    if (!newAccCode.trim() || !newAccName.trim()) {
+      setCreateAccError('Account code and name are required.');
+      return;
+    }
+
+    setCreatingAccount(true);
+    try {
+      const response = await fetch('/api/accounting/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: newAccCode.trim(),
+          name: newAccName.trim(),
+          type: newAccType,
+          parentId: newAccParentId ? Number(newAccParentId) : undefined,
+        }),
+      });
+
+      const data = await readJson(response);
+      if (!response.ok) {
+        setCreateAccError(data.error || 'Failed to create account.');
+        return;
+      }
+
+      setShowAddAccount(false);
+      setNewAccCode('');
+      setNewAccName('');
+      setNewAccType('asset');
+      setNewAccParentId('');
+      setNotice({
+        text: `Account "${data.account?.code} - ${data.account?.name}" added to Chart of Accounts.`,
+        kind: 'success',
+      });
+      await load();
+    } catch {
+      setCreateAccError('Could not reach accounting service.');
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
+
   const selectedDeposit = depositAccounts.find((a) => String(a.id) === codDeposit);
   const codPreview = Number(codAmount) || 0;
 
@@ -558,25 +612,31 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
 
           <button
             type="button"
-            onClick={() => setShowDriverCodDrawer(true)}
+            onClick={() => {
+              setCodError('');
+              setCodDeposit((prev) => prev || String(depositAccounts[0]?.id ?? ''));
+              setShowCod(true);
+            }}
             className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
-            title="View driver COD breakdown and cash in transit"
           >
-            <Truck className="h-4 w-4 text-amber-600" />
+            <BanknoteArrowUp className="h-4 w-4 text-emerald-600" />
             <span>COD Settlement</span>
           </button>
 
           <button
             type="button"
             onClick={() => {
-              setCodError('');
-              setCodDeposit((prev) => prev || String(depositAccounts[0]?.id ?? ''));
-              setShowCod(true);
+              setCreateAccError('');
+              setNewAccCode('');
+              setNewAccName('');
+              setNewAccType('asset');
+              setNewAccParentId('');
+              setShowAddAccount(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 shadow-xs transition-colors"
           >
             <Plus className="h-4 w-4" />
-            <span>Add New COD</span>
+            <span>Add New COA</span>
           </button>
 
           <button
@@ -853,6 +913,22 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
                   {t === 'all' ? 'All Types' : t}
                 </button>
               ))}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCreateAccError('');
+                  setNewAccCode('');
+                  setNewAccName('');
+                  setNewAccType('asset');
+                  setNewAccParentId('');
+                  setShowAddAccount(true);
+                }}
+                className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-blue-700 shadow-2xs transition-colors ml-1"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Account</span>
+              </button>
             </div>
           </div>
 
@@ -1734,6 +1810,135 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
                   className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {postingCod ? 'Recording...' : 'Record & Bank Cash'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD ACCOUNT TO CHART OF ACCOUNTS (COA) */}
+      {showAddAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
+          <div className="flex max-h-[92vh] w-full max-w-lg flex-col rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/80 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Add Account to Chart of Accounts</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Create a new General Ledger account code for double-entry records.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddAccount(false)}
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={postCreateAccount} className="flex-1 overflow-y-auto p-6 space-y-4">
+              {createAccError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold text-rose-700 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{createAccError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Account Type</label>
+                <select
+                  value={newAccType}
+                  onChange={(e) => {
+                    const nextType = e.target.value as AccountType;
+                    setNewAccType(nextType);
+                  }}
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold capitalize text-slate-900"
+                >
+                  <option value="asset">Asset (e.g. Bank Account, Cash, Inventory, Receivables)</option>
+                  <option value="liability">Liability (e.g. Accounts Payable, VAT Payable, Loans)</option>
+                  <option value="equity">Equity (e.g. Owner's Capital, Retained Earnings)</option>
+                  <option value="revenue">Revenue (e.g. Sales Revenue, Service Income)</option>
+                  <option value="expense">Expense (e.g. Rent, Electricity, Salaries, Marketing)</option>
+                </select>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Account Code</label>
+                  <input
+                    type="text"
+                    value={newAccCode}
+                    onChange={(e) => setNewAccCode(e.target.value)}
+                    placeholder={
+                      newAccType === 'asset'
+                        ? 'e.g. 1030'
+                        : newAccType === 'liability'
+                        ? 'e.g. 2030'
+                        : newAccType === 'equity'
+                        ? 'e.g. 3020'
+                        : newAccType === 'revenue'
+                        ? 'e.g. 4020'
+                        : 'e.g. 5040'
+                    }
+                    required
+                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-mono font-bold text-slate-900"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Recommended: {newAccType === 'asset' ? '1xxx' : newAccType === 'liability' ? '2xxx' : newAccType === 'equity' ? '3xxx' : newAccType === 'revenue' ? '4xxx' : '5xxx'} range
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Parent Account (Optional)</label>
+                  <select
+                    value={newAccParentId}
+                    onChange={(e) => setNewAccParentId(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-700"
+                  >
+                    <option value="">None (Top-level)</option>
+                    {accounts
+                      .filter((a) => a.type === newAccType)
+                      .map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.code} - {a.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Account Name</label>
+                <input
+                  type="text"
+                  value={newAccName}
+                  onChange={(e) => setNewAccName(e.target.value)}
+                  placeholder="e.g. Kumari Bank Current Account / Office Internet Expense"
+                  required
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-900"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setShowAddAccount(false)}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingAccount || !newAccCode.trim() || !newAccName.trim()}
+                  className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {creatingAccount ? 'Adding...' : 'Add Account'}
                 </button>
               </div>
             </form>
