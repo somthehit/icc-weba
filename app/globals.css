@@ -120,3 +120,34 @@
     margin: 10mm 15mm;
   }
 }
+
+/* Independent ERP Scrollbars */
+.scrollbar-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+.scrollbar-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.scrollbar-main::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-main::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+.scrollbar-main::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
+}
+

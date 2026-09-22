@@ -140,7 +140,11 @@ function AppContent() {
   const isStandalonePage = isAdminPage || currentPage === 'customer-login' || currentPage === 'customer-register' || currentPage === 'admin-login' || currentPage === 'driver-tracking';
 
   return (
-    <div className={`min-h-screen ${isStandalonePage ? (isAdminPage ? 'bg-[#0F1420]' : 'bg-white') : 'bg-white'} ${isAdminPage ? 'pb-0' : 'pb-16 md:pb-0'} flex flex-col text-[#1a1a1a] font-sans antialiased selection:bg-[#0056b3] selection:text-white`}>
+    <div
+      className={`${isAdminPage ? 'h-screen overflow-hidden' : 'min-h-screen'} ${
+        isStandalonePage ? (isAdminPage ? 'bg-[#0F1420]' : 'bg-white') : 'bg-white'
+      } ${isAdminPage ? 'pb-0' : 'pb-16 md:pb-0'} flex flex-col text-[#1a1a1a] font-sans antialiased selection:bg-[#0056b3] selection:text-white`}
+    >
       {/* Dynamic SEO Meta Tags Manager */}
       <SeoManager />
 
@@ -148,7 +152,7 @@ function AppContent() {
       {!isStandalonePage && <Header />}
 
       {/* Main Content Area */}
-      <main className="flex-1">
+      <main className={`flex-1 ${isAdminPage ? 'min-h-0 h-full overflow-hidden' : ''}`}>
         {renderActiveView()}
       </main>
 

@@ -251,10 +251,10 @@ export const AdminView: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F4F5F8] text-[#12151C] flex flex-col md:flex-row font-sans w-full">
+    <div className="h-screen w-full bg-[#F4F5F8] text-[#12151C] flex flex-col md:flex-row font-sans overflow-hidden">
       
       {/* ================= SIDEBAR ================= */}
-      <aside className="w-full md:w-[248px] flex-shrink-0 bg-[#0F1420] text-[#C7CBDA] flex flex-col p-4 md:sticky md:top-0 md:h-screen md:overflow-y-auto border-r border-white/5 select-none z-30">
+      <aside className="w-full md:w-[248px] h-auto md:h-full flex-shrink-0 bg-[#0F1420] text-[#C7CBDA] flex flex-col p-4 overflow-y-auto overscroll-contain scrollbar-sidebar border-r border-white/5 select-none z-30">
         
         {/* Brand Header */}
         <div className="flex items-center gap-2.5 px-2 pb-5 border-b border-white/10 mb-4">
@@ -511,10 +511,10 @@ export const AdminView: React.FC = () => {
       </aside>
 
       {/* ================= MAIN AREA ================= */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
         
         {/* Topbar */}
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-6 md:px-8 py-3.5 bg-white border-b border-[#E6E8EE] shadow-2xs">
+        <header className="flex-shrink-0 z-20 flex items-center justify-between gap-4 px-6 md:px-8 py-3.5 bg-white border-b border-[#E6E8EE] shadow-2xs">
           {/* Breadcrumb */}
           <div className="font-mono text-xs text-[#9AA1AF]">
             Console / <b className="text-[#12151C] capitalize">{activeModule.replace('-', ' ')}</b>
@@ -563,7 +563,8 @@ export const AdminView: React.FC = () => {
         </header>
 
         {/* Content Container */}
-        <main className="p-6 md:p-8 space-y-6 max-w-7xl w-full">
+        <main id="admin-main-scroll" className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-main p-6 md:p-8">
+          <div className="space-y-6 max-w-7xl w-full mx-auto">
 
           {activeModule === 'dashboard' && (
             <DashboardModule
@@ -671,6 +672,7 @@ export const AdminView: React.FC = () => {
 
           {activeModule === 'account' && <AccountModule />}
 
+          </div>
         </main>
       </div>
 
