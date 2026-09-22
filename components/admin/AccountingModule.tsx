@@ -488,8 +488,8 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
   return (
     <div className="space-y-6">
       {/* Top Header & Global Date Range Toolbar */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
-        <div>
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-black text-slate-950">Accounting &amp; General Ledger</h2>
             <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider">
@@ -502,7 +502,7 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
         </div>
 
         {/* Global Controls & Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {/* Date Range Selector */}
           <div className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-1">
             <Calendar className="h-3.5 w-3.5 text-slate-400 ml-2" />
@@ -542,7 +542,7 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
             type="button"
             onClick={() => void load()}
             title="Reload Ledger"
-            className="rounded-2xl border border-slate-200 bg-white p-2.5 hover:bg-slate-50 transition-colors"
+            className="rounded-2xl border border-slate-200 bg-white p-2.5 hover:bg-slate-50 transition-colors shadow-2xs"
           >
             <RefreshCw className={`h-4 w-4 text-slate-600 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -558,6 +558,16 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
 
           <button
             type="button"
+            onClick={() => setShowDriverCodDrawer(true)}
+            className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+            title="View driver COD breakdown and cash in transit"
+          >
+            <Truck className="h-4 w-4 text-amber-600" />
+            <span>COD Settlement</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => {
               setCodError('');
               setCodDeposit((prev) => prev || String(depositAccounts[0]?.id ?? ''));
@@ -565,8 +575,8 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
             }}
             className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs transition-colors"
           >
-            <BanknoteArrowUp className="h-4 w-4" />
-            <span>COD Settlement</span>
+            <Plus className="h-4 w-4" />
+            <span>Add New COD</span>
           </button>
 
           <button
