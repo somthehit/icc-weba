@@ -209,6 +209,7 @@ async function seed() {
   // also clears any dependent demo rows (cart, wishlist, payments, etc.).
   const truncateList = [
     'reviews',
+    'inventory_movements',
     'order_status_history',
     'order_items',
     'orders',
