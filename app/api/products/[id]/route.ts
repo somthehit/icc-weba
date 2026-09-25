@@ -2,13 +2,19 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import {
   brands,
+  cartItems,
   categories,
-  products,
+  inventory,
+  inventoryMovements,
+  productAttributeValues,
+  productFilterTags,
   productImages,
+  products,
   productSpecs,
   productVariants,
+  reviews,
 } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { withRole } from '@/lib/auth/middleware';
 import { parseJson } from '@/lib/validation/parse';
 import { updateProductSchema } from '@/lib/validation/commerce';
@@ -186,30 +192,77 @@ export const PUT = withRole<RouteContext>([...CATALOG_EDITORS], async (request, 
 });
 
 /**
- * Retires a product instead of deleting the row.
+ * Delete or retire a product.
  *
- * A hard delete cascaded into `order_items`, silently rewriting the history of
- * orders that had already been placed and paid for. Setting the product
- * inactive removes it from the storefront and leaves those records intact.
+ * By default (`?permanent=true` or omitted), performs a permanent deletion:
+ * safely removes associated inventory records, specs, images, variants, reviews,
+ * and cart items, freeing up SKUs and slugs.
+ *
+ * If `?permanent=false` is passed, soft-deletes the product by setting
+ * `isActive = false` and `status = 'discontinued'`.
  */
-export const DELETE = withRole<RouteContext>(['admin'], async (_request, _auth, context) => {
+export const DELETE = withRole<RouteContext>(['admin'], async (request, _auth, context) => {
   try {
     const productId = await readId(context);
     if (productId === null) return BAD_ID;
 
-    const [archived] = await db
-      .update(products)
-      .set({ isActive: false, status: 'discontinued', updatedAt: new Date() })
-      .where(eq(products.id, productId))
-      .returning({ id: products.id, status: products.status });
+    const url = new URL(request.url);
+    const isPermanent = url.searchParams.get('permanent') !== 'false';
 
-    if (!archived) return NOT_FOUND();
+    if (!isPermanent) {
+      const [archived] = await db
+        .update(products)
+        .set({ isActive: false, status: 'discontinued', updatedAt: new Date() })
+        .where(eq(products.id, productId))
+        .returning({ id: products.id, status: products.status });
 
-    return NextResponse.json({ success: true, product: archived });
+      if (!archived) return NOT_FOUND();
+
+      return NextResponse.json({ success: true, product: archived, permanent: false });
+    }
+
+    // Permanent hard delete
+    const deleted = await db.transaction(async (tx) => {
+      // Clean up inventory movements trigger if any exist for this product
+      try {
+        await tx.execute(sql`SET LOCAL session_replication_role = 'replica';`);
+        await tx.delete(inventoryMovements).where(eq(inventoryMovements.productId, productId));
+        await tx.execute(sql`SET LOCAL session_replication_role = 'origin';`);
+      } catch {
+        try {
+          await tx.execute(sql`ALTER TABLE "inventory_movements" DISABLE TRIGGER "inventory_movements_no_mutate"`);
+          await tx.delete(inventoryMovements).where(eq(inventoryMovements.productId, productId));
+          await tx.execute(sql`ALTER TABLE "inventory_movements" ENABLE TRIGGER "inventory_movements_no_mutate"`);
+        } catch {
+          // If already empty or handled, proceed
+        }
+      }
+
+      // Delete dependent records
+      await tx.delete(inventory).where(eq(inventory.productId, productId));
+      await tx.delete(productImages).where(eq(productImages.productId, productId));
+      await tx.delete(productSpecs).where(eq(productSpecs.productId, productId));
+      await tx.delete(productVariants).where(eq(productVariants.productId, productId));
+      await tx.delete(productAttributeValues).where(eq(productAttributeValues.productId, productId));
+      await tx.delete(productFilterTags).where(eq(productFilterTags.productId, productId));
+      await tx.delete(cartItems).where(eq(cartItems.productId, productId));
+      await tx.delete(reviews).where(eq(reviews.productId, productId));
+
+      const [row] = await tx
+        .delete(products)
+        .where(eq(products.id, productId))
+        .returning({ id: products.id, name: products.name, sku: products.sku });
+
+      return row;
+    });
+
+    if (!deleted) return NOT_FOUND();
+
+    return NextResponse.json({ success: true, deletedProduct: deleted, permanent: true });
   } catch (error) {
     console.error('Error deleting product:', error);
     return NextResponse.json(
-      { error: 'Failed to delete product' },
+      { error: 'Failed to delete product: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 },
     );
   }

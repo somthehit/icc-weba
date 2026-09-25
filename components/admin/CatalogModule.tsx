@@ -25,7 +25,8 @@ export interface CatalogModuleProps {
   handleExportProductsCsv: () => void;
   handleOpenAddProduct: () => void;
   handleOpenEditProduct: (product: Product) => void;
-  handleSoftDeleteProduct: (productId: string, productName: string) => void;
+  handleDeleteProduct: (productId: string, productName: string, permanent?: boolean) => void;
+  handleSoftDeleteProduct?: (productId: string, productName: string) => void;
 }
 
 const SUB_TABS: Array<{ id: 'products' | RegistrySubTab; label: string }> = [
@@ -44,6 +45,7 @@ export const CatalogModule: React.FC<CatalogModuleProps> = ({
   handleExportProductsCsv,
   handleOpenAddProduct,
   handleOpenEditProduct,
+  handleDeleteProduct,
   handleSoftDeleteProduct,
 }) => {
   const [catalogSubTab, setCatalogSubTab] = useState<'products' | RegistrySubTab>('products');
@@ -187,8 +189,8 @@ export const CatalogModule: React.FC<CatalogModuleProps> = ({
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleSoftDeleteProduct(p.id, p.name)}
-                            title="Discontinue Product"
+                            onClick={() => (handleDeleteProduct ? handleDeleteProduct(p.id, p.name, true) : handleSoftDeleteProduct?.(p.id, p.name))}
+                            title="Delete Product Permanently"
                             className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />

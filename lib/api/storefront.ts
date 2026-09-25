@@ -444,16 +444,21 @@ export const updateProductRequest = (id: number, input: Partial<ProductWriteInpu
   });
 
 /**
- * Retire a product.
- *
- * The endpoint sets `status = 'discontinued'` rather than deleting the row: a
- * hard delete would cascade into `order_items` and rewrite the history of orders
- * that have already been paid for.
+ * Delete a product permanently from the database.
+ */
+export const deleteProductRequest = (id: number, permanent = true) =>
+  request<{ success: true; product?: { id: number; status: string }; deletedProduct?: { id: number; name: string } }>(
+    `/api/products/${id}?permanent=${permanent}`,
+    {
+      method: 'DELETE',
+    },
+  );
+
+/**
+ * Retire a product (soft delete / mark as discontinued).
  */
 export const archiveProductRequest = (id: number) =>
-  request<{ success: true; product: { id: number; status: string } }>(`/api/products/${id}`, {
-    method: 'DELETE',
-  });
+  deleteProductRequest(id, false);
 
 /**
  * The full `products` row plus its gallery and spec sheet, as the admin form

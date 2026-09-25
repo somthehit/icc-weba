@@ -40,6 +40,10 @@ export interface UseProductFormOptions {
     input: ProductWriteInput,
     productId?: string,
   ) => Promise<{ ok: true; product: Product } | { ok: false; error: string }>;
+  deleteProduct?: (
+    productId: string,
+    permanent?: boolean,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   logAuditAction: (module: string, action: string, details: string) => void;
 }
 
@@ -48,6 +52,7 @@ export const useProductForm = ({
   brands,
   categories,
   saveProduct,
+  deleteProduct,
   logAuditAction,
 }: UseProductFormOptions) => {
   // Product Modal State
@@ -710,11 +715,40 @@ export const useProductForm = ({
     setIsProductModalOpen(true);
   };
 
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+
+  const handleDeleteEditingProduct = async () => {
+    if (!editingProduct?.id || !deleteProduct) return;
+    const name = prodForm.name || editingProduct.name || 'this product';
+    if (
+      !confirm(
+        `Are you sure you want to permanently delete "${name}"?\n\nThis will remove the product and all associated images and inventory records from the database.`,
+      )
+    ) {
+      return;
+    }
+    setIsDeletingProduct(true);
+    try {
+      const res = await deleteProduct(String(editingProduct.id), true);
+      if (!res.ok) {
+        alert(`Failed to delete product: ${res.error}`);
+        setIsDeletingProduct(false);
+        return;
+      }
+      logAuditAction('Catalog', 'Delete Product', `Permanently deleted product: ${name} (ID: ${editingProduct.id})`);
+      closeProductModal();
+    } finally {
+      setIsDeletingProduct(false);
+    }
+  };
+
   return {
     // modal visibility
     isProductModalOpen,
     editingProduct,
     isLoadingProductRow,
+    isDeletingProduct,
+    handleDeleteEditingProduct,
     // the form itself
     prodForm,
     patchProdForm,

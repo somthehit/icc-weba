@@ -90,9 +90,8 @@ export const AdminView: React.FC = () => {
     // the product form has to send back.
     brands,
     categories,
-    // `saveProduct` / `archiveProduct` persist; `updateProduct` only moves local
-    // state and is still what the stock-audit modal wants.
     saveProduct,
+    deleteProduct,
     archiveProduct,
     updateProduct,
     updateOrderStatusExtended,
@@ -222,17 +221,29 @@ export const AdminView: React.FC = () => {
     logAuditAction('Sales', 'Export CSV', 'Exported sales orders list to CSV.');
   };
 
-  // Soft delete product handler
-  const handleSoftDeleteProduct = async (prodId: string, prodName: string) => {
-    if (!confirm(`Set product status to discontinued for "${prodName}"? Past order history will be preserved.`)) {
+  // Delete product handler (permanent delete by default)
+  const handleDeleteProduct = async (prodId: string, prodName: string, permanent = true) => {
+    const message = permanent
+      ? `Are you sure you want to permanently delete "${prodName}"?\n\nThis will completely remove the product, images, specs, and inventory records from the database.`
+      : `Set product status to discontinued for "${prodName}"? Past order history will be preserved.`;
+
+    if (!confirm(message)) {
       return;
     }
-    const result = await archiveProduct(prodId);
+    const result = await deleteProduct(prodId, permanent);
     if (!result.ok) {
-      alert(`Could not discontinue "${prodName}": ${result.error}`);
+      alert(`Could not ${permanent ? 'delete' : 'discontinue'} "${prodName}": ${result.error}`);
       return;
     }
-    logAuditAction('Catalog', 'Soft Delete Product', `Discontinued product SKU: ${prodName}`);
+    logAuditAction(
+      'Catalog',
+      permanent ? 'Delete Product (Permanent)' : 'Discontinue Product',
+      `${permanent ? 'Permanently deleted' : 'Discontinued'} product: ${prodName} (ID: ${prodId})`,
+    );
+  };
+
+  const handleSoftDeleteProduct = async (prodId: string, prodName: string) => {
+    return handleDeleteProduct(prodId, prodName, false);
   };
 
   /**
@@ -247,6 +258,7 @@ export const AdminView: React.FC = () => {
     brands,
     categories,
     saveProduct,
+    deleteProduct,
     logAuditAction,
   });
 
@@ -590,6 +602,7 @@ export const AdminView: React.FC = () => {
               handleExportProductsCsv={handleExportProductsCsv}
               handleOpenAddProduct={productForm.handleOpenAddProduct}
               handleOpenEditProduct={productForm.handleOpenEditProduct}
+              handleDeleteProduct={handleDeleteProduct}
               handleSoftDeleteProduct={handleSoftDeleteProduct}
             />
           )}

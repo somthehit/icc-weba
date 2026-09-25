@@ -54,6 +54,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
   const {
     editingProduct,
     isLoadingProductRow,
+    isDeletingProduct,
+    handleDeleteEditingProduct,
     prodForm,
     patchProdForm,
     imageRows,
@@ -1471,11 +1473,34 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
 
           {/* ---------------------------------------------------- footer */}
           <div className="flex items-center justify-between gap-3 flex-wrap px-6 py-4 border-t border-gray-200 bg-white rounded-b-3xl">
-            <p className="text-[11px] text-gray-500 max-w-xs">
-              {prodForm.status === 'active'
-                ? 'Publishing makes this orderable on the storefront immediately.'
-                : 'A draft is saved to the catalog but stays hidden from customers.'}
-            </p>
+            <div className="flex items-center gap-3">
+              {editingProduct?.id && (
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteEditingProduct()}
+                  disabled={isSavingProduct || isDeletingProduct}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold text-xs transition-colors disabled:opacity-50"
+                  title="Permanently delete this product from catalog and database"
+                >
+                  {isDeletingProduct ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Deleting…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Product</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <p className="text-[11px] text-gray-500 max-w-xs">
+                {prodForm.status === 'active'
+                  ? 'Publishing makes this orderable on the storefront immediately.'
+                  : 'A draft is saved to the catalog but stays hidden from customers.'}
+              </p>
+            </div>
 
             <div className="flex items-center gap-2.5 ml-auto">
               <button

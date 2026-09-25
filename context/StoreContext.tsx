@@ -40,6 +40,7 @@ import {
   archiveProductRequest,
   createProductRequest,
   deleteCartLine,
+  deleteProductRequest,
   fetchCart,
   fetchOrders,
   fetchQuote,
@@ -216,7 +217,6 @@ interface StoreContextType {
   logoutAdmin: () => void;
   addProduct: (product: Product) => void;
   updateProduct: (product: Product) => void;
-  deleteProduct: (productId: string) => void;
   /**
    * Write a product to the database — create when `productId` is omitted, update
    * when it is given — and pull the catalogue back in. Unlike `addProduct` /
@@ -226,6 +226,11 @@ interface StoreContextType {
     input: ProductWriteInput,
     productId?: string,
   ) => Promise<{ ok: true; product: Product } | { ok: false; error: string }>;
+  /** Delete a product from the database (permanent by default, or archived if permanent=false). */
+  deleteProduct: (
+    productId: string,
+    permanent?: boolean,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   /** Retire a product in the database (`status = 'discontinued'`). */
   archiveProduct: (productId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   updateSiteSettings: (newSettings: Partial<SiteSettings>) => void;
@@ -1529,10 +1534,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  const deleteProduct = (productId: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
-  };
-
   /**
    * The catalogue form's save path.
    *
@@ -1596,24 +1597,40 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return { ok: true, product: saved };
   };
 
-  const archiveProduct = async (
+  /**
+   * Delete a product from the database (permanent by default, or soft-deleted/archived).
+   */
+  const deleteProduct = async (
     productId: string,
+    permanent = true,
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
     const numericId = Number(productId);
     if (!Number.isInteger(numericId) || numericId <= 0) {
+      if (permanent) {
+        setProducts((prev) => prev.filter((p) => p.id !== productId));
+      } else {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, status: 'discontinued' as const } : p)),
+        );
+      }
+      return { ok: true };
+    }
+    const result = await deleteProductRequest(numericId, permanent);
+    if (!result.ok) return result;
+    if (permanent) {
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
+    } else {
       setProducts((prev) =>
         prev.map((p) => (p.id === productId ? { ...p, status: 'discontinued' as const } : p)),
       );
-      return { ok: true };
     }
-    const result = await archiveProductRequest(numericId);
-    if (!result.ok) return result;
-    // The row still exists — it is discontinued, not deleted — so reflect the new
-    // status instead of dropping it out of the admin list.
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, status: 'discontinued' as const } : p)),
-    );
     return { ok: true };
+  };
+
+  const archiveProduct = async (
+    productId: string,
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    return deleteProduct(productId, false);
   };
 
   const updateSiteSettings = (newSettings: Partial<SiteSettings>) => {
