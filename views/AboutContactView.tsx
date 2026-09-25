@@ -59,24 +59,41 @@ export const AboutContactView: React.FC = () => {
         keywords={['Intel Computer Dhangadhi', 'Computer Shop Dhangadhi', 'Laptop Repair Kailali', 'Sudurpashchim Electronics']}
       />
 
-      {/* 1. Header Hero */}
-      <div className="bg-[#0056b3] text-white rounded-3xl p-8 md:p-12 shadow-xl border border-blue-700/50 space-y-4">
-        <span className="bg-white/20 backdrop-blur-sm text-white font-bold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider">
-          Authorized Technology Outlet in Dhangadhi
-        </span>
-        <h1 className="text-3xl md:text-4xl font-black">{siteSettings.storeName} — Dhangadhi</h1>
-        <p className="text-blue-100 text-sm max-w-2xl leading-relaxed">
-          {siteSettings.tagline}. Located at {siteSettings.address || INITIAL_SITE_SETTINGS.address}, we are a certified technology store and total hardware solutions provider for individuals, corporate offices, schools, and government institutions across Far-West Nepal.
-        </p>
-      </div>
-
-      {/* 2. Interactive Google Map Location Embed */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-xl font-black text-slate-900">Google Map Store Location</h2>
-          <p className="text-slate-500 text-xs">{siteSettings.address || INITIAL_SITE_SETTINGS.address}</p>
+      {/* 1 & 2. Header Hero + Map — one row, two columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0056b3] to-[#003d7a] text-white px-6 py-5 shadow-md flex flex-col justify-center">
+          <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-white/10 blur-2xl" aria-hidden />
+          <div className="relative space-y-1.5">
+            <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-blue-100/90">
+              Authorized Technology Outlet · Dhangadhi
+            </span>
+            <h1 className="text-xl md:text-2xl font-black tracking-tight">
+              {siteSettings.storeName}
+            </h1>
+            <p className="text-blue-100/90 text-xs max-w-xl leading-relaxed">
+              {siteSettings.tagline} — certified hardware solutions across Far-West Nepal.
+            </p>
+          </div>
         </div>
-        <GoogleMapEmbed />
+
+        <div>
+        <div className="mb-2 rounded-2xl bg-slate-900 text-white px-5 py-3.5 shadow-md relative overflow-hidden min-h-[64px]">
+          <img
+            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=60"
+            alt="Store location area"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0056b3]/85 via-[#0056b3]/55 to-transparent" />
+          <div className="relative flex items-start gap-2.5">
+            <MapPin className="w-4 h-4 text-blue-100 flex-shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <h2 className="text-sm font-black tracking-tight drop-shadow">Google Map Store Location</h2>
+              <p className="text-blue-100 text-[11px] leading-snug drop-shadow">{siteSettings.address || INITIAL_SITE_SETTINGS.address}</p>
+            </div>
+          </div>
+        </div>
+          <GoogleMapEmbed showDetailsCard={false} />
+        </div>
       </div>
 
       {/* 3. Physical Store Location & Contact Form Grid */}

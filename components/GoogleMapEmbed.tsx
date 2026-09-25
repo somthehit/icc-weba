@@ -28,20 +28,20 @@ export const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
   return (
     <div className={`bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm ${className}`}>
       {showDetailsCard && (
-        <div className="p-6 bg-[#0056b3] text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
+        <div className="px-4 py-3 bg-[#0056b3] text-white flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <span className="bg-red-500 text-white font-bold text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                <MapPin className="w-3 h-3" />
+              <span className="bg-red-500 text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                <MapPin className="w-2.5 h-2.5" />
                 Dhangadhi Outlet
               </span>
-              <span className="text-blue-100 text-xs flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-200" />
+              <span className="text-blue-100 text-[11px] flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-blue-200" />
                 Verified Google Business Profile
               </span>
             </div>
-            <h3 className="text-xl font-black">{storeName} — Dhangadhi Branch</h3>
-            <p className="text-blue-100 text-xs">
+            <h3 className="text-sm font-black">{storeName} — Dhangadhi Branch</h3>
+            <p className="text-blue-100 text-[11px]">
               {storeAddress}
             </p>
           </div>
@@ -51,16 +51,16 @@ export const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
               href={mapsLocationUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white text-[#0056b3] hover:bg-blue-50 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-md"
+              className="bg-white text-[#0056b3] hover:bg-blue-50 font-bold px-3 py-1.5 rounded-lg text-[11px] flex items-center gap-1.5 transition-colors shadow-md"
             >
-              <Navigation className="w-3.5 h-3.5" />
+              <Navigation className="w-3 h-3" />
               <span>Get Directions</span>
             </a>
             <a
               href={`tel:${storePhone}`}
-              className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-white/20"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] flex items-center gap-1.5 transition-colors border border-white/20"
             >
-              <Phone className="w-3.5 h-3.5" />
+              <Phone className="w-3 h-3" />
               <span>Call Store</span>
             </a>
           </div>
@@ -68,7 +68,7 @@ export const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
       )}
 
       {/* Google Map Iframe Container */}
-      <div className="relative w-full h-[420px] bg-slate-100">
+      <div className="relative w-full h-[260px] bg-slate-100">
         <iframe
           src={embedUrl}
           width="100%"
@@ -82,7 +82,7 @@ export const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
         />
       </div>
 
-      <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-600">
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-blue-600" />
           <span><strong>Hours:</strong> {storeHours}</span>

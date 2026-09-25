@@ -1,8 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { ChevronLeft, ChevronRight, ArrowRight, Check, ShoppingCart } from 'lucide-react';
+
+interface FlyingItem {
+  id: string;
+  image: string;
+  title: string;
+  subtitle: string;
+  badge?: string;
+  initX: number; // base percentage X
+  initY: number; // base percentage Y
+  radiusX: number; // flight range X in pixels
+  radiusY: number; // flight range Y in pixels
+  speedX: number; // flight frequency X
+  speedY: number; // flight frequency Y
+  phase: number;
+}
 
 interface HeroSlide {
   id: string;
@@ -15,6 +30,8 @@ interface HeroSlide {
   cardLabel: string;
   brand: string;
   model: string;
+  image: string;
+  flyingItems: FlyingItem[];
   bootLines: string[];
   specs: { k: string; v: string }[];
   mrp: number;
@@ -38,6 +55,65 @@ const HERO_SLIDES: HeroSlide[] = [
     cardLabel: 'Featured Build',
     brand: 'Dell Technologies',
     model: 'XPS 15 High Performance',
+    image: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=900&q=80',
+    flyingItems: [
+      {
+        id: 'float-1',
+        image: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=240&q=80',
+        title: 'Precision Mouse',
+        subtitle: 'Logitech MX 3S',
+        badge: 'Wireless',
+        initX: 42,
+        initY: 10,
+        radiusX: 95,
+        radiusY: 55,
+        speedX: 0.0012,
+        speedY: 0.0009,
+        phase: 0.2
+      },
+      {
+        id: 'float-2',
+        image: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=240&q=80',
+        title: '32GB DDR5',
+        subtitle: '5600 MT/s Dual',
+        badge: 'RAM',
+        initX: 38,
+        initY: 62,
+        radiusX: 110,
+        radiusY: 60,
+        speedX: 0.0009,
+        speedY: 0.0013,
+        phase: 2.1
+      },
+      {
+        id: 'float-3',
+        image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=240&q=80',
+        title: 'GeForce RTX',
+        subtitle: '4060 6GB GDDR6',
+        badge: 'GPU',
+        initX: 76,
+        initY: 8,
+        radiusX: 85,
+        radiusY: 65,
+        speedX: 0.0014,
+        speedY: 0.0010,
+        phase: 4.3
+      },
+      {
+        id: 'float-4',
+        image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=240&q=80',
+        title: '3.5K OLED',
+        subtitle: '100% DCI-P3 Color',
+        badge: 'Display',
+        initX: 12,
+        initY: 68,
+        radiusX: 90,
+        radiusY: 50,
+        speedX: 0.0011,
+        speedY: 0.0008,
+        phase: 1.5
+      }
+    ],
     bootLines: [
       '> boot sequence ok',
       '> gpu: rtx 4060 detected',
@@ -69,6 +145,65 @@ const HERO_SLIDES: HeroSlide[] = [
     cardLabel: 'Flagship Battle Rig',
     brand: 'Lenovo Legion',
     model: 'Legion Pro 5 (i9 14th Gen)',
+    image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=900&q=80',
+    flyingItems: [
+      {
+        id: 'float-1',
+        image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=240&q=80',
+        title: '7.1 Surround',
+        subtitle: 'Spatial Audio',
+        badge: 'Pro Audio',
+        initX: 44,
+        initY: 12,
+        radiusX: 100,
+        radiusY: 60,
+        speedX: 0.0013,
+        speedY: 0.0010,
+        phase: 0.5
+      },
+      {
+        id: 'float-2',
+        image: 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=240&q=80',
+        title: 'RGB Mechanical',
+        subtitle: 'TrueStrike Switch',
+        badge: 'Keyboard',
+        initX: 36,
+        initY: 65,
+        radiusX: 115,
+        radiusY: 55,
+        speedX: 0.0010,
+        speedY: 0.0014,
+        phase: 3.2
+      },
+      {
+        id: 'float-3',
+        image: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=240&q=80',
+        title: 'RTX 4070',
+        subtitle: '140W Max TGP',
+        badge: 'Peak FPS',
+        initX: 80,
+        initY: 10,
+        radiusX: 90,
+        radiusY: 70,
+        speedX: 0.0012,
+        speedY: 0.0009,
+        phase: 1.8
+      },
+      {
+        id: 'float-4',
+        image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=240&q=80',
+        title: '240Hz 2.5K',
+        subtitle: 'HDR400 G-Sync',
+        badge: 'eSports',
+        initX: 10,
+        initY: 70,
+        radiusX: 85,
+        radiusY: 55,
+        speedX: 0.0009,
+        speedY: 0.0012,
+        phase: 4.8
+      }
+    ],
     bootLines: [
       '> legion coldfront 5.0 engaged',
       '> cpu: core i9-14900hx unlocked',
@@ -100,6 +235,65 @@ const HERO_SLIDES: HeroSlide[] = [
     cardLabel: 'Security Package',
     brand: 'Hikvision Digital',
     model: '4K ColorVu AI Smart Kit',
+    image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&w=900&q=80',
+    flyingItems: [
+      {
+        id: 'float-1',
+        image: 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=240&q=80',
+        title: '4TB Surveillance',
+        subtitle: 'WD Purple 24/7',
+        badge: 'Storage',
+        initX: 42,
+        initY: 10,
+        radiusX: 95,
+        radiusY: 55,
+        speedX: 0.0011,
+        speedY: 0.0009,
+        phase: 0.8
+      },
+      {
+        id: 'float-2',
+        image: 'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?auto=format&fit=crop&w=240&q=80',
+        title: 'PoE 8-Port',
+        subtitle: 'Gigabit Switch',
+        badge: 'PoE Hub',
+        initX: 38,
+        initY: 64,
+        radiusX: 110,
+        radiusY: 60,
+        speedX: 0.0013,
+        speedY: 0.0011,
+        phase: 2.7
+      },
+      {
+        id: 'float-3',
+        image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?auto=format&fit=crop&w=240&q=80',
+        title: 'AI ColorVu',
+        subtitle: '24/7 Full Color',
+        badge: 'Night 4K',
+        initX: 78,
+        initY: 12,
+        radiusX: 90,
+        radiusY: 65,
+        speedX: 0.0010,
+        speedY: 0.0014,
+        phase: 5.1
+      },
+      {
+        id: 'float-4',
+        image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&w=240&q=80',
+        title: '4K Ultra HD',
+        subtitle: 'Smart Dome Cam',
+        badge: '8MP',
+        initX: 12,
+        initY: 68,
+        radiusX: 95,
+        radiusY: 50,
+        speedX: 0.0012,
+        speedY: 0.0008,
+        phase: 3.4
+      }
+    ],
     bootLines: [
       '> acusense motion detection: on',
       '> 24/7 full color night vision',
@@ -121,6 +315,74 @@ const HERO_SLIDES: HeroSlide[] = [
     productSlug: 'hikvision-4ch-2mp-full-hd-cctv-package'
   }
 ];
+
+/**
+ * High-performance animated flying badge that flies across the hero area in real time
+ * using requestAnimationFrame with multi-harmonic floating physics.
+ */
+const FlyingBadge: React.FC<{ item: FlyingItem }> = ({ item }) => {
+  const badgeRef = useRef<HTMLDivElement>(null);
+  const isHoveredRef = useRef(false);
+
+  useEffect(() => {
+    let animId: number;
+    let startTime: number | null = null;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+
+      if (badgeRef.current && !isHoveredRef.current) {
+        // Multi-frequency organic flight trajectory calculation
+        const dx = Math.sin(elapsed * item.speedX + item.phase) * item.radiusX
+                 + Math.cos(elapsed * (item.speedX * 0.6) + item.phase * 1.5) * (item.radiusX * 0.35);
+        const dy = Math.cos(elapsed * item.speedY + item.phase) * item.radiusY
+                 + Math.sin(elapsed * (item.speedY * 0.7) + item.phase * 0.8) * (item.radiusY * 0.3);
+        const rot = Math.sin(elapsed * 0.0008 + item.phase) * 5;
+
+        badgeRef.current.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0px) rotate(${rot.toFixed(2)}deg)`;
+      }
+
+      animId = requestAnimationFrame(animate);
+    };
+
+    animId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animId);
+  }, [item]);
+
+  return (
+    <div
+      ref={badgeRef}
+      onMouseEnter={() => { isHoveredRef.current = true; }}
+      onMouseLeave={() => { isHoveredRef.current = false; }}
+      className="hidden md:flex absolute z-20 items-center gap-2.5 bg-white/95 backdrop-blur-md border border-slate-200/90 py-1.5 px-3 rounded-2xl shadow-xl shadow-slate-300/40 hover:shadow-2xl hover:scale-105 pointer-events-auto cursor-pointer select-none transition-shadow duration-200"
+      style={{
+        left: `${item.initX}%`,
+        top: `${item.initY}%`,
+        willChange: 'transform',
+      }}
+    >
+      <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 flex-shrink-0 shadow-inner">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="text-left leading-tight pr-1">
+        <div className="flex items-center gap-1.5">
+          <span className="font-bold text-xs text-slate-800">{item.title}</span>
+          {item.badge && (
+            <span className="font-mono text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md border border-blue-100">
+              {item.badge}
+            </span>
+          )}
+        </div>
+        <div className="text-[11px] text-slate-500 font-medium">{item.subtitle}</div>
+      </div>
+    </div>
+  );
+};
 
 export const HeroBanner: React.FC = () => {
   const { navigateTo, addToCart, products } = useStore();
@@ -150,23 +412,34 @@ export const HeroBanner: React.FC = () => {
   return (
     <section
       id="hero-redesign-section"
-      className="relative bg-white text-slate-900 overflow-hidden my-2 max-w-[1536px] mx-auto rounded-3xl border border-slate-200/80 px-6 lg:px-12 py-5 lg:py-6 select-none shadow-xs"
+      className="relative bg-gradient-to-b from-slate-50/90 via-white to-slate-50/70 text-slate-900 overflow-hidden my-2 max-w-[1536px] mx-auto rounded-3xl border border-slate-200/80 px-6 lg:px-12 py-6 lg:py-8 select-none shadow-sm"
     >
-      {/* Background Subtle Radial Glow */}
+      {/* Background Subtle Radial Glow & Accents */}
       <div
-        className="absolute w-[500px] h-[500px] rounded-full pointer-events-none -top-40 -right-20 opacity-60"
+        className="absolute w-[600px] h-[600px] rounded-full pointer-events-none -top-40 -right-20 opacity-70"
         style={{
-          background: 'radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(59,130,246,0.09), transparent 70%)',
+        }}
+      />
+      <div
+        className="absolute w-[450px] h-[450px] rounded-full pointer-events-none -bottom-24 -left-16 opacity-50"
+        style={{
+          background: 'radial-gradient(circle, rgba(99,102,241,0.06), transparent 70%)',
         }}
       />
 
-      {/* Cyber Circuit SVG Background Grid (Subtle Light) */}
+      {/* Dynamic Flying Photo Badges across Hero Canvas (Real-time Physics Animation) */}
+      {current.flyingItems.map((item) => (
+        <FlyingBadge key={`${current.id}-${item.id}`} item={item} />
+      ))}
+
+      {/* Cyber Circuit SVG Background Grid (Crisp & Subtle) */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-40 pointer-events-none"
+        className="absolute inset-0 w-full h-full opacity-35 pointer-events-none"
         viewBox="0 0 1400 700"
         preserveAspectRatio="none"
       >
-        <g stroke="#3b82f6" strokeWidth="1" opacity="0.08">
+        <g stroke="#3b82f6" strokeWidth="1" opacity="0.12">
           <path d="M0 120 H340 V60 H700" fill="none" />
           <path d="M0 300 H180 V420 H520 V520" fill="none" />
           <path d="M1400 90 H1040 V220 H820" fill="none" />
@@ -183,7 +456,7 @@ export const HeroBanner: React.FC = () => {
         </g>
       </svg>
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
         {/* Left Column: Hero Content */}
         <div className="lg:col-span-7 space-y-4">
           {/* Eyebrow with pulsing blue/cyan status dot */}
@@ -205,7 +478,7 @@ export const HeroBanner: React.FC = () => {
           </p>
 
           {/* CTA Action Buttons */}
-          <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-3 pt-1 relative z-30">
             <button
               onClick={() => navigateTo('shop')}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base py-3 px-6 rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 shadow-sm flex items-center gap-2 cursor-pointer"
@@ -222,7 +495,7 @@ export const HeroBanner: React.FC = () => {
           </div>
 
           {/* Trust Features Strip */}
-          <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs text-slate-600">
+          <div className="pt-4 border-t border-slate-200/80 flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs text-slate-600">
             <span className="inline-flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-blue-600 stroke-[2.5]" />
               Official NP Warranty
@@ -242,7 +515,7 @@ export const HeroBanner: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Interactive Tech Spec Card */}
+        {/* Right Column: Featured Build Card */}
         <div className="lg:col-span-5 relative">
           {/* Animated Circuit Trace Line (Desktop only) */}
           <svg
@@ -259,8 +532,8 @@ export const HeroBanner: React.FC = () => {
             <circle cx="400" cy="90" r="4" fill="#3b82f6" />
           </svg>
 
-          {/* Spec Card Container */}
-          <div className="relative z-10 bg-slate-50 border border-slate-200/90 rounded-[22px] p-3 sm:p-4 shadow-lg shadow-slate-200/50">
+          {/* Main Spec Card Container */}
+          <div className="relative z-10 bg-white border border-slate-200/90 rounded-[24px] p-4 sm:p-5 shadow-xl shadow-slate-200/70">
             {/* Discount Badge */}
             <div className="absolute top-4 right-4 z-20 bg-red-500 text-white font-mono font-bold text-xs px-2.5 py-1 rounded-full shadow-xs">
               {current.badge}
@@ -271,45 +544,39 @@ export const HeroBanner: React.FC = () => {
               {current.cardLabel}
             </div>
 
-            {/* Virtual Device Display Screen */}
-            <div className="relative rounded-t-xl rounded-b h-36 bg-slate-950 border border-slate-800 overflow-hidden p-4 flex flex-col justify-center shadow-inner">
-              {/* Radial Highlight in Screen */}
-              <div
-                className="absolute -top-12 -left-8 w-44 h-44 rounded-full pointer-events-none"
-                style={{
-                  background: 'radial-gradient(circle, rgba(59,130,246,0.35), transparent 70%)',
-                }}
+            {/* Direct High-Quality Product Photo Showcase */}
+            <div className="relative rounded-2xl h-44 sm:h-48 bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-950 border border-slate-700/60 overflow-hidden group mb-3 shadow-inner">
+              <img
+                key={current.id}
+                src={current.image}
+                alt={current.model}
+                className="w-full h-full object-cover object-center opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out animate-fade-in"
               />
-              <div className="relative font-mono text-[11px] text-emerald-400 space-y-1">
-                <div>{current.bootLines[0]}</div>
-                {current.bootLines.slice(1).map((line, idx) => (
-                  <div key={idx} className="text-slate-400">
-                    {line}
-                  </div>
-                ))}
+              
+              {/* Subtle Gradient & Glare Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20 pointer-events-none" />
+              
+              {/* Live Terminal Telemetry Overlay Tag */}
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-slate-950/85 backdrop-blur-md rounded-xl p-2 border border-slate-700/60 font-mono text-[10px] text-emerald-400 flex items-center justify-between">
+                <div className="truncate pr-2">
+                  {current.bootLines[0]} <span className="text-slate-400">| {current.bootLines[1]}</span>
+                </div>
+                <span className="flex-shrink-0 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </div>
             </div>
-
-            {/* Device Metallic Base */}
-            <div
-              className="h-2 rounded-b-lg mx-2.5 mb-2.5 shadow-2xs border-t border-slate-300"
-              style={{
-                background: 'linear-gradient(90deg, #e2e8f0, #cbd5e1 50%, #e2e8f0)',
-              }}
-            />
 
             {/* Brand & Model */}
             <div className="font-mono text-[11px] font-bold tracking-wider text-slate-500 uppercase">
               {current.brand}
             </div>
-            <div className="font-sans font-extrabold text-lg text-slate-900 mb-2 truncate">
+            <div className="font-sans font-extrabold text-lg sm:text-xl text-slate-900 mb-2 truncate">
               {current.model}
             </div>
 
             {/* Spec Matrix Table */}
-            <div className="border-t border-slate-200 divide-y divide-slate-200 mb-2.5">
+            <div className="border-t border-slate-200 divide-y divide-slate-100 mb-2.5">
               {current.specs.map((spec, i) => (
-                <div key={i} className="flex justify-between items-center py-1 font-mono text-xs">
+                <div key={i} className="flex justify-between items-center py-1.5 font-mono text-xs">
                   <span className="text-slate-500 tracking-wide font-medium">{spec.k}</span>
                   <span className="text-slate-900 font-semibold text-right">{spec.v}</span>
                 </div>
@@ -368,7 +635,7 @@ export const HeroBanner: React.FC = () => {
       </div>
 
       {/* Hero Carousel Navigation Footer */}
-      <div className="relative z-10 mt-6 pt-3 border-t border-slate-100 flex items-center justify-between">
+      <div className="relative z-10 mt-6 pt-3 border-t border-slate-200/80 flex items-center justify-between">
         {/* Slide Dots Indicator */}
         <div className="flex items-center gap-2">
           {HERO_SLIDES.map((_, idx) => (
@@ -403,4 +670,3 @@ export const HeroBanner: React.FC = () => {
     </section>
   );
 };
-
