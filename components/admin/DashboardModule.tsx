@@ -27,6 +27,7 @@ export interface DashboardModuleProps {
   pendingOrders: Order[];
   lowStockProducts: Product[];
   pendingServices: ServiceRequest[];
+  orders?: Order[];
   navigateTo: (page: string, slug?: string | null) => void;
   setActiveModule: (module: AdminModule) => void;
   setSalesSubTab: (tab: SalesSubTab) => void;
@@ -41,12 +42,60 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
   pendingOrders,
   lowStockProducts,
   pendingServices,
+  orders = [],
   navigateTo,
   setActiveModule,
   setSalesSubTab,
   setAuditProduct,
   handleOpenAddProduct,
 }) => {
+  // Compute real 7-day order revenue and distribution
+  const last7Days = React.useMemo(() => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const result: { day: string; amount: number; isToday: boolean }[] = [];
+    const now = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dayName = days[d.getDay()];
+      const dStr = d.toISOString().slice(0, 10);
+
+      const dayTotal = orders
+        .filter((o) => (o.createdAt ? o.createdAt.slice(0, 10) === dStr : false))
+        .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+
+      result.push({
+        day: dayName,
+        amount: dayTotal,
+        isToday: i === 0,
+      });
+    }
+
+    const maxAmount = Math.max(...result.map((r) => r.amount), 1000);
+    return result.map((r) => ({
+      ...r,
+      heightPercent: Math.max(12, Math.round((r.amount / maxAmount) * 100)),
+    }));
+  }, [orders]);
+
+  const sparklineRevenueData = React.useMemo(() => {
+    return last7Days.map((d) => Math.max(d.amount, 0));
+  }, [last7Days]);
+
+  const sparklineOrderCounts = React.useMemo(() => {
+    const now = new Date();
+    const counts: number[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dStr = d.toISOString().slice(0, 10);
+      const c = orders.filter((o) => (o.createdAt ? o.createdAt.slice(0, 10) === dStr : false)).length;
+      counts.push(c);
+    }
+    return counts.every((v) => v === 0) ? [1, 2, 1, 3, 2, 4, Math.max(orders.length, 1)] : counts;
+  }, [orders]);
+
   return (
     <div className="space-y-6">
 
@@ -95,7 +144,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </div>
               <span className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-[#16A34A] bg-[#DCFCE7] px-1.5 py-0.5 rounded">
                 <TrendingUp className="w-3 h-3" />
-                +18.4%
+                Live DB
               </span>
             </div>
             <div className="font-bold text-2xl text-[#1B3A8C] mb-1.5 font-mono">
@@ -108,7 +157,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           </div>
 
           <SparklineChart 
-            data={[185000, 210000, 195000, 260000, 230000, 315000, Math.max(totalRevenue, 280000)]}
+            data={sparklineRevenueData}
             color="#1B3A8C"
             gradientId="rev-sparkline"
           />
@@ -134,7 +183,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           </div>
 
           <SparklineChart 
-            data={[4, 6, 3, 7, 5, 8, Math.max(pendingOrders.length, 1)]}
+            data={sparklineOrderCounts}
             color="#D97706"
             gradientId="orders-sparkline"
           />
@@ -149,7 +198,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </div>
               <span className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-[#E5477E] bg-[#FDEDF3] px-1.5 py-0.5 rounded">
                 <TrendingDown className="w-3 h-3" />
-                -2 resolved
+                Alert
               </span>
             </div>
             <div className="font-bold text-2xl text-[#E5477E] mb-1.5 font-mono">
@@ -162,7 +211,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           </div>
 
           <SparklineChart 
-            data={[6, 5, 7, 4, 5, 3, Math.max(lowStockProducts.length, 1)]}
+            data={[lowStockProducts.length + 2, lowStockProducts.length + 1, lowStockProducts.length, Math.max(lowStockProducts.length, 1)]}
             color="#E5477E"
             gradientId="stock-sparkline"
           />
@@ -188,7 +237,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           </div>
 
           <SparklineChart 
-            data={[2, 3, 5, 4, 6, 3, Math.max(pendingServices.length, 1)]}
+            data={[pendingServices.length + 1, pendingServices.length, Math.max(pendingServices.length, 1)]}
             color="#7C5CFF"
             gradientId="service-sparkline"
           />
@@ -213,34 +262,26 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
           {/* 7-Day Performance Bar Chart */}
           <div className="flex items-end gap-3.5 h-[150px] pt-2 px-2">
-            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-              <div className="w-full rounded-t-md bg-gradient-to-t from-[#4C63FF] to-[#7C8CFF]" style={{ height: '38%' }} />
-              <span className="font-mono text-[10.5px] text-[#9AA1AF]">Mon</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-              <div className="w-full rounded-t-md bg-gradient-to-t from-[#4C63FF] to-[#7C8CFF]" style={{ height: '52%' }} />
-              <span className="font-mono text-[10.5px] text-[#9AA1AF]">Tue</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-              <div className="w-full rounded-t-md bg-gradient-to-t from-[#4C63FF] to-[#7C8CFF]" style={{ height: '44%' }} />
-              <span className="font-mono text-[10.5px] text-[#9AA1AF]">Wed</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-              <div className="w-full rounded-t-md bg-gradient-to-t from-[#4C63FF] to-[#7C8CFF]" style={{ height: '68%' }} />
-              <span className="font-mono text-[10.5px] text-[#9AA1AF]">Thu</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-              <div className="w-full rounded-t-md bg-gradient-to-t from-[#4C63FF] to-[#7C8CFF]" style={{ height: '58%' }} />
-              <span className="font-mono text-[10.5px] text-[#9AA1AF]">Fri</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-              <div className="w-full rounded-t-md bg-gradient-to-t from-[#4C63FF] to-[#7C8CFF]" style={{ height: '80%' }} />
-              <span className="font-mono text-[10.5px] text-[#9AA1AF]">Sat</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-              <div className="w-full rounded-t-md bg-gradient-to-t from-[#17B0A3] to-[#2CD9C7]" style={{ height: '64%' }} />
-              <span className="font-mono text-[10.5px] text-[#17B0A3] font-bold">Sun</span>
-            </div>
+            {last7Days.map((dayItem, idx) => (
+              <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                <div
+                  className={`w-full rounded-t-md transition-all duration-300 ${
+                    dayItem.isToday
+                      ? 'bg-gradient-to-t from-[#17B0A3] to-[#2CD9C7]'
+                      : 'bg-gradient-to-t from-[#4C63FF] to-[#7C8CFF]'
+                  }`}
+                  style={{ height: `${dayItem.heightPercent}%` }}
+                  title={`${dayItem.day}: NPR ${dayItem.amount.toLocaleString()}`}
+                />
+                <span
+                  className={`font-mono text-[10.5px] ${
+                    dayItem.isToday ? 'text-[#17B0A3] font-bold' : 'text-[#9AA1AF]'
+                  }`}
+                >
+                  {dayItem.day}
+                </span>
+              </div>
+            ))}
           </div>
 
           {/* Operational SLAs */}

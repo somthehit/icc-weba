@@ -281,3 +281,147 @@
   background: rgba(0, 0, 0, 0.28);
 }
 
+/* ==========================================================================
+   Apex Retail POS Terminal Theme System (Dark & Light)
+   ========================================================================== */
+.pos-theme-light {
+  background-color: #f4f6f8 !important;
+  color: #0f172a !important;
+  color-scheme: light;
+}
+
+.pos-theme-light .bg-\[\#0f1412\] { background-color: #f4f6f8 !important; }
+.pos-theme-light .bg-\[\#0a0f0d\] { background-color: #ffffff !important; }
+.pos-theme-light .bg-\[\#0d1410\] { background-color: #f8fafc !important; }
+.pos-theme-light .bg-\[\#141a17\] { background-color: #f1f5f9 !important; }
+.pos-theme-light .bg-\[\#141816\] { background-color: #f8fafc !important; }
+.pos-theme-light .bg-\[\#101512\] { background-color: #ffffff !important; }
+.pos-theme-light .bg-\[\#050806\] { background-color: #ffffff !important; }
+.pos-theme-light .bg-\[\#181d1b\] { background-color: #ffffff !important; }
+.pos-theme-light .bg-\[\#1c211e\] { background-color: #f8fafc !important; }
+.pos-theme-light .bg-\[\#1f2823\] { background-color: #f1f5f9 !important; }
+.pos-theme-light .bg-\[\#202722\] { background-color: #e2e8f0 !important; }
+.pos-theme-light .bg-\[\#202723\] { background-color: #f1f5f9 !important; }
+.pos-theme-light .bg-\[\#262b29\] { background-color: #f1f5f9 !important; }
+.pos-theme-light .bg-\[\#313633\] { background-color: #e2e8f0 !important; }
+.pos-theme-light .bg-\[\#14231b\] { background-color: #ecfdf5 !important; }
+.pos-theme-light .bg-\[\#141828\] { background-color: #eff6ff !important; }
+.pos-theme-light .bg-\[\#251828\] { background-color: #faf5ff !important; }
+.pos-theme-light .bg-\[\#261616\] { background-color: #fff1f2 !important; }
+.pos-theme-light .bg-\[\#261f14\] { background-color: #fffbeb !important; }
+.pos-theme-light .bg-\[\#142028\] { background-color: #f0f9ff !important; }
+
+.pos-theme-light .hover\:bg-\[\#262b29\]:hover { background-color: #e2e8f0 !important; }
+.pos-theme-light .hover\:bg-\[\#313633\]:hover { background-color: #cbd5e1 !important; }
+.pos-theme-light .hover\:bg-\[\#181d1b\]:hover { background-color: #f8fafc !important; }
+.pos-theme-light .hover\:bg-\[\#141a17\]:hover { background-color: #e2e8f0 !important; }
+.pos-theme-light .hover\:bg-\[\#141816\]:hover { background-color: #f1f5f9 !important; }
+.pos-theme-light .hover\:bg-\[\#1a201c\]:hover { background-color: #f1f5f9 !important; }
+.pos-theme-light .hover\:bg-\[\#2b3830\]:hover { background-color: #e2e8f0 !important; }
+
+.pos-theme-light .text-\[\#dfe4e0\] { color: #0f172a !important; }
+.pos-theme-light .text-\[\#bec9c0\] { color: #334155 !important; }
+.pos-theme-light .text-\[\#88938b\] { color: #64748b !important; }
+.pos-theme-light .text-\[\#82d8a9\] { color: #006b45 !important; }
+.pos-theme-light .text-\[\#9df5c4\] { color: #004d32 !important; }
+.pos-theme-light .text-\[\#ffb95f\] { color: #b45309 !important; }
+
+/* In Light mode, labels and titles on white surfaces should be dark */
+.pos-theme-light h2,
+.pos-theme-light h3,
+.pos-theme-light h4 {
+  color: #0f172a !important;
+}
+
+.pos-theme-light .border-\[\#141a17\] { border-color: #e2e8f0 !important; }
+.pos-theme-light .border-\[\#262b29\] { border-color: #e2e8f0 !important; }
+.pos-theme-light .border-\[\#313633\] { border-color: #cbd5e1 !important; }
+.pos-theme-light .border-\[\#3f4942\] { border-color: #cbd5e1 !important; }
+.pos-theme-light .border-\[\#82d8a9\] { border-color: #006b45 !important; }
+
+.pos-theme-light input,
+.pos-theme-light select,
+.pos-theme-light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.pos-theme-light input::placeholder {
+  color: #94a3b8 !important;
+}
+
+.pos-theme-light .shadow-2xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ==========================================================================
+   POS THERMAL RECEIPT PRINT STYLES (80mm / 58mm Standard)
+   ========================================================================== */
+@media print {
+  @page {
+    margin: 0 !important;
+    size: 80mm auto !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide entire page workspace & backgrounds */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Unhide ONLY the receipt slip container and its contents */
+  #pos-receipt-print-slip,
+  #pos-receipt-print-slip * {
+    visibility: visible !important;
+  }
+
+  /* Position receipt at very top left with thermal roll sizing */
+  #pos-receipt-print-slip {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 78mm !important;
+    max-width: 78mm !important;
+    margin: 0 auto !important;
+    padding: 3mm 4mm 8mm 4mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: block !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Hide Action buttons, close button, modals and dialog controls */
+  .no-print,
+  .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .pos-receipt-backdrop {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+    inset: auto !important;
+  }
+}
+
+

@@ -20,6 +20,7 @@ export const users = pgTable(
     email: varchar('email', { length: 200 }).notNull(),
     phone: varchar('phone', { length: 15 }), // Nepali format e.g. 98XXXXXXXX — validate at app layer
     passwordHash: varchar('password_hash', { length: 255 }),
+    posPin: varchar('pos_pin', { length: 255 }),
     role: userRoleEnum('role').notNull().default('customer'),
     avatarUrl: varchar('avatar_url', { length: 500 }),
     isActive: boolean('is_active').notNull().default(true),

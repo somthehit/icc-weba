@@ -53,6 +53,7 @@ import { UploadButton } from './ImageUploadField';
 import { AccountLedgerModal } from './AccountLedgerModal';
 import { DriverCodDrawer } from './DriverCodDrawer';
 import { BankReconciliationModal } from './BankReconciliationModal';
+import { AccountantDashboard } from './AccountantDashboard';
 
 interface AccountingModuleProps {
   orders: Order[];
@@ -148,6 +149,7 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
   const [tab, setTab] = useState<'overview' | 'coa' | 'journal' | 'cod' | 'reports'>('overview');
   const [notice, setNotice] = useState<Notice>(null);
   const [loading, setLoading] = useState(true);
+  const [accountingTab, setAccountingTab] = useState<'erp-ledger' | 'pos-eod'>('erp-ledger');
 
   // Global Date Range Filter
   const [datePreset, setDatePreset] = useState<DatePreset>('this_month');
@@ -541,6 +543,36 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
 
   return (
     <div className="space-y-6">
+      {/* Tab Switcher: ERP Ledger vs POS EOD Reconciliation */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+        <button
+          type="button"
+          onClick={() => setAccountingTab('erp-ledger')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            accountingTab === 'erp-ledger'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          General Ledger &amp; ERP Accounts
+        </button>
+        <button
+          type="button"
+          onClick={() => setAccountingTab('pos-eod')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            accountingTab === 'pos-eod'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          POS EOD &amp; Cashier Reconciliation (Accountant Cockpit)
+        </button>
+      </div>
+
+      {accountingTab === 'pos-eod' ? (
+        <AccountantDashboard />
+      ) : (
+        <>
       {/* Top Header & Global Date Range Toolbar */}
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
         <div className="min-w-0">
@@ -1944,6 +1976,8 @@ export const AccountingModule: React.FC<AccountingModuleProps> = ({ orders, prod
             </form>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -29,6 +29,7 @@ import {
   timestamp,
   index,
   uniqueIndex,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { relations, sql as raw } from 'drizzle-orm';
 import { users } from './users';
@@ -276,9 +277,220 @@ export const purchaseBillItems = pgTable(
   }),
 );
 
+export type PurchaseOrderStatus =
+  | 'draft'
+  | 'pending_approval'
+  | 'approved'
+  | 'sent'
+  | 'issued'
+  | 'partially_received'
+  | 'received'
+  | 'closed'
+  | 'rejected'
+  | 'cancelled';
+
+/**
+ * Purchase Orders issued to suppliers for procuring stock.
+ */
+export const purchaseOrders = pgTable(
+  'purchase_orders',
+  {
+    id: serial('id').primaryKey(),
+    supplierId: integer('supplier_id')
+      .notNull()
+      .references(() => suppliers.id, { onDelete: 'restrict' }),
+    poNumber: varchar('po_number', { length: 60 }).notNull(),
+    fiscalYear: varchar('fiscal_year', { length: 20 }).default('2082/83'),
+    orderDate: date('order_date', { mode: 'string' }).notNull(),
+    expectedDeliveryDate: date('expected_delivery_date', { mode: 'string' }),
+    deliverToLocation: varchar('deliver_to_location', { length: 150 }).default('Main Store - Dhangadhi'),
+    billingReference: varchar('billing_reference', { length: 100 }),
+    currency: varchar('currency', { length: 10 }).default('NPR'),
+    exchangeRate: numeric('exchange_rate', { precision: 10, scale: 4 }).default('1.0000'),
+    supplierQuoteNo: varchar('supplier_quote_no', { length: 80 }),
+    subtotal: numeric('subtotal', { precision: 14, scale: 2 }).notNull().default('0'),
+    discountAmount: numeric('discount_amount', { precision: 14, scale: 2 }).default('0'),
+    vatAmount: numeric('vat_amount', { precision: 14, scale: 2 }).notNull().default('0'),
+    otherCharges: numeric('other_charges', { precision: 14, scale: 2 }).default('0'),
+    totalAmount: numeric('total_amount', { precision: 14, scale: 2 }).notNull().default('0'),
+    status: varchar('status', { length: 30 })
+      .$type<PurchaseOrderStatus>()
+      .notNull()
+      .default('draft'),
+    paymentTerms: varchar('payment_terms', { length: 100 }).default('Credit 30 Days'),
+    notes: text('notes'),
+    internalNotes: text('internal_notes'),
+    createdById: integer('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+    createdByName: varchar('created_by_name', { length: 150 }),
+    approvedById: integer('approved_by_id').references(() => users.id, { onDelete: 'set null' }),
+    approvedByName: varchar('approved_by_name', { length: 150 }),
+    approvedAt: timestamp('approved_at'),
+    sentAt: timestamp('sent_at'),
+    sentMethod: varchar('sent_method', { length: 30 }),
+    confirmationStatus: varchar('confirmation_status', { length: 30 }).default('pending'),
+    revisionNumber: integer('revision_number').default(1),
+    idempotencyKey: varchar('idempotency_key', { length: 64 }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    poNumberIdx: uniqueIndex('purchase_orders_number_idx').on(t.poNumber),
+    supplierIdx: index('purchase_orders_supplier_idx').on(t.supplierId),
+    statusIdx: index('purchase_orders_status_idx').on(t.status),
+  }),
+);
+
+export const purchaseOrderItems = pgTable(
+  'purchase_order_items',
+  {
+    id: serial('id').primaryKey(),
+    purchaseOrderId: integer('purchase_order_id')
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').references(() => products.id, { onDelete: 'set null' }),
+    sku: varchar('sku', { length: 60 }),
+    supplierPartNo: varchar('supplier_part_no', { length: 80 }),
+    description: varchar('description', { length: 300 }).notNull(),
+    quantityOrdered: integer('quantity_ordered').notNull().default(1),
+    quantityReceived: integer('quantity_received').notNull().default(0),
+    unitOfMeasure: varchar('unit_of_measure', { length: 20 }).default('Pcs'),
+    unitCost: numeric('unit_cost', { precision: 14, scale: 2 }).notNull(),
+    discountPercent: numeric('discount_percent', { precision: 5, scale: 2 }).default('0'),
+    discountAmount: numeric('discount_amount', { precision: 14, scale: 2 }).default('0'),
+    taxCategory: varchar('tax_category', { length: 20 }).default('vat_13'),
+    vatRate: numeric('vat_rate', { precision: 5, scale: 2 }).default('13.00'),
+    vatAmount: numeric('vat_amount', { precision: 14, scale: 2 }).default('0'),
+    lineTotal: numeric('line_total', { precision: 14, scale: 2 }).notNull(),
+    requiresSerial: boolean('requires_serial').default(false),
+    lastPurchaseCost: numeric('last_purchase_cost', { precision: 14, scale: 2 }),
+    averageCost: numeric('average_cost', { precision: 14, scale: 2 }),
+    currentStock: integer('current_stock'),
+    estimatedLandedCost: numeric('estimated_landed_cost', { precision: 14, scale: 2 }),
+    expectedSellingPrice: numeric('expected_selling_price', { precision: 14, scale: 2 }),
+    expectedMarginPercent: numeric('expected_margin_percent', { precision: 5, scale: 2 }),
+  },
+  (t) => ({
+    poIdx: index('purchase_order_items_po_idx').on(t.purchaseOrderId),
+  }),
+);
+
+export const purchaseOrderRevisions = pgTable(
+  'purchase_order_revisions',
+  {
+    id: serial('id').primaryKey(),
+    purchaseOrderId: integer('purchase_order_id')
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: 'cascade' }),
+    revisionNumber: integer('revision_number').notNull(),
+    snapshotJson: jsonb('snapshot_json').notNull(),
+    changeReason: text('change_reason'),
+    changedById: integer('changed_by_id').references(() => users.id, { onDelete: 'set null' }),
+    changedByName: varchar('changed_by_name', { length: 150 }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    poRevIdx: index('po_revisions_poid_idx').on(t.purchaseOrderId),
+  }),
+);
+
+export const poApprovals = pgTable(
+  'po_approvals',
+  {
+    id: serial('id').primaryKey(),
+    purchaseOrderId: integer('purchase_order_id')
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: 'cascade' }),
+    approverId: integer('approver_id').references(() => users.id, { onDelete: 'set null' }),
+    approverName: varchar('approver_name', { length: 150 }).notNull(),
+    role: varchar('role', { length: 50 }).notNull(),
+    action: varchar('action', { length: 30 }).notNull(),
+    amount: numeric('amount', { precision: 14, scale: 2 }).notNull(),
+    pinHash: varchar('pin_hash', { length: 128 }),
+    deviceIp: varchar('device_ip', { length: 45 }),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    poApprIdx: index('po_approvals_poid_idx').on(t.purchaseOrderId),
+  }),
+);
+
+export const poAttachments = pgTable(
+  'po_attachments',
+  {
+    id: serial('id').primaryKey(),
+    purchaseOrderId: integer('purchase_order_id')
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: 'cascade' }),
+    filename: varchar('filename', { length: 255 }).notNull(),
+    fileUrl: text('file_url').notNull(),
+    fileType: varchar('file_type', { length: 50 }),
+    fileSize: integer('file_size'),
+    uploadedByName: varchar('uploaded_by_name', { length: 150 }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    poAttIdx: index('po_attachments_poid_idx').on(t.purchaseOrderId),
+  }),
+);
+
+export const poCommunications = pgTable(
+  'po_communications',
+  {
+    id: serial('id').primaryKey(),
+    purchaseOrderId: integer('purchase_order_id')
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: 'cascade' }),
+    channel: varchar('channel', { length: 30 }).notNull(),
+    recipient: varchar('recipient', { length: 150 }).notNull(),
+    messageBody: text('message_body'),
+    trackingToken: varchar('tracking_token', { length: 64 }).unique(),
+    status: varchar('status', { length: 30 }).default('sent'),
+    sentAt: timestamp('sent_at').notNull().defaultNow(),
+    deliveredAt: timestamp('delivered_at'),
+    confirmedAt: timestamp('confirmed_at'),
+  },
+  (t) => ({
+    poCommIdx: index('po_comm_poid_idx').on(t.purchaseOrderId),
+  }),
+);
+
+export const supplierTerms = pgTable(
+  'supplier_terms',
+  {
+    id: serial('id').primaryKey(),
+    supplierId: integer('supplier_id')
+      .notNull()
+      .unique()
+      .references(() => suppliers.id, { onDelete: 'cascade' }),
+    leadTimeDays: integer('lead_time_days').default(7),
+    defaultPaymentTerms: varchar('default_payment_terms', { length: 80 }).default('Credit 30 Days'),
+    minimumOrderValue: numeric('minimum_order_value', { precision: 14, scale: 2 }).default('0'),
+    isBlacklisted: boolean('is_blacklisted').default(false),
+    blacklistReason: text('blacklist_reason'),
+    creditLimit: numeric('credit_limit', { precision: 14, scale: 2 }).default('500000'),
+    rating: numeric('rating', { precision: 3, scale: 2 }).default('4.50'),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+);
+
+export const purchaseOrdersRelations = relations(purchaseOrders, ({ one, many }) => ({
+  supplier: one(suppliers, { fields: [purchaseOrders.supplierId], references: [suppliers.id] }),
+  items: many(purchaseOrderItems),
+}));
+
+export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one }) => ({
+  purchaseOrder: one(purchaseOrders, {
+    fields: [purchaseOrderItems.purchaseOrderId],
+    references: [purchaseOrders.id],
+  }),
+  product: one(products, { fields: [purchaseOrderItems.productId], references: [products.id] }),
+}));
+
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
   bills: many(purchaseBills),
   expenses: many(expenses),
+  purchaseOrders: many(purchaseOrders),
 }));
 
 export const expenseCategoriesRelations = relations(expenseCategories, ({ many }) => ({
@@ -308,6 +520,87 @@ export const purchaseBillItemsRelations = relations(purchaseBillItems, ({ one })
   product: one(products, { fields: [purchaseBillItems.productId], references: [products.id] }),
 }));
 
+export type GrnFinancialStatus = 'pending_invoice' | 'billed' | 'settled';
+
+/**
+ * Goods Received Notes (GRN) logged by the Storekeeper when physical stock arrives from a PO.
+ */
+export const goodsReceiptNotes = pgTable(
+  'goods_receipt_notes',
+  {
+    id: serial('id').primaryKey(),
+    grnNumber: varchar('grn_number', { length: 60 }).notNull(), // e.g. "GRN-2026-0001"
+    purchaseOrderId: integer('purchase_order_id').references(() => purchaseOrders.id, { onDelete: 'set null' }),
+    supplierId: integer('supplier_id')
+      .notNull()
+      .references(() => suppliers.id, { onDelete: 'restrict' }),
+    supplierInvoiceNo: varchar('supplier_invoice_no', { length: 80 }),
+    receivedDate: date('received_date', { mode: 'string' }).notNull(),
+    storekeeperId: integer('storekeeper_id').references(() => users.id, { onDelete: 'set null' }),
+    storekeeperName: varchar('storekeeper_name', { length: 150 }),
+    totalItems: integer('total_items').notNull().default(0),
+    totalQuantity: integer('total_quantity').notNull().default(0),
+    totalAmount: numeric('total_amount', { precision: 12, scale: 2 }).notNull().default('0'),
+    financialStatus: varchar('financial_status', { length: 30 })
+      .$type<GrnFinancialStatus>()
+      .notNull()
+      .default('pending_invoice'),
+    purchaseBillId: integer('purchase_bill_id').references(() => purchaseBills.id, { onDelete: 'set null' }),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    grnNumberIdx: uniqueIndex('goods_receipt_notes_number_idx').on(t.grnNumber),
+    poIdx: index('goods_receipt_notes_po_idx').on(t.purchaseOrderId),
+    supplierIdx: index('goods_receipt_notes_supplier_idx').on(t.supplierId),
+    statusIdx: index('goods_receipt_notes_status_idx').on(t.financialStatus),
+  }),
+);
+
+export const goodsReceiptNoteItems = pgTable(
+  'goods_receipt_note_items',
+  {
+    id: serial('id').primaryKey(),
+    grnId: integer('grn_id')
+      .notNull()
+      .references(() => goodsReceiptNotes.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').references(() => products.id, { onDelete: 'set null' }),
+    poItemId: integer('po_item_id').references(() => purchaseOrderItems.id, { onDelete: 'set null' }),
+    sku: varchar('sku', { length: 60 }),
+    description: varchar('description', { length: 300 }).notNull(),
+    quantityReceived: integer('quantity_received').notNull().default(1),
+    unitCost: numeric('unit_cost', { precision: 12, scale: 2 }).notNull(),
+    lineTotal: numeric('line_total', { precision: 12, scale: 2 }).notNull(),
+    batchNo: varchar('batch_no', { length: 60 }),
+    expiryDate: date('expiry_date', { mode: 'string' }),
+  },
+  (t) => ({
+    grnIdx: index('goods_receipt_note_items_grn_idx').on(t.grnId),
+  }),
+);
+
+export const goodsReceiptNotesRelations = relations(goodsReceiptNotes, ({ one, many }) => ({
+  supplier: one(suppliers, { fields: [goodsReceiptNotes.supplierId], references: [suppliers.id] }),
+  purchaseOrder: one(purchaseOrders, {
+    fields: [goodsReceiptNotes.purchaseOrderId],
+    references: [purchaseOrders.id],
+  }),
+  purchaseBill: one(purchaseBills, {
+    fields: [goodsReceiptNotes.purchaseBillId],
+    references: [purchaseBills.id],
+  }),
+  items: many(goodsReceiptNoteItems),
+}));
+
+export const goodsReceiptNoteItemsRelations = relations(goodsReceiptNoteItems, ({ one }) => ({
+  grn: one(goodsReceiptNotes, {
+    fields: [goodsReceiptNoteItems.grnId],
+    references: [goodsReceiptNotes.id],
+  }),
+  product: one(products, { fields: [goodsReceiptNoteItems.productId], references: [products.id] }),
+}));
+
 export const accountsRelations = relations(accounts, ({ many }) => ({ lines: many(journalLines) }));
 export const journalEntriesRelations = relations(journalEntries, ({ one, many }) => ({
   poster: one(users, { fields: [journalEntries.postedBy], references: [users.id] }),
@@ -317,3 +610,5 @@ export const journalLinesRelations = relations(journalLines, ({ one }) => ({
   entry: one(journalEntries, { fields: [journalLines.journalEntryId], references: [journalEntries.id] }),
   account: one(accounts, { fields: [journalLines.accountId], references: [accounts.id] }),
 }));
+
+

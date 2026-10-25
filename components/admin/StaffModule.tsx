@@ -14,12 +14,14 @@ import {
   Users,
   Wrench,
   X,
+  Store,
 } from 'lucide-react';
 import { type AdminUser, type AuditLogEntry } from '@/types';
 import { RolesPermissionsTab } from './RolesPermissionsTab';
+import { PosStaffTab } from './PosStaffTab';
 
 type StaffRole = NonNullable<AdminUser['staffRole']>;
-type Tab = 'all' | 'staff' | 'roles' | 'audit';
+type Tab = 'all' | 'staff' | 'pos' | 'roles' | 'audit';
 type DirectoryUser = AdminUser & { isStaff: boolean };
 
 interface StaffModuleProps {
@@ -168,6 +170,7 @@ export const StaffModule: React.FC<StaffModuleProps> = ({ adminUsers, auditLogs,
   const tabs: { id: Tab; label: string; count?: number; icon: typeof Users }[] = [
     { id: 'all', label: 'All Users Directory', count: staff.length + customers.length, icon: Users },
     { id: 'staff', label: 'Staff & Operational Team', count: staff.length, icon: BriefcaseBusiness },
+    { id: 'pos', label: 'POS Staff & Cashiers', icon: Store },
     { id: 'roles', label: 'Roles & Permissions', icon: SlidersHorizontal },
     { id: 'audit', label: 'System Audit Trail', count: auditLogs.length, icon: ClipboardList },
   ];
@@ -208,6 +211,8 @@ export const StaffModule: React.FC<StaffModuleProps> = ({ adminUsers, auditLogs,
           {visibleUsers.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-sm text-slate-500">No users match these filters.</div>}
         </div>
       </>}
+
+      {activeTab === 'pos' && <PosStaffTab />}
 
       {activeTab === 'roles' && <RolesPermissionsTab />}
 

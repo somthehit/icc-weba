@@ -38,11 +38,13 @@ export const slugify = (value: string): string =>
  */
 export type AdminModule =
   | 'dashboard'
+  | 'pos'
   | 'catalog'
   | 'sales'
   | 'delivery'
   | 'services'
   | 'inventory'
+  | 'storekeeper'
   | 'content'
   | 'seo'
   | 'customers'
@@ -50,6 +52,7 @@ export type AdminModule =
   | 'reviews'
   | 'reports'
   | 'accounting'
+  | 'accountant'
   | 'settings'
   | 'staff'
   | 'account';

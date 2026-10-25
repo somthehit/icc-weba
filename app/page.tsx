@@ -4,6 +4,7 @@ import React from 'react';
 import { StoreProvider, useStore } from '@/context/StoreContext';
 import { SeoProvider } from '@/context/SeoContext';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { MobileNav } from '@/components/MobileNav';
 import { QuickViewModal } from '@/components/QuickViewModal';
 import { CartDrawer } from '@/components/CartDrawer';
@@ -31,12 +32,15 @@ import { CustomerLoginView } from '@/views/CustomerLoginView';
 import { CustomerRegisterView } from '@/views/CustomerRegisterView';
 import { AdminLoginView } from '@/views/AdminLoginView';
 import { DriverTrackingView } from '@/views/DriverTrackingView';
+import CounterPosTerminal from '@/components/pos/CounterPosTerminal';
+import { AccountingDashboardView } from '@/components/admin/AccountingDashboardView';
+import { StorekeeperDashboard } from '@/components/admin/StorekeeperDashboard';
 
 function AppContent() {
   const { currentPage, isUserLoggedIn, isAdminLoggedIn, authStatus, navigateTo } = useStore();
 
   const REQUIRES_AUTH = ['cart', 'checkout', 'account', 'wishlist', 'track-order'];
-  const ADMIN_ONLY = ['admin', 'driver-tracking'];
+  const ADMIN_ONLY = ['admin', 'driver-tracking', 'accounting', 'store-manage'];
 
   /**
    * Where the current page should send an unauthorised visitor, or null if they
@@ -131,18 +135,42 @@ function AppContent() {
             <DriverTrackingView />
           </ProtectedRoute>
         );
+      case 'pos':
+        return <CounterPosTerminal />;
+      case 'accounting':
+        return (
+          <ProtectedRoute requireAuth={true} allowedRoles={['admin', 'sales', 'inventory_manager']}>
+            <AccountingDashboardView />
+          </ProtectedRoute>
+        );
+      case 'store-manage':
+        return (
+          <ProtectedRoute requireAuth={true} allowedRoles={['admin', 'inventory_manager']}>
+            <div className="min-h-screen bg-[#0E131F] text-slate-100 flex flex-col font-sans">
+              <StorekeeperDashboard />
+            </div>
+          </ProtectedRoute>
+        );
       default:
         return <HomeView />;
     }
   };
 
-  const isAdminPage = currentPage === 'admin';
-  const isStandalonePage = isAdminPage || currentPage === 'customer-login' || currentPage === 'customer-register' || currentPage === 'admin-login' || currentPage === 'driver-tracking';
+  const isPosPage = currentPage === 'pos';
+  const isAccountingPage = currentPage === 'accounting';
+  const isStoreManagePage = currentPage === 'store-manage';
+  const isAdminPage = currentPage === 'admin' || isPosPage || isAccountingPage || isStoreManagePage;
+  const isStandalonePage =
+    isAdminPage ||
+    currentPage === 'customer-login' ||
+    currentPage === 'customer-register' ||
+    currentPage === 'admin-login' ||
+    currentPage === 'driver-tracking';
 
   return (
     <div
-      className={`${isAdminPage ? 'h-screen overflow-hidden' : 'min-h-screen'} ${
-        isStandalonePage ? (isAdminPage ? 'bg-[#0F1420]' : 'bg-white') : 'bg-white'
+      className={`${isAdminPage ? 'min-h-screen' : 'min-h-screen'} ${
+        isStandalonePage ? (isPosPage ? 'bg-[#0f1412]' : isAccountingPage || isStoreManagePage ? 'bg-[#0E131F]' : isAdminPage ? 'bg-[#0F1420]' : 'bg-white') : 'bg-white'
       } ${isAdminPage ? 'pb-0' : 'pb-16 md:pb-0'} flex flex-col text-[#1a1a1a] font-sans antialiased selection:bg-[#0056b3] selection:text-white`}
     >
       {/* Dynamic SEO Meta Tags Manager */}
@@ -155,6 +183,9 @@ function AppContent() {
       <main className={`flex-1 ${isAdminPage ? 'min-h-0 h-full overflow-hidden' : ''}`}>
         {renderActiveView()}
       </main>
+
+      {/* Storefront Footer - Hidden on Admin Dashboard and Auth Pages */}
+      {!isStandalonePage && <Footer />}
 
       {/* Mobile Bottom Navigation Bar - Hidden on Admin Dashboard and Auth Pages */}
       {!isStandalonePage && <MobileNav />}

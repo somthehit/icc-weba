@@ -8,9 +8,10 @@
 import { jwtVerify, SignJWT } from 'jose';
 
 export interface JWTPayload {
-  userId: number;
+  userId: number | string;
   email: string;
   role: string;
+  scope?: string; // 'pos' | 'backoffice'
 }
 
 const JWT_ISSUER = 'ice-computers';
@@ -36,13 +37,13 @@ function getSecret(): Uint8Array {
 }
 
 export async function signToken(payload: JWTPayload): Promise<string> {
-  return new SignJWT({ ...payload })
+  const jwt = new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setIssuer(JWT_ISSUER)
     .setAudience(JWT_AUDIENCE)
-    .setExpirationTime(`${JWT_MAX_AGE_SECONDS}s`)
-    .sign(getSecret());
+    .setExpirationTime(`${JWT_MAX_AGE_SECONDS}s`);
+  return jwt.sign(getSecret());
 }
 
 /** Returns the payload, or null for any malformed/expired/foreign token. */
@@ -53,12 +54,21 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
       audience: JWT_AUDIENCE,
       algorithms: ['HS256'],
     });
-    const { userId, email, role } = payload as unknown as JWTPayload;
+    const { userId, email, role, scope } = payload as unknown as JWTPayload;
     // A token that verifies but lacks identity claims is not usable.
-    if (typeof userId !== 'number' || typeof email !== 'string' || typeof role !== 'string') {
+    if (
+      (typeof userId !== 'number' && typeof userId !== 'string') ||
+      typeof email !== 'string' ||
+      typeof role !== 'string'
+    ) {
       return null;
     }
-    return { userId, email, role };
+    return {
+      userId,
+      email,
+      role,
+      scope: scope ? String(scope) : undefined,
+    };
   } catch {
     return null;
   }

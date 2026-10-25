@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {"darkMode":"class","theme":{"extend":{"colors":{"on-primary-fixed-variant":"#005234","on-tertiary-container":"#cbd6ff","surface-container":"#1c211e","surface-dim":"#0f1412","on-tertiary-fixed":"#00174b","on-background":"#dfe4e0","on-primary":"#003822","on-secondary":"#472a00","secondary-fixed-dim":"#ffb95f","error":"#ffb4ab","surface-container-low":"#181d1b","surface-container-lowest":"#0a0f0d","tertiary":"#b4c5ff","inverse-on-surface":"#2c322f","outline":"#88938b","secondary":"#ffb95f","tertiary-fixed":"#dbe1ff","on-secondary-fixed":"#2a1700","tertiary-fixed-dim":"#b4c5ff","surface":"#0f1412","surface-container-highest":"#313633","secondary-container":"#ee9800","on-surface":"#dfe4e0","primary-container":"#006b45","primary-fixed-dim":"#82d8a9","inverse-primary":"#036c46","on-tertiary":"#002a78","surface-variant":"#313633","on-error-container":"#ffdad6","surface-tint":"#82d8a9","background":"#0f1412","on-secondary-fixed-variant":"#653e00","primary-fixed":"#9df5c4","on-tertiary-fixed-variant":"#003ea8","surface-container-high":"#262b29","on-primary-container":"#92e8b9","error-container":"#93000a","on-primary-fixed":"#002112","secondary-fixed":"#ffddb8","tertiary-container":"#0052d8","primary":"#82d8a9","on-secondary-container":"#5b3800","outline-variant":"#3f4942","inverse-surface":"#dfe4e0","surface-bright":"#353a38","on-surface-variant":"#bec9c0","on-error":"#690005"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter-sm":"0.5rem","space-lg":"1rem","gutter":"1rem","margin-mobile":"0.75rem","space-md":"0.75rem","space-xl":"1.5rem","space-sm":"0.5rem","margin":"1rem","space-xs":"0.25rem"},"fontFamily":{"body-lg":["JetBrains Mono"],"display-total":["Space Grotesk"],"headline-lg":["Space Grotesk"],"numeric-currency":["JetBrains Mono"],"body-md":["JetBrains Mono"],"headline-sm":["Space Grotesk"],"headline-md":["Space Grotesk"],"label-keybinding":["JetBrains Mono"],"body-sm":["JetBrains Mono"],"label-badge":["JetBrains Mono"]},"fontSize":{"body-lg":["16px",{"lineHeight":"24px","fontWeight":"500"}],"display-total":["56px",{"lineHeight":"60px","letterSpacing":"-0.03em","fontWeight":"700"}],"headline-lg":["32px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"700"}],"numeric-currency":["20px",{"lineHeight":"24px","letterSpacing":"0.02em","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"headline-md":["24px",{"lineHeight":"30px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-keybinding":["11px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-badge":["10px",{"lineHeight":"12px","letterSpacing":"0.05em","fontWeight":"700"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased select-none"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest"><div class="h-16 w-full px-gutter flex items-center justify-between"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="Apex Retail POS Terminal Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UQzNZQWpSaK-Vx8qSMbnRdnCO0Sx5QKIBTXjx5KBUrMGl1idbzVD9tRPQty5F3BZepneU2ZKpWb7DEWxjG50abIaRAvsEHOi3WhWTeltpmOJd5ieLLsAEcHlHz4iz6rr7Ld3xpfNRkfxN03cKzTGVBfzVllenqgmnRQJv7Qv_DgAqwcTpn-amt0gGeXG-UV6Su6yNDx5PvbIPLdXefHcetXdSnlb5UQVkv5wZCpBRfnx5Bd0YsGWUNwa4N"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary leading-none">APEX POS</span><span class="font-label-badge text-label-badge text-on-surface-variant uppercase tracking-wider">v4.8 Enterprise</span></div></div><div class="h-8 w-px bg-surface-container-highest"></div><div class="flex flex-col"><span class="font-body-sm text-body-sm text-on-surface font-semibold">Downtown Flagship #104</span><span class="font-label-badge text-label-badge text-on-surface-variant font-mono">TERM-02 (Register A)</span></div><div class="hidden xl:flex items-center gap-space-sm px-space-sm py-space-xs bg-surface-container-low"><div class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-lowest"><span class="h-2 w-2 rounded-full bg-primary"></span><span class="font-label-keybinding text-label-keybinding text-on-surface uppercase">Scanner</span></div><div class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-lowest"><span class="h-2 w-2 rounded-full bg-primary"></span><span class="font-label-keybinding text-label-keybinding text-on-surface uppercase">Printer 80mm</span></div><div class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-lowest"><span class="h-2 w-2 rounded-full bg-primary"></span><span class="font-label-keybinding text-label-keybinding text-on-surface uppercase">Drawer</span></div><div class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-lowest"><span class="h-2 w-2 rounded-full bg-primary"></span><span class="font-label-keybinding text-label-keybinding text-primary-fixed-dim uppercase">Sync 12ms</span></div></div></div><div class="flex items-center gap-space-lg"><div class="hidden lg:flex flex-col text-right"><span class="font-body-sm text-body-sm text-on-surface font-mono">Shift #412 • 08:30 AM</span><span class="font-label-badge text-label-badge text-secondary font-mono">Float: $250.00</span></div><div class="h-8 w-px bg-surface-container-highest"></div><div class="flex items-center gap-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDivK4vj8YXL89ihnUGO47JGQ2VIXJRfWK5QE_GWd2aSAlxArRMua6dzbTfEFelAAq0a5CXbssyMviCfkU7WAsXhCtx-PRf6qkKfujQ3jQlvQuEO5E8IvdSRZovflZghYdkT_VpW2Bg9mCiFgBWNbeiTK7UAmB4bbprpx5IDfMnE87fhh6-rarNe2NlASLnbxA03qm5p9i562I5rDlwMRg2vE0LnZjFeAwCtekXa6TuO7qf-PLPIj-LXg"/><div class="flex flex-col"><span class="font-body-sm text-body-sm text-on-surface font-semibold leading-none">Sarah Jenkins</span><span class="font-label-badge text-label-badge text-on-surface-variant">Head Cashier</span></div></div><div class="flex items-center gap-space-xs"><button class="px-space-sm py-space-xs bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-1" type="button"><span class="material-symbols-outlined text-body-md">lock</span><span class="font-label-keybinding text-label-keybinding">F10 LOCK</span></button><button class="px-space-sm py-space-xs bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-1" type="button"><span class="material-symbols-outlined text-body-md">help</span><span class="font-label-keybinding text-label-keybinding">HELP</span></button></div></div></div></header><aside class="fixed left-0 top-16 bottom-16 w-56 bg-surface-container-lowest z-40 flex flex-col justify-between py-space-md"><div class="px-space-sm"><div class="px-space-sm mb-space-sm font-label-badge text-label-badge text-on-surface-variant uppercase tracking-wider">POS Navigation</div><nav class="flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-bold"><a class="flex items-center justify-between px-space-md py-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-md text-body-md" data-path="pos-terminal" href="#"><span>Active Register</span><span class="font-label-keybinding text-label-keybinding px-1.5 py-0.5 bg-surface-container-lowest text-on-surface-variant">F1</span></a><a class="flex items-center justify-between px-space-md py-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-md text-body-md" data-path="transaction-history" href="#"><span>Journal &amp; Logs</span><span class="font-label-keybinding text-label-keybinding px-1.5 py-0.5 bg-surface-container-lowest text-on-surface-variant">F3</span></a><a class="flex items-center justify-between px-space-md py-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-md text-body-md" data-path="held-orders" href="#"><span>Held Orders</span><span class="font-label-keybinding text-label-keybinding px-1.5 py-0.5 bg-surface-container-lowest text-on-surface-variant">F4</span></a><a class="flex items-center justify-between px-space-md py-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-md text-body-md" data-path="inventory-lookup" href="#"><span>Price / Stock Check</span><span class="font-label-keybinding text-label-keybinding px-1.5 py-0.5 bg-surface-container-lowest text-on-surface-variant">F5</span></a><a class="flex items-center justify-between px-space-md py-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-md text-body-md" data-path="cash-management" href="#"><span>Cash Drawer &amp; Safe</span><span class="font-label-keybinding text-label-keybinding px-1.5 py-0.5 bg-surface-container-lowest text-on-surface-variant">F6</span></a><a class="flex items-center justify-between px-space-md py-space-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-md text-body-md" data-path="shift-reconciliation" href="#"><span>Shift Close / EOD</span><span class="font-label-keybinding text-label-keybinding px-1.5 py-0.5 bg-surface-container-lowest text-on-surface-variant">F7</span></a></nav></div><div class="px-space-md"><div class="p-space-sm bg-surface-container-low flex flex-col gap-space-xs"><div class="flex justify-between items-center"><span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Storage</span><span class="font-label-badge text-label-badge text-primary">98% Free</span></div><div class="w-full h-1 bg-surface-container-highest"><div class="w-1/12 h-full bg-primary"></div></div><span class="font-label-badge text-label-badge text-on-surface-variant font-mono">Offline Cache: Sync Ready</span></div></div></aside><div class="pl-56"><main class="w-full pt-16 pb-16 bg-surface"><div class="flex flex-col w-full">
+<!-- TOP METRICS / TELEMETRY KPI BAR -->
+<section class="w-full bg-surface-container-lowest px-gutter py-space-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<!-- Tier Breakdown & Active Members -->
+<div class="flex flex-wrap items-center gap-space-lg">
+<div class="flex items-center gap-space-sm">
+<div class="p-space-xs bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-headline-sm" style="font-variation-settings: 'FILL' 1;">badge</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase tracking-wider">Active Members</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">8,420</span>
+<span class="font-label-badge text-label-badge text-primary font-mono font-bold">TOTAL</span>
+</div>
+</div>
+</div>
+<div class="h-8 w-px bg-surface-container-highest hidden sm:block"></div>
+<!-- Tier Counts -->
+<div class="flex items-center gap-space-md">
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-secondary-fixed-dim uppercase">Gold VIP</span>
+<span class="font-body-md text-body-md text-on-surface font-bold font-mono">1,140</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-tertiary-fixed-dim uppercase">Silver</span>
+<span class="font-body-md text-body-md text-on-surface font-bold font-mono">3,210</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-outline uppercase">Bronze</span>
+<span class="font-body-md text-body-md text-on-surface font-bold font-mono">4,070</span>
+</div>
+</div>
+<div class="h-8 w-px bg-surface-container-highest hidden md:block"></div>
+<!-- Liability / Points Circulation -->
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-body-lg">savings</span>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Points In Circulation</span>
+<span class="font-body-md text-body-md text-on-surface font-mono font-bold">482,900 pts <span class="text-secondary text-body-sm font-normal">($4,829.00 Liab.)</span></span>
+</div>
+</div>
+<div class="h-8 w-px bg-surface-container-highest hidden lg:block"></div>
+<!-- Shift Penetration -->
+<div class="flex items-center gap-space-sm">
+<div class="relative w-8 h-8 flex items-center justify-center">
+<svg class="w-8 h-8 -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="78.4, 100" stroke-width="3"></path>
+</svg>
+<span class="font-label-badge text-label-badge text-primary font-bold absolute">78%</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Loyalty Penetration</span>
+<span class="font-body-md text-body-md text-primary font-bold font-mono">78.4% <span class="text-on-surface-variant text-body-sm font-normal">Shift Avg</span></span>
+</div>
+</div>
+</div>
+<!-- Quick Function Key Shortcuts -->
+<div class="flex flex-wrap items-center gap-space-xs">
+<button class="px-space-sm py-space-xs bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-space-xs" type="button">
+<span class="font-label-keybinding text-label-keybinding text-primary">[F2]</span>
+<span class="font-body-sm text-body-sm font-semibold uppercase">Scan QR</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-space-xs" type="button">
+<span class="font-label-keybinding text-label-keybinding text-primary">[F4]</span>
+<span class="font-body-sm text-body-sm font-semibold uppercase">New Customer (+)</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-space-xs" type="button">
+<span class="font-label-keybinding text-label-keybinding text-secondary">[F6]</span>
+<span class="font-body-sm text-body-sm font-semibold uppercase">Adjust Pts</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-space-xs" type="button">
+<span class="font-label-keybinding text-label-keybinding text-tertiary">[F7]</span>
+<span class="font-body-sm text-body-sm font-semibold uppercase">Issue Card</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container text-error hover:bg-surface-variant flex items-center gap-space-xs" type="button">
+<span class="font-label-keybinding text-label-keybinding text-error">[ESC]</span>
+<span class="font-body-sm text-body-sm font-semibold uppercase">Exit</span>
+</button>
+</div>
+</div>
+</section>
+<!-- WORKSPACE COCKPIT (60/40 SPLIT) -->
+<div class="w-full grid grid-cols-1 xl:grid-cols-12 gap-space-md p-gutter">
+<!-- LEFT & CENTER: CUSTOMER DIRECTORY & SEARCH BUFFER (7 COLS) -->
+<section class="xl:col-span-7 flex flex-col gap-space-md min-w-0">
+<!-- SCANNER BUFFER / SEARCH INPUT BAR -->
+<div class="bg-surface-container-low p-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-keybinding text-label-keybinding text-primary uppercase">Barcode / HID Trapper Armed</span>
+</div>
+<span class="font-label-badge text-label-badge text-on-surface-variant font-mono">BUFFER: READY (INPUT FOCUS LOCKED)</span>
+</div>
+<div class="flex items-center bg-surface-container-lowest px-space-md py-space-sm gap-space-sm">
+<span class="font-label-keybinding text-label-keybinding text-primary bg-surface-container-high px-1.5 py-0.5">[/]</span>
+<span class="material-symbols-outlined text-outline text-body-lg">search</span>
+<input class="bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline outline-none w-full font-mono" id="customer-search-input" placeholder="Search Customer by Phone, Email, Member Barcode, or Last Name [ENTER]" type="text" value="Taylor"/>
+<div class="flex items-center gap-1.5 shrink-0">
+<span class="font-label-keybinding text-label-keybinding text-on-surface-variant bg-surface-container px-2 py-0.5 uppercase">[ENTER] EXECUTE</span>
+<button class="p-1 hover:bg-surface-container text-on-surface-variant" type="button">
+<span class="material-symbols-outlined text-body-md">qr_code_scanner</span>
+</button>
+</div>
+</div>
+</div>
+<!-- FILTER SEGMENTS & TAB BAR -->
+<div class="flex items-center gap-space-xs overflow-x-auto bg-surface-container-lowest p-space-xs">
+<button class="px-space-sm py-space-xs bg-primary-container text-on-primary-container font-label-badge text-label-badge uppercase font-bold flex items-center gap-1" type="button">
+<span>All Members</span>
+<span class="bg-surface-container-lowest px-1 py-0.2 text-primary font-mono">8,420</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container text-secondary-fixed-dim hover:bg-surface-container-high font-label-badge text-label-badge uppercase font-bold flex items-center gap-1" type="button">
+<span>Gold VIP</span>
+<span class="bg-surface-container-lowest px-1 py-0.2 text-secondary font-mono">1,140</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container text-on-surface hover:bg-surface-container-high font-label-badge text-label-badge uppercase font-bold flex items-center gap-1" type="button">
+<span>Silver</span>
+<span class="bg-surface-container-lowest px-1 py-0.2 text-on-surface-variant font-mono">3,210</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container text-on-surface hover:bg-surface-container-high font-label-badge text-label-badge uppercase font-bold flex items-center gap-1" type="button">
+<span>Bronze</span>
+<span class="bg-surface-container-lowest px-1 py-0.2 text-on-surface-variant font-mono">4,070</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container text-tertiary-fixed-dim hover:bg-surface-container-high font-label-badge text-label-badge uppercase font-bold flex items-center gap-1" type="button">
+<span>Credit Holders</span>
+<span class="bg-surface-container-lowest px-1 py-0.2 text-tertiary font-mono">342</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container text-on-surface hover:bg-surface-container-high font-label-badge text-label-badge uppercase font-bold flex items-center gap-1" type="button">
+<span>Recent Visitors</span>
+<span class="bg-surface-container-lowest px-1 py-0.2 text-primary font-mono">19</span>
+</button>
+</div>
+<!-- HIGH-DENSITY CUSTOMER DATA TABLE -->
+<div class="bg-surface-container-low flex flex-col overflow-hidden">
+<!-- Table Control Strip -->
+<div class="px-space-md py-space-xs bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-badge text-label-badge text-on-surface uppercase font-bold">Query Match: 4 Records</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant font-mono">(Index Time: 2ms)</span>
+</div>
+<span class="font-label-keybinding text-label-keybinding text-on-surface-variant">▲ ▼ Navigate Rows | [F1] Quick Select</span>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto">
+<table class="w-full text-left font-mono border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest text-on-surface-variant font-label-keybinding text-label-keybinding uppercase">
+<th class="py-space-xs px-space-sm">Member / Card</th>
+<th class="py-space-xs px-space-sm">Customer Info</th>
+<th class="py-space-xs px-space-sm">Tier</th>
+<th class="py-space-xs px-space-sm text-right">Points</th>
+<th class="py-space-xs px-space-sm text-right">Credit</th>
+<th class="py-space-xs px-space-sm text-right">Lifetime</th>
+<th class="py-space-xs px-space-sm">Last Active</th>
+<th class="py-space-xs px-space-sm text-center">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm text-body-sm">
+<!-- ROW 1 (ACTIVE / HIGHLIGHTED SELECTION) -->
+<tr class="bg-surface-container-high cursor-pointer hover:bg-surface-variant">
+<td class="py-space-sm px-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-6 bg-primary inline-block"></span>
+<div class="flex flex-col">
+<span class="font-bold text-primary font-mono">#LOY-44029</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant font-mono">BAR: 7894402901</span>
+</div>
+</div>
+</td>
+<td class="py-space-sm px-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-7 h-7 bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-body-sm">
+                      JT
+                    </div>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface font-headline-sm text-body-md">Jessica Taylor</span>
+<span class="font-mono text-body-sm text-on-surface-variant">+1 555-019-8231</span>
+</div>
+</div>
+</td>
+<td class="py-space-sm px-space-sm">
+<span class="px-1.5 py-0.5 bg-secondary text-on-secondary font-label-badge text-label-badge uppercase font-bold tracking-wider">GOLD VIP</span>
+</td>
+<td class="py-space-sm px-space-sm text-right font-bold">
+<div class="flex flex-col items-end">
+<span class="text-primary font-bold">1,240 pts</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant font-normal">($12.40)</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm text-right">
+<span class="text-on-surface font-bold text-body-md">$25.00</span>
+</td>
+<td class="py-space-sm px-space-sm text-right font-mono">
+<div class="flex flex-col items-end">
+<span class="text-on-surface">$2,840.10</span>
+<span class="font-label-badge text-label-badge text-outline">42 visits</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm font-mono text-body-sm">
+<div class="flex flex-col">
+<span class="text-primary font-bold">Today 10:42 AM</span>
+<span class="font-label-badge text-label-badge text-outline">INV-08912</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm text-center">
+<button class="px-space-xs py-1 bg-primary text-on-primary font-label-keybinding text-label-keybinding font-bold uppercase hover:bg-primary-fixed-dim" type="button">
+                    [F1] SELECT
+                  </button>
+</td>
+</tr>
+<!-- ROW 2 -->
+<tr class="bg-surface-container-low hover:bg-surface-container-high cursor-pointer">
+<td class="py-space-sm px-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-6 bg-transparent inline-block"></span>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface font-mono">#LOY-11942</span>
+<span class="font-label-badge text-label-badge text-outline font-mono">BAR: 7891194288</span>
+</div>
+</div>
+</td>
+<td class="py-space-sm px-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-7 h-7 bg-surface-container text-on-surface-variant flex items-center justify-center font-bold text-body-sm">
+                      MT
+                    </div>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface font-headline-sm text-body-md">Marcus Taylor</span>
+<span class="font-mono text-body-sm text-outline">+1 555-442-9901</span>
+</div>
+</div>
+</td>
+<td class="py-space-sm px-space-sm">
+<span class="px-1.5 py-0.5 bg-surface-container-highest text-tertiary-fixed-dim font-label-badge text-label-badge uppercase font-bold">SILVER</span>
+</td>
+<td class="py-space-sm px-space-sm text-right font-bold">
+<div class="flex flex-col items-end">
+<span class="text-on-surface">540 pts</span>
+<span class="font-label-badge text-label-badge text-outline font-normal">($5.40)</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm text-right">
+<span class="text-on-surface-variant font-mono">$0.00</span>
+</td>
+<td class="py-space-sm px-space-sm text-right font-mono">
+<div class="flex flex-col items-end">
+<span class="text-on-surface">$812.50</span>
+<span class="font-label-badge text-label-badge text-outline">16 visits</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm font-mono text-body-sm">
+<div class="flex flex-col">
+<span class="text-on-surface-variant">Oct 19, 2025</span>
+<span class="font-label-badge text-label-badge text-outline">INV-08871</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm text-center">
+<button class="px-space-xs py-1 bg-surface-container-highest text-on-surface font-label-keybinding text-label-keybinding uppercase hover:bg-surface-variant" type="button">
+                    CHOOSE
+                  </button>
+</td>
+</tr>
+<!-- ROW 3 -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-high cursor-pointer">
+<td class="py-space-sm px-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-6 bg-transparent inline-block"></span>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface font-mono">#LOY-98201</span>
+<span class="font-label-badge text-label-badge text-outline font-mono">BAR: 7899820154</span>
+</div>
+</div>
+</td>
+<td class="py-space-sm px-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-7 h-7 bg-surface-container text-on-surface-variant flex items-center justify-center font-bold text-body-sm">
+                      ET
+                    </div>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface font-headline-sm text-body-md">Elena Taylor-White</span>
+<span class="font-mono text-body-sm text-outline">+1 555-884-2109</span>
+</div>
+</div>
+</td>
+<td class="py-space-sm px-space-sm">
+<span class="px-1.5 py-0.5 bg-surface-container text-outline font-label-badge text-label-badge uppercase font-bold">BRONZE</span>
+</td>
+<td class="py-space-sm px-space-sm text-right font-bold">
+<div class="flex flex-col items-end">
+<span class="text-on-surface">190 pts</span>
+<span class="font-label-badge text-label-badge text-outline font-normal">($1.90)</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm text-right">
+<span class="text-tertiary font-bold text-body-md">$15.50</span>
+</td>
+<td class="py-space-sm px-space-sm text-right font-mono">
+<div class="flex flex-col items-end">
+<span class="text-on-surface">$340.00</span>
+<span class="font-label-badge text-label-badge text-outline">7 visits</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm font-mono text-body-sm">
+<div class="flex flex-col">
+<span class="text-on-surface-variant">Oct 14, 2025</span>
+<span class="font-label-badge text-label-badge text-outline">INV-08722</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm text-center">
+<button class="px-space-xs py-1 bg-surface-container-highest text-on-surface font-label-keybinding text-label-keybinding uppercase hover:bg-surface-variant" type="button">
+                    CHOOSE
+                  </button>
+</td>
+</tr>
+<!-- ROW 4 -->
+<tr class="bg-surface-container-low hover:bg-surface-container-high cursor-pointer">
+<td class="py-space-sm px-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-6 bg-transparent inline-block"></span>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface font-mono">#LOY-00431</span>
+<span class="font-label-badge text-label-badge text-outline font-mono">BAR: 7890043110</span>
+</div>
+</div>
+</td>
+<td class="py-space-sm px-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-7 h-7 bg-surface-container text-on-surface-variant flex items-center justify-center font-bold text-body-sm">
+                      ST
+                    </div>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface font-headline-sm text-body-md">Simon Taylor</span>
+<span class="font-mono text-body-sm text-outline">+1 555-731-0022</span>
+</div>
+</div>
+</td>
+<td class="py-space-sm px-space-sm">
+<span class="px-1.5 py-0.5 bg-secondary text-on-secondary font-label-badge text-label-badge uppercase font-bold tracking-wider">GOLD VIP</span>
+</td>
+<td class="py-space-sm px-space-sm text-right font-bold">
+<div class="flex flex-col items-end">
+<span class="text-primary font-bold">3,810 pts</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant font-normal">($38.10)</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm text-right">
+<span class="text-on-surface font-bold text-body-md">$100.00</span>
+</td>
+<td class="py-space-sm px-space-sm text-right font-mono">
+<div class="flex flex-col items-end">
+<span class="text-on-surface">$5,420.90</span>
+<span class="font-label-badge text-label-badge text-outline">89 visits</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm font-mono text-body-sm">
+<div class="flex flex-col">
+<span class="text-on-surface-variant">Sep 28, 2025</span>
+<span class="font-label-badge text-label-badge text-outline">INV-08103</span>
+</div>
+</td>
+<td class="py-space-sm px-space-sm text-center">
+<button class="px-space-xs py-1 bg-surface-container-highest text-on-surface font-label-keybinding text-label-keybinding uppercase hover:bg-surface-variant" type="button">
+                    CHOOSE
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Directory Footer Pagination / Hardware Status -->
+<div class="p-space-sm bg-surface-container-lowest flex items-center justify-between text-on-surface-variant font-mono">
+<div class="flex items-center gap-space-md">
+<span class="font-label-badge text-label-badge uppercase">Displaying 1-4 of 4 results</span>
+<span class="font-label-badge text-label-badge text-primary uppercase">● Live Synced to POS Cache</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-xs py-0.5 bg-surface-container text-on-surface hover:bg-surface-container-high font-label-keybinding text-label-keybinding font-bold" type="button">PREV</button>
+<span class="px-space-xs font-label-badge text-label-badge text-on-surface">Page 1/1</span>
+<button class="px-space-xs py-0.5 bg-surface-container text-on-surface hover:bg-surface-container-high font-label-keybinding text-label-keybinding font-bold" type="button">NEXT</button>
+</div>
+</div>
+</div>
+<!-- IN-LINE ENROLLMENT & FAST REGISTRATION DOCK (COLLAPSED BY DEFAULT) -->
+<div class="bg-surface-container-lowest p-space-md flex items-center justify-between">
+<div class="flex items-center gap-space-md">
+<div class="p-space-xs bg-surface-container-high text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-headline-sm">person_add</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">Unregistered Shopper At Register?</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-mono">Instant 1-step phone enrollment awards +100 bonus welcome points to current transaction.</span>
+</div>
+</div>
+<button class="px-space-md py-space-sm bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-space-xs shrink-0" type="button">
+<span class="font-label-keybinding text-label-keybinding text-primary">[F4]</span>
+<span class="font-body-sm text-body-sm font-bold uppercase tracking-wider">Fast Enroll</span>
+</button>
+</div>
+</section>
+<!-- RIGHT COLUMN: CUSTOMER 360 & LOYALTY ACTION DOCK (5 COLS) -->
+<section class="xl:col-span-5 flex flex-col gap-space-md min-w-0">
+<!-- CUSTOMER 360 PROFILE HEADER CARD -->
+<div class="bg-surface-container-low p-space-md flex flex-col gap-space-md">
+<!-- Header row -->
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="relative">
+<img class="w-16 h-16 object-cover bg-surface-container-high" data-alt="A clean portrait photo of customer Jessica Taylor with warm natural studio lighting against a dark slate textured background, high professional quality retail profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaywNkDRqd1W2V_WzHAIPP2orfb2nueN0bC84dEIhsXJSgWfP798ZIfjgEA1fuodl-cqByUEdO0OUlIFU_sEVOsFkxkqhjhZznSR0hCI5R9zE2py0lsfa9zwQhZyDRFnZlj6T5vR3La_a140ilO9DUFyRwy_MgP0DDnQQGjF6fsnnGXydEHzIf1YNP7Po-UrBnmJL9snlLsdBDlb1hiCsUIJEGX1_r9KBKatg01H6tilcxorkHB0uVVw"/>
+<span class="absolute bottom-0 right-0 w-4 h-4 bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-label-badge" style="font-variation-settings: 'FILL' 1;">check</span>
+</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">Jessica Taylor</span>
+<span class="px-2 py-0.5 bg-secondary text-on-secondary font-label-badge text-label-badge uppercase font-bold tracking-wider">GOLD VIP</span>
+</div>
+<span class="font-body-sm text-body-sm text-primary font-mono font-bold">Member ID #LOY-44029 • Enrolled Mar 2023</span>
+<span class="font-label-badge text-label-badge text-secondary font-mono">Perk: 15% Off Bakery &amp; Deli Items Automated</span>
+</div>
+</div>
+<button class="px-space-xs py-1 bg-surface-container-high text-on-surface hover:bg-surface-variant flex items-center gap-1 font-label-keybinding text-label-keybinding uppercase" type="button">
+<span class="material-symbols-outlined text-body-sm">edit</span>
+<span>Edit [F4]</span>
+</button>
+</div>
+<!-- Contact & Profile Metadata Chips -->
+<div class="grid grid-cols-2 gap-space-xs bg-surface-container-lowest p-space-sm font-mono text-body-sm">
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Phone Contact</span>
+<span class="text-on-surface font-bold">+1 555-019-8231</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Email Delivery</span>
+<span class="text-on-surface truncate">jessica.t@example.com</span>
+</div>
+<div class="flex flex-col mt-space-xs">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Digital Receipt</span>
+<span class="text-primary font-bold">SMS + EMAIL ACTIVE</span>
+</div>
+<div class="flex flex-col mt-space-xs">
+<span class="font-label-badge text-label-badge text-secondary uppercase">Birthday Reward Ready</span>
+<span class="text-secondary font-bold">Nov 14 (Birthday Gift Ready)</span>
+</div>
+</div>
+<!-- POINTS & BALANCE DOCK -->
+<div class="bg-surface-container-lowest p-space-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase tracking-wider">Available Rewards Balance</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display-total text-headline-lg text-primary font-bold">1,240</span>
+<span class="font-numeric-currency text-body-lg text-primary font-bold">POINTS</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Cash Value</span>
+<span class="font-headline-md text-headline-md text-on-surface font-bold font-mono">$12.40</span>
+<span class="font-label-badge text-label-badge text-primary-fixed-dim font-mono">100 pts = $1.00</span>
+</div>
+</div>
+<!-- Tier Progress Bar -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<div class="flex justify-between font-label-badge text-label-badge font-mono">
+<span class="text-secondary font-bold uppercase">Gold VIP Active</span>
+<span class="text-on-surface-variant">760 pts to Platinum VIP (2,000 threshold)</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high overflow-hidden">
+<div class="bg-primary h-full" style="width: 62%;"></div>
+</div>
+<div class="flex justify-between font-label-badge text-label-badge text-outline font-mono">
+<span>Tier Exp: 31-Dec-2025</span>
+<span>62% Progress</span>
+</div>
+</div>
+<!-- Quick Redeem Coupons / Rewards Grid -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase tracking-wider">One-Touch Point Redemptions</span>
+<div class="grid grid-cols-3 gap-space-xs">
+<button class="p-space-xs bg-surface-container hover:bg-surface-container-high flex flex-col items-center justify-center text-center" type="button">
+<span class="font-headline-sm text-body-md text-on-surface font-bold">$5.00 OFF</span>
+<span class="font-label-badge text-label-badge text-primary font-mono">500 PTS</span>
+<span class="font-label-keybinding text-label-keybinding text-on-surface-variant mt-0.5">[ALT+1]</span>
+</button>
+<button class="p-space-xs bg-surface-container hover:bg-surface-container-high flex flex-col items-center justify-center text-center" type="button">
+<span class="font-headline-sm text-body-md text-on-surface font-bold">$10.00 OFF</span>
+<span class="font-label-badge text-label-badge text-primary font-mono">1,000 PTS</span>
+<span class="font-label-keybinding text-label-keybinding text-on-surface-variant mt-0.5">[ALT+2]</span>
+</button>
+<button class="p-space-xs bg-surface-container hover:bg-surface-container-high flex flex-col items-center justify-center text-center" type="button">
+<span class="font-headline-sm text-body-md text-secondary font-bold">FREE BREAD</span>
+<span class="font-label-badge text-label-badge text-secondary-fixed-dim font-mono">450 PTS</span>
+<span class="font-label-keybinding text-label-keybinding text-on-surface-variant mt-0.5">[ALT+3]</span>
+</button>
+</div>
+</div>
+</div>
+<!-- STORE CREDIT & GIFT CARD MODULE -->
+<div class="bg-surface-container-lowest p-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-body-lg">credit_card</span>
+<span class="font-label-badge text-label-badge text-on-surface uppercase font-bold">Stored Value &amp; Gift Balance</span>
+</div>
+<span class="font-label-badge text-label-badge text-primary font-mono">CARD #APX-GC-8841</span>
+</div>
+<div class="flex items-center justify-between p-space-xs bg-surface-container">
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Current Ledger Balance</span>
+<span class="font-headline-md text-headline-md text-on-surface font-bold font-mono">$25.00</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-sm py-space-xs bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-1 font-label-keybinding text-label-keybinding uppercase" type="button">
+<span class="text-tertiary">[F8]</span>
+<span>Top-Up</span>
+</button>
+<button class="px-space-sm py-space-xs bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-1 font-label-keybinding text-label-keybinding uppercase" type="button">
+<span class="text-on-surface-variant">[F9]</span>
+<span>Slip</span>
+</button>
+</div>
+</div>
+</div>
+<!-- RECENT TRANSACTION / AUDIT HISTORY -->
+<div class="bg-surface-container-lowest p-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase tracking-wider">Purchase History &amp; Point Accrual</span>
+<span class="font-label-badge text-label-badge text-on-surface font-mono">Shift Ledger Synced</span>
+</div>
+<div class="flex flex-col divide-y divide-surface-container font-mono text-body-sm">
+<!-- Order item 1 -->
+<div class="py-space-xs flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-bold text-on-surface">INV-2025-08912</span>
+<span class="text-label-badge px-1 py-0.2 bg-primary-container text-on-primary-container font-bold">+31 PTS</span>
+</div>
+<span class="font-label-badge text-label-badge text-outline">Today 10:42 AM • Tender: Cash ($40.00)</span>
+</div>
+<div class="text-right">
+<span class="font-bold text-on-surface">$31.30</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant block">3 items</span>
+</div>
+</div>
+<!-- Order item 2 -->
+<div class="py-space-xs flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-bold text-on-surface">INV-2025-07810</span>
+<span class="text-label-badge px-1 py-0.2 bg-surface-container text-on-surface-variant font-bold">+68 PTS</span>
+</div>
+<span class="font-label-badge text-label-badge text-outline">Oct 18, 2025 • Tender: Visa *4129</span>
+</div>
+<div class="text-right">
+<span class="font-bold text-on-surface">$68.45</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant block">8 items</span>
+</div>
+</div>
+<!-- Order item 3 -->
+<div class="py-space-xs flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-bold text-on-surface">INV-2025-06922</span>
+<span class="text-label-badge px-1 py-0.2 bg-surface-container text-on-surface-variant font-bold">+44 PTS</span>
+</div>
+<span class="font-label-badge text-label-badge text-outline">Oct 10, 2025 • Tender: Apple Pay</span>
+</div>
+<div class="text-right">
+<span class="font-bold text-on-surface">$44.10</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant block">4 items</span>
+</div>
+</div>
+</div>
+</div>
+<!-- BIG OPERATIONAL ACTION BUTTON DOCK -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<!-- Primary Enter Button -->
+<button class="w-full min-h-[56px] py-space-sm px-space-md bg-primary-container hover:bg-inverse-primary text-on-primary-container font-headline-sm text-headline-sm font-bold uppercase tracking-wider flex items-center justify-between transition-colors shadow-sm" id="attach-cart-btn" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-headline-md">shopping_cart_checkout</span>
+<span>ATTACH TO ACTIVE ORDER</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-mono text-body-sm font-normal text-on-primary-container opacity-80">ORDER #POS-8821</span>
+<span class="font-label-keybinding text-label-keybinding bg-surface-container-lowest text-primary px-2 py-1">[ENTER]</span>
+</div>
+</button>
+<!-- Secondary Bottom Action Strip -->
+<div class="grid grid-cols-2 gap-space-xs">
+<button class="py-space-sm px-space-sm bg-surface-container-high hover:bg-surface-variant text-on-surface font-body-sm text-body-sm font-bold uppercase flex items-center justify-center gap-1.5" type="button">
+<span class="font-label-keybinding text-label-keybinding text-primary">[F5]</span>
+<span>Loyalty Tier History</span>
+</button>
+<button class="py-space-sm px-space-sm bg-surface-container-high hover:bg-surface-variant text-on-surface font-body-sm text-body-sm font-bold uppercase flex items-center justify-center gap-1.5" type="button">
+<span class="font-label-keybinding text-label-keybinding text-secondary">[F6]</span>
+<span>Audit Ledger Log</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<script>
+  // Terminal Keyboard Accelerator Trap for CRM Console
+  (function() {
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'F1' || e.key === 'Enter') {
+        const attachBtn = document.getElementById('attach-cart-btn');
+        if (attachBtn) {
+          e.preventDefault();
+          attachBtn.classList.add('bg-primary', 'text-on-primary');
+          setTimeout(() => {
+            attachBtn.classList.remove('bg-primary', 'text-on-primary');
+          }, 150);
+        }
+      } else if (e.key === '/') {
+        const searchInput = document.getElementById('customer-search-input');
+        if (searchInput && document.activeElement !== searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+    });
+  })();
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-16 bg-surface-container-lowest z-50 flex items-center justify-between px-gutter"><div class="flex items-center gap-space-sm overflow-x-auto py-space-xs"><div class="flex items-center gap-1.5 px-space-sm py-space-xs bg-surface-container"><span class="font-label-keybinding text-label-keybinding text-primary">[F1]</span><span class="font-body-sm text-body-sm text-on-surface">New Sale</span></div><div class="flex items-center gap-1.5 px-space-sm py-space-xs bg-surface-container"><span class="font-label-keybinding text-label-keybinding text-primary">[F2]</span><span class="font-body-sm text-body-sm text-on-surface">Scan/Search</span></div><div class="flex items-center gap-1.5 px-space-sm py-space-xs bg-surface-container"><span class="font-label-keybinding text-label-keybinding text-secondary">[F4]</span><span class="font-body-sm text-body-sm text-on-surface">Hold Cart</span></div><div class="flex items-center gap-1.5 px-space-sm py-space-xs bg-surface-container"><span class="font-label-keybinding text-label-keybinding text-tertiary">[F8]</span><span class="font-body-sm text-body-sm text-on-surface">Discount</span></div><div class="flex items-center gap-1.5 px-space-sm py-space-xs bg-primary-container text-on-primary-container font-bold"><span class="font-label-keybinding text-label-keybinding text-on-primary-container">[F9]</span><span class="font-body-sm text-body-sm text-on-primary-container">Payment / Tender</span></div><div class="flex items-center gap-1.5 px-space-sm py-space-xs bg-surface-container"><span class="font-label-keybinding text-label-keybinding text-error">[ESC]</span><span class="font-body-sm text-body-sm text-on-surface">Void / Clear</span></div></div><div class="hidden md:flex items-center gap-space-md"><div class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span><span class="font-label-keybinding text-label-keybinding text-on-surface-variant font-mono">SCANNER LISTENING</span></div><div class="font-label-keybinding text-label-keybinding text-on-surface-variant px-space-xs py-0.5 bg-surface-container">ENG / US-INTL</div></div></footer></body></html>

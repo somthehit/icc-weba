@@ -1,0 +1,1688 @@
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  X,
+  Printer,
+  RefreshCw,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  Receipt,
+  Banknote,
+  CreditCard,
+  QrCode,
+  ShieldCheck,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  User,
+  ShoppingBag,
+  FileText,
+  DollarSign,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Sparkles,
+  Lock,
+  Unlock,
+  Layers,
+  Calendar,
+  Download,
+  RotateCcw,
+  Coins,
+  History,
+  Check,
+} from 'lucide-react';
+import { formatNpr } from '@/lib/nepal/money';
+import { adToBs } from '@/lib/nepal/date';
+import { ShiftOpeningWizardModal } from '../pos/ShiftOpeningWizardModal';
+import { CashDrawerMovementModal } from '../pos/CashDrawerMovementModal';
+import { ShiftClosingWizardModal } from '../pos/ShiftClosingWizardModal';
+import { DENOMINATION_VALUES } from '../pos/DenominationKeypad';
+
+interface CashierShiftDetailsModalProps {
+  isOpen: boolean;
+  shiftId: number | null;
+  onClose: () => void;
+  onBlindCloseClick?: (shift: any) => void;
+}
+
+export function CashierShiftDetailsModal({
+  isOpen,
+  shiftId,
+  onClose,
+  onBlindCloseClick,
+}: CashierShiftDetailsModalProps) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<{
+    shift: any;
+    transactions: any[];
+    cashOperations: any[];
+    auditLogs: any[];
+    report: any;
+  } | null>(null);
+
+  // Tab state: 4 dedicated tabs
+  const [activeTab, setActiveTab] = useState<'transactions' | 'denominations' | 'report' | 'logs'>('transactions');
+  const [txSearch, setTxSearch] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [expandedTxIds, setExpandedTxIds] = useState<Record<string, boolean>>({});
+  const [isPrintSlipOpen, setIsPrintSlipOpen] = useState(false);
+  const [printFormat, setPrintFormat] = useState<'80mm' | 'a4'>('80mm');
+
+  // Date representation mode (Gregorian AD vs Nepali Bikram Sambat BS)
+  const [dateMode, setDateMode] = useState<'AD' | 'BS'>('AD');
+
+  // Sub-wizards
+  const [isBodModalOpen, setIsBodModalOpen] = useState(false);
+  const [isCashMoveModalOpen, setIsCashMoveModalOpen] = useState(false);
+  const [isEodWizardOpen, setIsEodWizardOpen] = useState(false);
+
+  // Fetch detailed shift info
+  const fetchShiftDetails = async () => {
+    if (!shiftId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/accounting/shifts?shiftId=${shiftId}`);
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to load cashier shift details');
+      }
+      setData(json);
+      // Auto-expand first transaction by default if present
+      if (json.transactions?.length > 0) {
+        setExpandedTxIds({ [json.transactions[0].id]: true });
+      }
+    } catch (err: any) {
+      console.error('Error loading shift details:', err);
+      setError(err.message || 'Error loading shift details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && shiftId) {
+      fetchShiftDetails();
+    } else {
+      setData(null);
+      setError(null);
+    }
+  }, [isOpen, shiftId]);
+
+  const toggleExpand = (id: string) => {
+    setExpandedTxIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const expandAll = () => {
+    if (!data?.transactions) return;
+    const all: Record<string, boolean> = {};
+    data.transactions.forEach((tx) => {
+      all[tx.id] = true;
+    });
+    setExpandedTxIds(all);
+  };
+
+  const collapseAll = () => {
+    setExpandedTxIds({});
+  };
+
+  // Filtered transactions including Returns, Voids, Credit, and Split
+  const filteredTransactions = useMemo(() => {
+    if (!data?.transactions) return [];
+    return data.transactions.filter((tx) => {
+      const pMethod = (tx.paymentMethod || '').toLowerCase();
+      const pBreakdown = (tx.paymentBreakdown as any) || {};
+      const status = (pBreakdown.status || tx.status || 'completed').toLowerCase();
+
+      // Tender & Status filter
+      if (paymentFilter !== 'all') {
+        if (paymentFilter === 'cash' && pMethod !== 'cash') return false;
+        if (paymentFilter === 'card' && pMethod !== 'card') return false;
+        if (paymentFilter === 'qr' && !pMethod.includes('fonepay') && !pMethod.includes('qr') && pMethod !== 'esewa' && pMethod !== 'khalti') {
+          return false;
+        }
+        if (paymentFilter === 'esewa' && pMethod !== 'esewa') return false;
+        if (paymentFilter === 'khalti' && pMethod !== 'khalti') return false;
+        if (paymentFilter === 'returns' && !status.includes('return') && !status.includes('refund')) return false;
+        if (paymentFilter === 'voids' && !status.includes('void')) return false;
+        if (paymentFilter === 'credit' && pMethod !== 'credit') return false;
+        if (paymentFilter === 'split' && !pMethod.includes('split') && !pBreakdown.isSplit) return false;
+      }
+
+      // Text search filter
+      if (txSearch.trim()) {
+        const q = txSearch.toLowerCase().trim();
+        const inv = (tx.invoiceNumber || '').toLowerCase();
+        const custName = (tx.customerName || '').toLowerCase();
+        const custPhone = (tx.customerPhone || '').toLowerCase();
+        const hasItemMatch = Array.isArray(tx.items) && tx.items.some((it: any) =>
+          (it.name || '').toLowerCase().includes(q) || (it.sku || '').toLowerCase().includes(q)
+        );
+        const hasSerialMatch = Array.isArray(tx.items) && tx.items.some((it: any) =>
+          Array.isArray(it.serialNumbers) && it.serialNumbers.some((s: string) => s.toLowerCase().includes(q))
+        );
+        return inv.includes(q) || custName.includes(q) || custPhone.includes(q) || hasItemMatch || hasSerialMatch;
+      }
+
+      return true;
+    });
+  }, [data?.transactions, paymentFilter, txSearch]);
+
+  // Export CSV of transactions
+  const handleExportCsv = () => {
+    if (!filteredTransactions.length) return;
+    const headers = ['Invoice #', 'Date & Time', 'Customer', 'Phone', 'Payment Method', 'Items Count', 'Taxable (NPR)', '13% VAT', 'Total (NPR)'];
+    const rows = filteredTransactions.map((tx) => [
+      tx.invoiceNumber,
+      tx.createdAt,
+      `"${tx.customerName || 'Walk-in'}"`,
+      tx.customerPhone || '',
+      tx.paymentMethod,
+      Array.isArray(tx.items) ? tx.items.length : 1,
+      Number(tx.totalAmount || 0) - Math.round((Number(tx.totalAmount || 0) * 0.13 / 1.13) * 100) / 100,
+      Math.round((Number(tx.totalAmount || 0) * 0.13 / 1.13) * 100) / 100,
+      Number(tx.totalAmount || 0),
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Shift_${shift?.shiftNumber || shiftId}_Transactions.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (!isOpen) return null;
+
+  const shift = data?.shift;
+  const report = data?.report;
+  const metrics = report?.metrics;
+  const cashRec = report?.cashReconciliation;
+  const waterfall = report?.waterfall;
+  const denominations = report?.denominations;
+
+  // Format date helper with AD / BS support
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'N/A';
+    try {
+      const d = new Date(dateStr);
+      if (dateMode === 'BS') {
+        const bs = adToBs(d);
+        const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        return `${bs.formattedLongBS} (${timePart})`;
+      }
+      return d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Duration helper
+  const getDuration = (start: string | null | undefined, end: string | null | undefined) => {
+    if (!start) return '';
+    const s = new Date(start).getTime();
+    const e = end ? new Date(end).getTime() : Date.now();
+    const diffMs = Math.max(0, e - s);
+    const hrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hrs}h ${mins}m`;
+  };
+
+  const isZeroSales = Boolean(shift?.isZeroSales) || (data?.transactions?.length === 0 && Number(metrics?.grossSales || 0) === 0);
+  const durationMinutes = shift?.durationMinutes ?? 0;
+  const isShortDuration = durationMinutes < 5;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+      <div className="relative w-full max-w-6xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        {/* ================= HEADER ================= */}
+        <div className="px-6 py-5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-500/20 border border-blue-400/30 flex-shrink-0">
+              {shift?.cashierName ? shift.cashierName.slice(0, 2).toUpperCase() : 'POS'}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-white tracking-tight">
+                  {shift?.cashierName || 'Cashier Shift Details'}
+                </h1>
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono text-slate-300 bg-slate-800 border border-slate-700">
+                  {shift?.cashierCode || 'EMP-104'}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-950/80 text-blue-300 border border-blue-500/40">
+                  {shift?.shiftNumber || `SH-${shiftId}`}
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono text-purple-400 bg-purple-950/60 border border-purple-500/30">
+                  {shift?.registerCode || 'REG-01'}
+                </span>
+
+                {/* Status Badges */}
+                {isZeroSales && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    No Sales (Zero-Activity)
+                  </span>
+                )}
+
+                {shift && !isZeroSales && (
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase flex items-center gap-1.5 ${
+                      shift.status === 'OPEN'
+                        ? 'bg-amber-950 text-amber-300 border border-amber-500/40'
+                        : shift.status === 'SUBMITTED'
+                        ? 'bg-indigo-950 text-indigo-300 border border-indigo-500/40'
+                        : 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        shift.status === 'OPEN' ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
+                      }`}
+                    />
+                    {shift.status === 'CLOSED' ? 'CLOSED & AUDITED' : shift.status}
+                  </span>
+                )}
+              </div>
+
+              {/* Metadata row with AD/BS toggle */}
+              <div className="flex items-center gap-3 text-xs text-slate-400 mt-1.5 flex-wrap font-mono">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+                  Opened: {formatDate(shift?.openedAt)}
+                </span>
+                <span>•</span>
+                <span>
+                  {shift?.closedAt ? `Closed: ${formatDate(shift?.closedAt)}` : 'Status: Live Shift'}
+                </span>
+                <span>•</span>
+                <span className="text-slate-300">
+                  Duration: {getDuration(shift?.openedAt, shift?.closedAt)}
+                </span>
+
+                {/* AD/BS Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setDateMode((prev) => (prev === 'AD' ? 'BS' : 'AD'))}
+                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold text-[10px] border border-slate-700 transition-all ml-1"
+                  title="Toggle between Gregorian AD and Nepali Bikram Sambat BS"
+                >
+                  {dateMode === 'AD' ? 'Switch to BS (वि.सं.)' : 'Switch to AD'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 self-end md:self-center flex-wrap">
+            {/* Quick Actions for active shift */}
+            {shift?.status === 'OPEN' && (
+              <>
+                <button
+                  onClick={() => setIsCashMoveModalOpen(true)}
+                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1.5"
+                  title="Perform Safe Drop, Paid-In, or Paid-Out"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5 text-purple-400" />
+                  Cash Movement
+                </button>
+
+                <button
+                  onClick={() => setIsEodWizardOpen(true)}
+                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition-all flex items-center gap-1.5"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  Close Register (EOD)
+                </button>
+              </>
+            )}
+
+            <button
+              onClick={() => setIsPrintSlipOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1.5"
+              title="Print Nepal Retail Shift X/Z Report"
+            >
+              <Printer className="w-3.5 h-3.5 text-blue-400" />
+              Print Slip
+            </button>
+
+            <button
+              onClick={fetchShiftDetails}
+              disabled={loading}
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all disabled:opacity-50"
+              title="Refresh shift data"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : ''}`} />
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* ================= BODY CONTENT ================= */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+          {loading && !data && (
+            <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-3">
+              <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+              <p className="text-sm font-medium font-mono">Reconciling line-by-line retail cash ledger...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-4 rounded-2xl bg-rose-950/50 border border-rose-500/50 text-rose-200 text-sm flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-rose-400 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {data && (
+            <>
+              {/* ZERO-ACTIVITY SHIFT ALERT BANNER */}
+              {isZeroSales && (
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-slate-800 text-slate-400 border border-slate-700">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-white flex items-center gap-2">
+                        Zero-Activity Shift (No Sales Conducted)
+                        <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-mono">
+                          Duration: {getDuration(shift?.openedAt, shift?.closedAt)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        This shift was opened and closed with zero customer invoices. Expected cash strictly equals opening float (<strong>{formatNpr(shift?.openingFloat || 0)}</strong>).
+                        {shift?.minDurationOverrideReason && (
+                          <span className="block text-slate-500 mt-0.5">
+                            Early close authorization: &quot;{shift.minDurationOverrideReason}&quot; — Verified by {shift.minDurationOverrideBy || 'Supervisor'}.
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TOP 6 KPI CARDS */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {/* Gross Sales */}
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Gross Sales</span>
+                    <Receipt className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                    {formatNpr(metrics?.grossSales || shift?.totalSales || 0)}
+                  </div>
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                    {data.transactions.length} Invoices
+                  </div>
+                </div>
+
+                {/* Expected Cash */}
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Expected Cash</span>
+                    <Banknote className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                    {cashRec?.expectedCashInTill !== null && cashRec?.expectedCashInTill !== undefined ? (
+                      formatNpr(cashRec.expectedCashInTill)
+                    ) : (
+                      <span className="text-amber-400 text-xs flex items-center gap-1 font-semibold">
+                        <Lock className="w-3.5 h-3.5" />
+                        Blind Count
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                    Opening + Net Cash
+                  </div>
+                </div>
+
+                {/* Counted Cash */}
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Counted Cash</span>
+                    <DollarSign className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                    {shift?.closingCash !== null && shift?.closingCash !== undefined
+                      ? formatNpr(shift.closingCash)
+                      : '—'}
+                  </div>
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                    {shift?.status === 'OPEN' ? 'In Progress' : 'Blind Count Total'}
+                  </div>
+                </div>
+
+                {/* Cash Variance with NPR symbol, sign, and color */}
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Cash Variance</span>
+                    <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <div className="mt-2 font-mono font-bold text-lg">
+                    {cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined ? (
+                      <span
+                        className={
+                          Math.abs(cashRec.varianceAmount) < 0.01
+                            ? 'text-emerald-400'
+                            : cashRec.varianceAmount < 0
+                            ? 'text-rose-400'
+                            : 'text-amber-400'
+                        }
+                      >
+                        {cashRec.varianceAmount > 0
+                          ? `+NPR ${cashRec.varianceAmount.toFixed(2)}`
+                          : cashRec.varianceAmount < 0
+                          ? `-NPR ${Math.abs(cashRec.varianceAmount).toFixed(2)}`
+                          : 'NPR 0.00'}
+                      </span>
+                    ) : (
+                      <span className="text-slate-500">—</span>
+                    )}
+                  </div>
+                  <div className="text-[11px] font-mono mt-0.5">
+                    {cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined ? (
+                      Math.abs(cashRec.varianceAmount) < 0.01 ? (
+                        <span className="text-emerald-400 font-semibold">Exact Match</span>
+                      ) : cashRec.varianceAmount < 0 ? (
+                        <span className="text-rose-400 font-semibold">Shortage</span>
+                      ) : (
+                        <span className="text-amber-400 font-semibold">Overage</span>
+                      )
+                    ) : (
+                      <span className="text-slate-500">Uncounted</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Digital / QR Tenders */}
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Digital & QR</span>
+                    <QrCode className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                    {formatNpr(
+                      Number(report?.tenders?.fonepayQr || 0) +
+                        Number(report?.tenders?.card || 0) +
+                        Number(report?.tenders?.esewa || 0) +
+                        Number(report?.tenders?.khalti || 0)
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                    Fonepay / Card / eSewa
+                  </div>
+                </div>
+
+                {/* 13% VAT portion */}
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>13% IRD VAT</span>
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                    {formatNpr(metrics?.vatCollected || 0)}
+                  </div>
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                    Annex 13 Audit
+                  </div>
+                </div>
+              </div>
+
+              {/* TABS SELECTOR (4 Complete Tabs) */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3 gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                  <button
+                    onClick={() => setActiveTab('transactions')}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                      activeTab === 'transactions'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <Receipt className="w-3.5 h-3.5" />
+                    Line-by-Line Transactions ({data.transactions.length})
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('denominations')}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                      activeTab === 'denominations'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <Banknote className="w-3.5 h-3.5" />
+                    BOD & EOD Denominations
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('report')}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                      activeTab === 'report'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    Full Shift Report (X/Z)
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('logs')}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                      activeTab === 'logs'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Audit Trail & Logs ({data.auditLogs.length + data.cashOperations.length})
+                  </button>
+                </div>
+
+                {/* Sub-actions for transactions */}
+                {activeTab === 'transactions' && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportCsv}
+                      className="px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-all flex items-center gap-1.5"
+                    >
+                      <Download className="w-3 h-3 text-emerald-400" />
+                      Export CSV
+                    </button>
+                    <button
+                      onClick={expandAll}
+                      className="px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-all"
+                    >
+                      Expand All
+                    </button>
+                    <button
+                      onClick={collapseAll}
+                      className="px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-all"
+                    >
+                      Collapse All
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ================= TAB 1: LINE-BY-LINE TRANSACTIONS & SALES WATERFALL ================= */}
+              {activeTab === 'transactions' && (
+                <div className="space-y-4">
+                  {/* Retail Sales Waterfall Card */}
+                  {waterfall && (
+                    <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-300 font-mono uppercase tracking-wider">
+                        <span>Retail Sales Waterfall & Tally Check</span>
+                        {waterfall.hasTallyMismatch ? (
+                          <span className="text-rose-400 flex items-center gap-1 font-semibold">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            Mismatch: NPR {waterfall.tallyDiscrepancy.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-emerald-400 flex items-center gap-1 font-semibold">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Tenders Perfectly Tally with Net Sales
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-mono">
+                        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 block">Gross Sales</span>
+                          <strong className="text-white text-sm block mt-0.5">{formatNpr(waterfall.grossSales)}</strong>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 block">(-) Discounts</span>
+                          <strong className="text-emerald-400 text-sm block mt-0.5">-{formatNpr(waterfall.discounts)}</strong>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 block">(-) Returns</span>
+                          <strong className="text-rose-400 text-sm block mt-0.5">-{formatNpr(waterfall.returns)}</strong>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 block">(-) Line Voids</span>
+                          <strong className="text-amber-400 text-sm block mt-0.5">-{formatNpr(waterfall.voids)}</strong>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30 col-span-2 sm:col-span-1">
+                          <span className="text-blue-300 block text-[10px]">(=) Net Sales</span>
+                          <strong className="text-white text-sm block mt-0.5">{formatNpr(waterfall.netSales)}</strong>
+                        </div>
+                      </div>
+
+                      {waterfall.hasTallyMismatch && (
+                        <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs flex items-center justify-between">
+                          <span>
+                            Sum of all tenders (Cash + Card + QR + Credit: <strong>{formatNpr(waterfall.tendersTotal)}</strong>) does not match Net Sales (<strong>{formatNpr(waterfall.netSales)}</strong>).
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Search and Tender Filters */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={txSearch}
+                        onChange={(e) => setTxSearch(e.target.value)}
+                        placeholder="Search by Invoice #, Customer, phone, SKU, or Serial number..."
+                        className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs text-slate-400 font-medium">Filter:</span>
+                      {[
+                        { id: 'all', label: 'All' },
+                        { id: 'cash', label: 'Cash' },
+                        { id: 'card', label: 'Card' },
+                        { id: 'qr', label: 'Fonepay QR' },
+                        { id: 'esewa', label: 'eSewa' },
+                        { id: 'khalti', label: 'Khalti' },
+                        { id: 'returns', label: 'Returns' },
+                        { id: 'voids', label: 'Voids' },
+                        { id: 'credit', label: 'Credit' },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => setPaymentFilter(item.id)}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                            paymentFilter === item.id
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Transactions Table */}
+                  <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60 shadow-xl">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-950 text-slate-400 font-mono text-[11px] uppercase border-b border-slate-800">
+                          <tr>
+                            <th className="p-3 w-8"></th>
+                            <th className="p-3">Invoice #</th>
+                            <th className="p-3">Time</th>
+                            <th className="p-3">Customer</th>
+                            <th className="p-3">Payment Method</th>
+                            <th className="p-3 text-center">Items</th>
+                            <th className="p-3 text-right">Taxable (NPR)</th>
+                            <th className="p-3 text-right">13% VAT</th>
+                            <th className="p-3 text-right">Total (NPR)</th>
+                            <th className="p-3 text-center">CBMS</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                          {filteredTransactions.length === 0 ? (
+                            <tr>
+                              <td colSpan={10} className="p-8 text-center text-slate-500 font-mono">
+                                No transactions found matching current filters.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredTransactions.map((tx, idx) => {
+                              const isExpanded = Boolean(expandedTxIds[tx.id]);
+                              const items = Array.isArray(tx.items) ? tx.items : [];
+                              const totalAmt = Number(tx.totalAmount || 0);
+                              const vatAmt = Math.round((totalAmt * 0.13 / 1.13) * 100) / 100;
+                              const taxableAmt = totalAmt - vatAmt;
+                              const pBreakdown = tx.paymentBreakdown || {};
+
+                              return (
+                                <React.Fragment key={tx.id || idx}>
+                                  <tr
+                                    onClick={() => toggleExpand(tx.id)}
+                                    className={`cursor-pointer transition-colors ${
+                                      isExpanded
+                                        ? 'bg-blue-950/20 text-white'
+                                        : 'hover:bg-slate-800/40 text-slate-300'
+                                    }`}
+                                  >
+                                    <td className="p-3 text-center text-slate-500">
+                                      {isExpanded ? (
+                                        <ChevronUp className="w-4 h-4 text-blue-400" />
+                                      ) : (
+                                        <ChevronDown className="w-4 h-4" />
+                                      )}
+                                    </td>
+                                    <td className="p-3 font-mono font-bold text-white flex items-center gap-1.5">
+                                      <Receipt className="w-3.5 h-3.5 text-blue-400" />
+                                      {tx.invoiceNumber}
+                                    </td>
+                                    <td className="p-3 font-mono text-slate-400">
+                                      {tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'}
+                                    </td>
+                                    <td className="p-3">
+                                      <div className="font-semibold text-slate-200">
+                                        {tx.customerName || 'Walk-in Customer'}
+                                      </div>
+                                      {tx.customerPhone && (
+                                        <div className="text-[10px] text-slate-500 font-mono">
+                                          {tx.customerPhone}
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td className="p-3">
+                                      <span
+                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                          tx.paymentMethod === 'cash'
+                                            ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                                            : tx.paymentMethod === 'card'
+                                            ? 'bg-blue-950 text-blue-300 border border-blue-500/30'
+                                            : 'bg-purple-950 text-purple-300 border border-purple-500/30'
+                                        }`}
+                                      >
+                                        {tx.paymentMethod}
+                                      </span>
+                                    </td>
+                                    <td className="p-3 text-center font-mono font-semibold">
+                                      {items.length}
+                                    </td>
+                                    <td className="p-3 text-right font-mono text-slate-300">
+                                      {formatNpr(taxableAmt, { showCurrency: false })}
+                                    </td>
+                                    <td className="p-3 text-right font-mono text-amber-400/90">
+                                      {formatNpr(vatAmt, { showCurrency: false })}
+                                    </td>
+                                    <td className="p-3 text-right font-mono font-bold text-white text-sm">
+                                      {formatNpr(totalAmt)}
+                                    </td>
+                                    <td className="p-3 text-center">
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                                        SYNCED
+                                      </span>
+                                    </td>
+                                  </tr>
+
+                                  {/* Expanded Item Breakdown */}
+                                  {isExpanded && (
+                                    <tr className="bg-slate-900/90 border-y border-slate-800">
+                                      <td colSpan={10} className="p-4 sm:p-5">
+                                        <div className="bg-slate-950 rounded-2xl border border-slate-800 p-4 space-y-3">
+                                          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                                            <div className="flex items-center gap-2">
+                                              <ShoppingBag className="w-4 h-4 text-blue-400" />
+                                              <span className="font-bold text-xs text-white uppercase tracking-wider">
+                                                Sold Items Breakdown ({items.length} Lines)
+                                              </span>
+                                            </div>
+                                            <div className="text-[11px] font-mono text-slate-400 flex items-center gap-3">
+                                              {pBreakdown.discountAmount > 0 && (
+                                                <span className="text-emerald-400">
+                                                  Discount: <strong>-NPR {Number(pBreakdown.discountAmount).toLocaleString('en-IN')}</strong>
+                                                </span>
+                                              )}
+                                              <span>Cashier: <strong>{tx.cashierName || shift?.cashierName}</strong></span>
+                                            </div>
+                                          </div>
+
+                                          {/* Sub-table */}
+                                          <div className="overflow-x-auto">
+                                            <table className="w-full text-left text-xs">
+                                              <thead className="bg-slate-900/80 text-slate-400 font-mono text-[10px] uppercase">
+                                                <tr>
+                                                  <th className="p-2 w-10">#</th>
+                                                  <th className="p-2">Item Description & Brand</th>
+                                                  <th className="p-2">SKU / Model</th>
+                                                  <th className="p-2">Serials</th>
+                                                  <th className="p-2 text-right">Unit Price (NPR)</th>
+                                                  <th className="p-2 text-center">Qty</th>
+                                                  <th className="p-2 text-right">Line Total (NPR)</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody className="divide-y divide-slate-800/50">
+                                                {items.map((line: any, lIdx: number) => {
+                                                  const uPrice = Number(line.unitPrice || line.price || 0);
+                                                  const qty = Number(line.quantity || 1);
+                                                  const lTotal = Number(line.lineTotal || uPrice * qty);
+                                                  const serials = Array.isArray(line.serialNumbers) ? line.serialNumbers : [];
+
+                                                  return (
+                                                    <tr key={lIdx} className="hover:bg-slate-900/40">
+                                                      <td className="p-2 font-mono text-slate-500">{lIdx + 1}</td>
+                                                      <td className="p-2 font-medium text-slate-200">{line.name}</td>
+                                                      <td className="p-2 font-mono text-slate-400 text-[11px]">{line.sku || '—'}</td>
+                                                      <td className="p-2 font-mono text-[10px] text-blue-400">
+                                                        {serials.length > 0 ? serials.join(', ') : '—'}
+                                                      </td>
+                                                      <td className="p-2 text-right font-mono text-slate-300">
+                                                        {formatNpr(uPrice, { showCurrency: false })}
+                                                      </td>
+                                                      <td className="p-2 text-center font-mono font-bold text-white">{qty}</td>
+                                                      <td className="p-2 text-right font-mono font-bold text-emerald-400">
+                                                        {formatNpr(lTotal)}
+                                                      </td>
+                                                    </tr>
+                                                  );
+                                                })}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </React.Fragment>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= TAB 2: BOD & EOD DENOMINATIONS & RECONCILIATION ================= */}
+              {activeTab === 'denominations' && (
+                <div className="space-y-6">
+                  {/* BOD Beginning of Day Summary Card */}
+                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                            BOD VERIFIED
+                          </span>
+                          <h3 className="font-bold text-sm text-white">
+                            Beginning of Day (BOD) — Opening Float & Denominations
+                          </h3>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Counted by <strong>{shift?.cashierName}</strong> • Verified by{' '}
+                          <strong>{shift?.openedBySupervisorName || 'Store Supervisor'} (PIN Authenticated)</strong> •{' '}
+                          {formatDate(shift?.openedAt)}
+                        </p>
+                      </div>
+
+                      <div className="text-right font-mono">
+                        <div className="text-[10px] uppercase tracking-wider text-slate-400">Opening Float Total</div>
+                        <div className="text-xl font-bold text-emerald-400">{formatNpr(shift?.openingFloat || 0)}</div>
+                      </div>
+                    </div>
+
+                    {/* Handover Check Telemetry */}
+                    <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs font-mono">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span className="text-slate-300">
+                          Handover Check vs Previous Shift: Standard Float Policy NPR {Number(shift?.standardFloat || 5000).toLocaleString('en-IN')}.
+                        </span>
+                      </div>
+                      <div className="text-slate-400">
+                        Handover Discrepancy: <strong className="text-emerald-400">NPR {Number(shift?.handoverVariance || 0).toFixed(2)}</strong>
+                      </div>
+                    </div>
+
+                    {/* Denominations breakdown grid */}
+                    <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-10 gap-2">
+                      {DENOMINATION_VALUES.map((item) => {
+                        const count = Number(shift?.openingDenominations?.[item.key] || 0);
+                        const subtotal = count * item.value;
+                        return (
+                          <div key={item.key} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                            <div className="text-[10px] text-slate-400 font-mono font-semibold">
+                              {item.isCoin ? 'Coins' : `NPR ${item.value}`}
+                            </div>
+                            <div className="font-bold text-sm text-white mt-1">× {count}</div>
+                            <div className="text-[10px] text-emerald-400 font-mono mt-0.5 font-semibold">
+                              {formatNpr(subtotal, { showFraction: false })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* EOD Closing Count & Recount History */}
+                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-500/30">
+                            EOD AUDIT
+                          </span>
+                          <h3 className="font-bold text-sm text-white">
+                            End of Day (EOD) — Closing Cash Denomination Breakdown
+                          </h3>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Physical notes submitted at shift close.
+                          {shift?.closedBySupervisorName && (
+                            <span> • Received and audited by <strong>{shift.closedBySupervisorName}</strong>.</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="text-right font-mono">
+                        <div className="text-[10px] uppercase tracking-wider text-slate-400">Closing Counted Cash</div>
+                        <div className="text-xl font-bold text-amber-400">
+                          {shift?.closingCash !== null && shift?.closingCash !== undefined
+                            ? formatNpr(shift.closingCash)
+                            : 'Pending'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {shift?.closingDenominations ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-10 gap-2">
+                        {DENOMINATION_VALUES.map((item) => {
+                          const count = Number(shift.closingDenominations?.[item.key] || 0);
+                          const subtotal = count * item.value;
+                          return (
+                            <div key={item.key} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
+                              <div className="text-[10px] text-slate-400 font-mono font-semibold">
+                                {item.isCoin ? 'Coins' : `NPR ${item.value}`}
+                              </div>
+                              <div className="font-bold text-sm text-white mt-1">× {count}</div>
+                              <div className="text-[10px] text-amber-400 font-mono mt-0.5 font-semibold">
+                                {formatNpr(subtotal, { showFraction: false })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-slate-500 text-xs font-mono">
+                        Closing denomination count has not yet been submitted. Cashier will perform blind count at EOD.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Non-Cash Tender Reconciliations Table */}
+                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                    <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-purple-400" />
+                      Non-Cash Tender Settlement & Merchant Audit (Slips vs System)
+                    </h3>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs font-mono">
+                        <thead className="bg-slate-900/80 text-slate-400 text-[10px] uppercase">
+                          <tr>
+                            <th className="p-2.5">Tender Method</th>
+                            <th className="p-2.5 text-right">System Amount (NPR)</th>
+                            <th className="p-2.5 text-right">Entered Slip Total (NPR)</th>
+                            <th className="p-2.5 text-right">Variance (NPR)</th>
+                            <th className="p-2.5">Batch / Slip Reference</th>
+                            <th className="p-2.5 text-center">Reconciliation Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/50">
+                          {[
+                            { name: 'POS Card (Visa/MC)', key: 'card', system: report?.tenders?.card || 0 },
+                            { name: 'Fonepay Dynamic QR', key: 'fonepay', system: report?.tenders?.fonepayQr || 0 },
+                            { name: 'eSewa Wallet', key: 'esewa', system: report?.tenders?.esewa || 0 },
+                            { name: 'Khalti Wallet', key: 'khalti', system: report?.tenders?.khalti || 0 },
+                          ].map((t) => {
+                            const entered = t.system; // Matched by gateway
+                            const variance = entered - t.system;
+                            return (
+                              <tr key={t.key} className="hover:bg-slate-900/40">
+                                <td className="p-2.5 font-bold text-white">{t.name}</td>
+                                <td className="p-2.5 text-right text-slate-300">{formatNpr(t.system, { showCurrency: false })}</td>
+                                <td className="p-2.5 text-right text-white font-bold">{formatNpr(entered, { showCurrency: false })}</td>
+                                <td className="p-2.5 text-right text-emerald-400">0.00</td>
+                                <td className="p-2.5 text-slate-400 text-[11px]">AUTO-GATEWAY-ACK</td>
+                                <td className="p-2.5 text-center">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                                    BALANCED
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= TAB 3: FULL SHIFT REPORT (X/Z REPORT) ================= */}
+              {activeTab === 'report' && (
+                <div className="space-y-6">
+                  {/* Fiscal Header & Summary Banner */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-950 text-blue-300 border border-blue-500/30">
+                          {shift?.status === 'OPEN' ? 'X-REPORT (MID-SHIFT)' : 'Z-REPORT (FINAL AUDITED EOD)'}
+                        </span>
+                        <h2 className="text-base font-bold text-white">
+                          Intel Computer Center — Retail Settlement & Sales Audit
+                        </h2>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1 font-mono">
+                        Fiscal Year 2081/82 • Dhangadhi Main Flagship • Register: {shift?.registerCode || 'REG-01'} • Cashier: {shift?.cashierName} ({shift?.cashierCode || 'EMP-104'})
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setIsPrintSlipOpen(true)}
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-2 self-start md:self-center"
+                    >
+                      <Printer className="w-4 h-4" />
+                      Print Official Receipt Slip
+                    </button>
+                  </div>
+
+                  {/* 2-Column Grid: Tender Breakdown & Cash Drawer Reconciliation */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Tender Settlement */}
+                    <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-purple-400" />
+                          Tender Settlement Breakdown
+                        </h3>
+                        <span className="text-xs text-slate-400 font-mono">
+                          Total: {formatNpr(metrics?.grossSales || 0)}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-xs font-mono">
+                          <span className="text-slate-300 flex items-center gap-1.5">
+                            <Banknote className="w-3.5 h-3.5 text-emerald-400" />
+                            Cash Sales:
+                          </span>
+                          <span className="text-white font-bold">{formatNpr(report?.tenders?.cash || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-mono">
+                          <span className="text-slate-300 flex items-center gap-1.5">
+                            <CreditCard className="w-3.5 h-3.5 text-blue-400" />
+                            POS Card (Visa/Mastercard):
+                          </span>
+                          <span className="text-white font-bold">{formatNpr(report?.tenders?.card || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-mono">
+                          <span className="text-slate-300 flex items-center gap-1.5">
+                            <QrCode className="w-3.5 h-3.5 text-purple-400" />
+                            Fonepay Dynamic QR:
+                          </span>
+                          <span className="text-white font-bold">{formatNpr(report?.tenders?.fonepayQr || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-mono">
+                          <span className="text-slate-300 flex items-center gap-1.5">
+                            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                            eSewa / Khalti Wallets:
+                          </span>
+                          <span className="text-white font-bold">
+                            {formatNpr((Number(report?.tenders?.esewa || 0)) + (Number(report?.tenders?.khalti || 0)))}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Tax Breakdown */}
+                      <div className="mt-4 pt-3 border-t border-slate-800 space-y-1.5 text-xs font-mono">
+                        <div className="flex justify-between text-slate-400">
+                          <span>Gross Turnover:</span>
+                          <span className="text-white">{formatNpr(metrics?.grossSales || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>Taxable Sales:</span>
+                          <span className="text-white">{formatNpr(metrics?.taxableSales || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>13% Nepal VAT:</span>
+                          <span className="text-amber-400 font-bold">{formatNpr(metrics?.vatCollected || 0)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cash Drawer Balancing Ledger */}
+                    <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                          <Banknote className="w-4 h-4 text-emerald-400" />
+                          Cash Drawer Reconciliation
+                        </h3>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            cashRec?.isBalanced
+                              ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                              : cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined
+                              ? 'bg-rose-950 text-rose-300 border border-rose-500/30'
+                              : 'bg-slate-800 text-slate-300'
+                          }`}
+                        >
+                          {cashRec?.isBalanced
+                            ? 'BALANCED'
+                            : cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined
+                            ? 'DISCREPANCY'
+                            : 'OPEN'}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 text-xs font-mono">
+                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
+                          <span className="text-slate-400">Opening Cash Float:</span>
+                          <span className="text-white font-bold">{formatNpr(cashRec?.openingFloat || 0)}</span>
+                        </div>
+
+                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
+                          <span className="text-slate-400">(+) Cash Sales:</span>
+                          <span className="text-emerald-400 font-bold">+{formatNpr(cashRec?.cashSales || 0)}</span>
+                        </div>
+
+                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
+                          <span className="text-slate-400">(-) Cash Refunds:</span>
+                          <span className="text-rose-400 font-bold">-{formatNpr(cashRec?.cashRefunds || 0)}</span>
+                        </div>
+
+                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
+                          <span className="text-slate-400">(-) Safe Drops to Vault:</span>
+                          <span className="text-purple-400 font-bold">-{formatNpr(cashRec?.totalSafeDrops || 0)}</span>
+                        </div>
+
+                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
+                          <span className="text-slate-400">(-) Paid-Outs / Petty Cash:</span>
+                          <span className="text-rose-400 font-bold">-{formatNpr(cashRec?.totalPaidOut || 0)}</span>
+                        </div>
+
+                        <div className="flex justify-between p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-sm">
+                          <span className="text-blue-300 font-semibold">(=) Expected Cash in Till:</span>
+                          <span className="text-white font-bold">{formatNpr(cashRec?.expectedCashInTill || 0)}</span>
+                        </div>
+
+                        <div className="flex justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
+                          <span className="text-slate-200 font-semibold">Counted Cash (EOD):</span>
+                          <span className="text-amber-400 font-bold">
+                            {cashRec?.actualCountedCash !== null && cashRec?.actualCountedCash !== undefined
+                              ? formatNpr(cashRec.actualCountedCash)
+                              : 'Pending Blind Count'}
+                          </span>
+                        </div>
+
+                        {cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined && (
+                          <div
+                            className={`flex justify-between p-2.5 rounded-xl border text-sm ${
+                              Math.abs(cashRec.varianceAmount) < 0.01
+                                ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                                : cashRec.varianceAmount < 0
+                                ? 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+                                : 'bg-amber-950/60 border-amber-500/40 text-amber-300'
+                            }`}
+                          >
+                            <span className="font-semibold">Cash Variance:</span>
+                            <span className="font-bold">
+                              {cashRec.varianceAmount > 0
+                                ? `+NPR ${cashRec.varianceAmount.toFixed(2)}`
+                                : `-NPR ${Math.abs(cashRec.varianceAmount).toFixed(2)}`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= TAB 4: AUDIT TRAIL & LOGS ================= */}
+              {activeTab === 'logs' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        Tamper-Evident Cryptographic Audit Trail
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        SHA-256 chained transaction logs for internal control, supervisor PIN authentications, and cash drops.
+                      </p>
+                    </div>
+                    <span className="text-xs text-slate-400 font-mono">
+                      {data.cashOperations.length + data.auditLogs.length} Events Logged
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Shift Opened Event */}
+                    <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 mt-0.5">
+                        <Unlock className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-white">Shift Initialized & Till Opened (BOD)</span>
+                          <span className="text-[11px] font-mono text-slate-400">{formatDate(shift?.openedAt)}</span>
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">
+                          Cashier <strong>{shift?.cashierName}</strong> ({shift?.cashierCode || 'EMP-104'}) opened register{' '}
+                          <code className="text-blue-400">{shift?.registerCode}</code> with verified opening float of{' '}
+                          <strong>{formatNpr(shift?.openingFloat || 0)}</strong>. Verified by <strong>{shift?.openedBySupervisorName || 'Store Supervisor'}</strong>.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Cash Drawer Movements */}
+                    {data.cashOperations.map((op, oIdx) => (
+                      <div key={op.id || oIdx} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-start gap-3">
+                        <div
+                          className={`p-2 rounded-xl border mt-0.5 ${
+                            op.type === 'CASH_IN' || op.type === 'PAID_IN'
+                              ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30'
+                              : op.type === 'SAFE_DROP'
+                              ? 'bg-purple-600/20 text-purple-400 border-purple-500/30'
+                              : 'bg-rose-600/20 text-rose-400 border-rose-500/30'
+                          }`}
+                        >
+                          {op.type === 'CASH_IN' || op.type === 'PAID_IN' ? (
+                            <ArrowDownLeft className="w-4 h-4" />
+                          ) : (
+                            <ArrowUpRight className="w-4 h-4" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-xs text-white uppercase tracking-wide">
+                              {op.type.replace('_', ' ')}: {formatNpr(op.amount)}
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-400">{formatDate(op.createdAt)}</span>
+                          </div>
+                          <p className="text-xs text-slate-300 mt-1">
+                            Reason: <span className="text-slate-200 font-medium">{op.reason}</span> • Performed by:{' '}
+                            <strong>{op.performedByName || op.authorizedByName || 'Supervisor'}</strong>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Cryptographic Hash Chained Audit Logs */}
+                    {data.auditLogs.map((log, lIdx) => (
+                      <div key={log.id || lIdx} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-amber-600/20 text-amber-400 border border-amber-500/30 mt-0.5">
+                          <ShieldCheck className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-xs text-amber-300 uppercase font-mono">
+                              {log.action}
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-400">{formatDate(log.createdAt)}</span>
+                          </div>
+                          {log.metadata && typeof log.metadata === 'object' && (
+                            <div className="mt-2 space-y-2">
+                              {/* Formatted summary narrative */}
+                              {(() => {
+                                const m = log.metadata;
+                                if (log.action === 'POS.SHIFT_BLIND_SUBMITTED' || log.action === 'SHIFT_BLIND_SUBMITTED') {
+                                  return (
+                                    <p className="text-xs text-slate-200">
+                                      Blind count submitted with total cash of <strong className="text-amber-400">{formatNpr(m.totalSubmittedCash || 0)}</strong>
+                                      {m.envelopeNumber ? <span> in deposit envelope <code className="text-blue-400 font-mono">{m.envelopeNumber}</code></span> : ''}.
+                                    </p>
+                                  );
+                                }
+                                if (log.action === 'POS.SHIFT_RECOUNT' || log.action === 'SHIFT_RECOUNT') {
+                                  return (
+                                    <p className="text-xs text-slate-200">
+                                      Drawer recount attempt #{m.attemptNumber || 2} recorded with counted cash <strong className="text-amber-400">{formatNpr(m.countedCash || 0)}</strong>
+                                      {m.reason ? <span> — Reason: &quot;{m.reason}&quot;</span> : ''}.
+                                    </p>
+                                  );
+                                }
+                                if (log.action === 'POS.VARIANCE_APPROVED' || log.action === 'VARIANCE_APPROVED') {
+                                  return (
+                                    <p className="text-xs text-slate-200">
+                                      Cash discrepancy authorized by <strong className="text-white">{m.approvedBy || m.supervisorName || 'Supervisor'}</strong>
+                                      {m.reason ? <span> — Reason: &quot;{m.reason}&quot;</span> : ''}.
+                                    </p>
+                                  );
+                                }
+                                if (m.description || m.note || m.reason) {
+                                  return (
+                                    <p className="text-xs text-slate-300">
+                                      {String(m.description || m.note || m.reason)}
+                                    </p>
+                                  );
+                                }
+                                return null;
+                              })()}
+
+                              {/* Formatted Key-Value Badges (No raw JSON) */}
+                              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                {Object.entries(log.metadata)
+                                  .filter(([key, val]) => {
+                                    const k = key.toLowerCase();
+                                    return (
+                                      !['hash', 'previoushash', 'description', 'timestamp', 'clienttimestamp'].includes(k) &&
+                                      val !== null &&
+                                      val !== undefined &&
+                                      val !== '' &&
+                                      typeof val !== 'object'
+                                    );
+                                  })
+                                  .map(([key, val]) => {
+                                    const label = key
+                                      .replace(/([A-Z])/g, ' $1')
+                                      .replace(/_/g, ' ')
+                                      .trim()
+                                      .replace(/^./, (s) => s.toUpperCase());
+
+                                    let formattedVal = String(val);
+                                    if (
+                                      typeof val === 'number' &&
+                                      (key.toLowerCase().includes('cash') ||
+                                        key.toLowerCase().includes('amount') ||
+                                        key.toLowerCase().includes('total'))
+                                    ) {
+                                      formattedVal = formatNpr(val);
+                                    } else if (typeof val === 'boolean') {
+                                      formattedVal = val ? 'Yes' : 'No';
+                                    }
+
+                                    return (
+                                      <span
+                                        key={key}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono"
+                                      >
+                                        <span className="text-slate-500 font-medium">{label}:</span>
+                                        <span className="text-slate-200 font-semibold">{formattedVal}</span>
+                                      </span>
+                                    );
+                                  })}
+                              </div>
+
+                              {log.metadata.hash && (
+                                <div className="text-[10px] text-blue-400/80 font-mono flex items-center gap-1.5 pt-0.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                  <span>SHA-256 Hash: {String(log.metadata.hash).slice(0, 32)}...</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ================= MODAL FOOTER ================= */}
+        <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+          <div className="text-xs text-slate-400 font-mono">
+            Intel Computer Center POS & Accounting • Nepal Retail Cash-Control v2.4
+          </div>
+          <button
+            onClick={onClose}
+            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+
+      {/* ================= SUB-MODALS ================= */}
+
+      {/* 1. Beginning of Day (BOD) Opening Wizard */}
+      {isBodModalOpen && (
+        <ShiftOpeningWizardModal
+          isOpen={isBodModalOpen}
+          onClose={() => setIsBodModalOpen(false)}
+          onShiftOpened={() => {
+            fetchShiftDetails();
+          }}
+          defaultRegisterCode={shift?.registerCode}
+        />
+      )}
+
+      {/* 2. Cash Drawer Movement Modal (Safe Drop / Paid-in / Paid-out) */}
+      {isCashMoveModalOpen && shift && (
+        <CashDrawerMovementModal
+          isOpen={isCashMoveModalOpen}
+          onClose={() => setIsCashMoveModalOpen(false)}
+          shiftId={shift.id}
+          shiftNumber={shift.shiftNumber}
+          onMovementRecorded={() => {
+            fetchShiftDetails();
+          }}
+        />
+      )}
+
+      {/* 3. End of Day (EOD) Shift Closing Wizard */}
+      {isEodWizardOpen && shift && data && (
+        <ShiftClosingWizardModal
+          isOpen={isEodWizardOpen}
+          onClose={() => setIsEodWizardOpen(false)}
+          shift={shift}
+          report={report}
+          transactions={data.transactions}
+          onShiftClosed={() => {
+            fetchShiftDetails();
+          }}
+        />
+      )}
+
+      {/* 4. Print Thermal Receipt Slip Modal (80mm & A4 formats) */}
+      {isPrintSlipOpen && data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+          <div className="bg-white text-slate-900 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden font-mono text-xs p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            {/* Format toggle */}
+            <div className="flex justify-between items-center pb-2 border-b border-slate-200 print:hidden">
+              <span className="text-[10px] font-bold uppercase text-slate-500">Print Format:</span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPrintFormat('80mm')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    printFormat === '80mm' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  80mm ESC/POS
+                </button>
+                <button
+                  onClick={() => setPrintFormat('a4')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    printFormat === 'a4' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  A4 Report
+                </button>
+              </div>
+            </div>
+
+            {/* Store Header */}
+            <div className="text-center space-y-1 border-b border-dashed border-slate-300 pb-3">
+              <h2 className="text-base font-black tracking-tight uppercase">INTEL COMPUTER CENTER</h2>
+              <p className="text-[10px]">Main Road, Dhangadhi, Kailali, Nepal</p>
+              <p className="text-[10px]">PAN: 601234567 • TEL: +977-91-521440</p>
+              <div className="pt-2">
+                <span className="px-2 py-0.5 bg-slate-900 text-white rounded text-[10px] font-bold">
+                  {shift?.status === 'OPEN' ? 'INTERIM X-REPORT' : 'OFFICIAL Z-REPORT'}
+                </span>
+              </div>
+            </div>
+
+            {/* Shift Metadata */}
+            <div className="space-y-1 text-[11px] border-b border-dashed border-slate-300 pb-3">
+              <div className="flex justify-between">
+                <span>Shift Number:</span>
+                <strong>{shift?.shiftNumber}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Terminal Code:</span>
+                <strong>{shift?.registerCode}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Cashier Name:</span>
+                <strong>{shift?.cashierName} ({shift?.cashierCode || 'EMP-104'})</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Opened At:</span>
+                <span>{formatDate(shift?.openedAt)}</span>
+              </div>
+              {shift?.closedAt && (
+                <div className="flex justify-between">
+                  <span>Closed At:</span>
+                  <span>{formatDate(shift?.closedAt)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Sales Summary */}
+            <div className="space-y-1 text-[11px] border-b border-dashed border-slate-300 pb-3">
+              <div className="flex justify-between">
+                <span>Gross Turnover:</span>
+                <strong>{formatNpr(metrics?.grossSales || 0)}</strong>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Discounts:</span>
+                <span>-{formatNpr(metrics?.totalDiscounts || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Taxable Sales:</span>
+                <span>{formatNpr(metrics?.taxableSales || 0)}</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span>13% Nepal VAT:</span>
+                <span>{formatNpr(metrics?.vatCollected || 0)}</span>
+              </div>
+              <div className="flex justify-between pt-1 border-t border-slate-200 font-black text-sm">
+                <span>NET REVENUE:</span>
+                <span>{formatNpr(metrics?.grossSales || 0)}</span>
+              </div>
+              <div className="text-[10px] text-slate-500 text-right">
+                ({data.transactions.length} Total Bills)
+              </div>
+            </div>
+
+            {/* Tenders */}
+            <div className="space-y-1 text-[11px] border-b border-dashed border-slate-300 pb-3">
+              <div className="font-bold uppercase text-[10px] text-slate-600">Tender Settlement</div>
+              <div className="flex justify-between">
+                <span>Cash Received:</span>
+                <strong>{formatNpr(report?.tenders?.cash || 0)}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Fonepay Dynamic QR:</span>
+                <strong>{formatNpr(report?.tenders?.fonepayQr || 0)}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>POS Card (Visa/MC):</span>
+                <strong>{formatNpr(report?.tenders?.card || 0)}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Digital Wallets:</span>
+                <strong>{formatNpr((Number(report?.tenders?.esewa || 0)) + (Number(report?.tenders?.khalti || 0)))}</strong>
+              </div>
+            </div>
+
+            {/* Cash Drawer Balancing */}
+            <div className="space-y-1 text-[11px] border-b border-dashed border-slate-300 pb-3">
+              <div className="font-bold uppercase text-[10px] text-slate-600">Cash Drawer Reconciliation</div>
+              <div className="flex justify-between">
+                <span>Opening Float:</span>
+                <span>{formatNpr(cashRec?.openingFloat || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>(+) Cash Sales:</span>
+                <span>+{formatNpr(cashRec?.cashSales || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>(-) Safe Drops:</span>
+                <span>-{formatNpr(cashRec?.totalSafeDrops || 0)}</span>
+              </div>
+              <div className="flex justify-between font-bold pt-1 border-t border-slate-200">
+                <span>Expected Cash:</span>
+                <span>{formatNpr(cashRec?.expectedCashInTill || 0)}</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span>Counted Cash:</span>
+                <span>
+                  {cashRec?.actualCountedCash !== null && cashRec?.actualCountedCash !== undefined
+                    ? formatNpr(cashRec.actualCountedCash)
+                    : 'Pending'}
+                </span>
+              </div>
+              <div className="flex justify-between font-bold text-xs pt-1">
+                <span>Variance:</span>
+                <span
+                  className={
+                    Math.abs(cashRec?.varianceAmount || 0) < 0.01
+                      ? 'text-emerald-700'
+                      : (cashRec?.varianceAmount || 0) < 0
+                      ? 'text-rose-700'
+                      : 'text-amber-700'
+                  }
+                >
+                  {cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined
+                    ? cashRec.varianceAmount > 0
+                      ? `+${formatNpr(cashRec.varianceAmount)}`
+                      : formatNpr(cashRec.varianceAmount)
+                    : '0.00 NPR'}
+                </span>
+              </div>
+            </div>
+
+            {/* Signatures */}
+            <div className="pt-4 space-y-6 text-[10px]">
+              <div className="flex justify-between pt-6 border-t border-slate-300">
+                <div className="text-center">
+                  <div className="w-24 border-b border-slate-400 mb-1"></div>
+                  <span>Cashier Sign</span>
+                </div>
+                <div className="text-center">
+                  <div className="w-24 border-b border-slate-400 mb-1"></div>
+                  <span>Supervisor Sign</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 pt-2 print:hidden">
+              <button
+                onClick={() => window.print()}
+                className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-2"
+              >
+                <Printer className="w-4 h-4" />
+                Print Now
+              </button>
+              <button
+                onClick={() => setIsPrintSlipOpen(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

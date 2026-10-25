@@ -44,7 +44,9 @@ import { ServicesModule } from '@/components/admin/ServicesModule';
 import { SettingsModule } from '@/components/admin/SettingsModule';
 import { StaffModule } from '@/components/admin/StaffModule';
 import { AccountModule } from '@/components/admin/AccountModule';
-import { AccountingModule } from '@/components/admin/AccountingModule';
+import { AccountantDashboard } from '@/components/admin/AccountantDashboard';
+import { AdminPosModule } from '@/components/admin/AdminPosModule';
+import { AdminAccountingModule } from '@/components/admin/AdminAccountingModule';
 import { StockAuditModal } from '@/components/admin/StockAuditModal';
 import { WaybillModal } from '@/components/admin/WaybillModal';
 import { useProductForm } from '@/components/admin/useProductForm';
@@ -75,6 +77,7 @@ import {
   MessageSquare,
   Star,
   Globe2,
+  Banknote,
 } from 'lucide-react';
 
 export const AdminView: React.FC = () => {
@@ -296,6 +299,38 @@ export const AdminView: React.FC = () => {
             <span className="flex-1">Dashboard</span>
           </button>
 
+          {/* Apex Retail POS Terminal */}
+          <button
+            onClick={() => setActiveModule('pos')}
+            className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13px] font-semibold transition-all text-left w-full ${
+              activeModule === 'pos'
+                ? 'bg-[#006b45] text-white ring-2 ring-[#82d8a9] shadow-md shadow-emerald-950/40 font-bold'
+                : 'bg-[#006b45]/90 hover:bg-[#006b45] text-emerald-100 border border-[#82d8a9]/50 shadow-xs'
+            }`}
+          >
+            <Banknote className="w-4 h-4 flex-shrink-0 text-[#82d8a9]" />
+            <span className="flex-1">Apex POS Terminal</span>
+            <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-black/40 text-[#82d8a9] font-bold">
+              LIVE
+            </span>
+          </button>
+
+          {/* Central Accounting & Invoices Hub */}
+          <button
+            onClick={() => setActiveModule('accounting')}
+            className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13px] font-semibold transition-all text-left w-full ${
+              activeModule === 'accounting'
+                ? 'bg-blue-800 text-white ring-2 ring-blue-400 shadow-md shadow-blue-950/40 font-bold'
+                : 'bg-blue-900/70 hover:bg-blue-800/90 text-blue-100 border border-blue-400/40 shadow-xs'
+            }`}
+          >
+            <DollarSign className="w-4 h-4 flex-shrink-0 text-blue-300" />
+            <span className="flex-1">Accounting Hub</span>
+            <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-blue-500/40 text-blue-100 font-bold">
+              ERP
+            </span>
+          </button>
+
           <button
             onClick={() => setActiveModule('catalog')}
             className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
@@ -372,7 +407,7 @@ export const AdminView: React.FC = () => {
           <button
             onClick={() => setActiveModule('inventory')}
             className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
-              activeModule === 'inventory'
+              activeModule === 'inventory' || activeModule === 'storekeeper'
                 ? 'bg-[#4C63FF] text-white font-semibold shadow-sm'
                 : 'text-[#B4BACC] hover:bg-[#181F30] hover:text-white'
             }`}
@@ -383,7 +418,12 @@ export const AdminView: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-[#3D465C] flex-shrink-0" />
             )}
             <Boxes className="w-4 h-4 flex-shrink-0 opacity-90" />
-            <span className="flex-1">Inventory</span>
+            <span className="flex-1">Inventory & Store</span>
+            {lowStockProducts.length > 0 && (
+              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold">
+                {lowStockProducts.length} low
+              </span>
+            )}
           </button>
         </nav>
 
@@ -465,15 +505,15 @@ export const AdminView: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveModule('accounting')}
+            onClick={() => setActiveModule('accountant')}
             className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
-              activeModule === 'accounting'
+              activeModule === 'accountant'
                 ? 'bg-[#4C63FF] text-white font-semibold shadow-sm'
                 : 'text-[#B4BACC] hover:bg-[#181F30] hover:text-white'
             }`}
           >
-            <DollarSign className="w-4 h-4 flex-shrink-0 opacity-90" />
-            <span className="flex-1">Accounting</span>
+            <Banknote className="w-4 h-4 flex-shrink-0 opacity-90 text-emerald-400" />
+            <span className="flex-1">Accountant (EOD)</span>
           </button>
 
           <button
@@ -529,7 +569,15 @@ export const AdminView: React.FC = () => {
         <header className="flex-shrink-0 z-20 flex items-center justify-between gap-4 px-6 md:px-8 py-3.5 bg-white border-b border-[#E6E8EE] shadow-2xs">
           {/* Breadcrumb */}
           <div className="font-mono text-xs text-[#9AA1AF]">
-            Console / <b className="text-[#12151C] capitalize">{activeModule.replace('-', ' ')}</b>
+            Console / <b className="text-[#12151C] capitalize">
+              {activeModule === 'pos'
+                ? 'Apex POS Terminal'
+                : activeModule === 'accounting'
+                ? 'Accounting Hub (ERP)'
+                : activeModule === 'storekeeper' || activeModule === 'inventory'
+                ? 'Inventory & Store (GRN)'
+                : activeModule.replace('-', ' ')}
+            </b>
           </div>
 
           {/* Quick Search cmdk */}
@@ -578,9 +626,14 @@ export const AdminView: React.FC = () => {
         <main id="admin-main-scroll" className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-main p-6 md:p-8">
           <div className="space-y-6 max-w-7xl w-full mx-auto">
 
+          {activeModule === 'pos' && (
+            <AdminPosModule />
+          )}
+
           {activeModule === 'dashboard' && (
             <DashboardModule
               products={products}
+              orders={orders}
               totalRevenue={totalRevenue}
               pendingOrders={pendingOrders}
               lowStockProducts={lowStockProducts}
@@ -640,7 +693,7 @@ export const AdminView: React.FC = () => {
             />
           )}
 
-          {activeModule === 'inventory' && (
+          {(activeModule === 'inventory' || activeModule === 'storekeeper') && (
             <InventoryModule
               products={products}
               stockAdjustments={stockAdjustments}
@@ -673,10 +726,11 @@ export const AdminView: React.FC = () => {
           )}
 
           {activeModule === 'accounting' && (
-            <AccountingModule
-              orders={orders}
-              products={products}
-            />
+            <AdminAccountingModule orders={orders} products={products} />
+          )}
+
+          {activeModule === 'accountant' && (
+            <AccountantDashboard />
           )}
 
           {activeModule === 'settings' && <SettingsModule />}

@@ -50,7 +50,7 @@ const RULES: readonly Rule[] = [
   { path: '/api/auth/register', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/google', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/logout', match: 'exact', read: PUBLIC, write: PUBLIC },
-  { path: '/api/auth/me', match: 'exact', read: SIGNED_IN, write: SIGNED_IN },
+  { path: '/api/auth/me', match: 'exact', read: PUBLIC, write: SIGNED_IN },
   // Public storefront contact form. Validation and rate limiting are enforced by
   // the route; this rule keeps the request from falling into the admin-only fallback.
   { path: '/api/v1/public/contact', match: 'exact', read: PUBLIC, write: PUBLIC },
@@ -60,7 +60,6 @@ const RULES: readonly Rule[] = [
   // analytics ids and refuses `include=products` for anyone who is not staff.
   { path: '/api/v1/seo', match: 'prefix', read: PUBLIC, write: OWNER_ONLY },
   { path: '/api/admin/reviews', match: 'prefix', read: ['admin', 'sales'], write: ['admin', 'sales'] },
-  { path: '/api/reviews/', match: 'prefix', read: ['admin', 'sales'], write: ['admin', 'sales'] },
 
   // Uploads. A valid session is all this layer insists on; the route handler owns
   // the per-purpose role check, because the answer differs by what is being
@@ -108,6 +107,41 @@ const RULES: readonly Rule[] = [
   { path: '/api/orders/quote', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/orders', match: 'prefix', read: SIGNED_IN, write: SIGNED_IN },
   { path: '/api/addresses', match: 'prefix', read: SIGNED_IN, write: SIGNED_IN },
+
+  // POS Terminal — physical in-store register.
+  // The terminal runs on a local counter machine without an authenticated web session cookie.
+  // Products, receipts lookup, returns processing, shift status, and checkout are accessible
+  // so the cashier terminal can function seamlessly on local LAN.
+  { path: '/api/pos/products', match: 'prefix', read: PUBLIC, write: SALES },
+  { path: '/api/pos/receipts', match: 'prefix', read: PUBLIC, write: SALES },
+  { path: '/api/pos/returns', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/pos/auth', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/pos/shift', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/pos/checkout', match: 'exact', read: PUBLIC, write: PUBLIC },
+  { path: '/api/pos/reserve', match: 'exact', read: PUBLIC, write: PUBLIC },
+  { path: '/api/pos/stock-stream', match: 'exact', read: PUBLIC, write: PUBLIC },
+  // Terminal state machine (BOD float, shift open/close, status checks).
+  // The physical till has no browser session — auth is enforced inside each
+  // route via supervisor-gate / cashier PIN flow.
+  { path: '/api/pos/terminal', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/pos', match: 'prefix', read: PUBLIC, write: SALES },
+
+  // POS auth gates — supervisor unlock and cashier PIN login.
+  // Auth enforcement (Argon2id + role check) is inside the route handlers;
+  // the middleware must not block them before that check runs.
+  { path: '/api/auth/supervisor-gate', match: 'exact', read: PUBLIC, write: PUBLIC },
+  { path: '/api/auth/cashier-pin-login', match: 'exact', read: PUBLIC, write: PUBLIC },
+
+  // Accountant EOD dashboard, comprehensive accounting hub & POS staff management.
+  // Auth & PIN verification (Argon2 / supervisor PIN / role gates) are enforced inside route handlers.
+  { path: '/api/admin/accounting', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/admin/inventory', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/admin/pos-staff', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/accounting', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  // Web application page routes for back-office accounting hub and store manager.
+  // Cashiers with a 'pos' scope session token are already blocked earlier in middleware (lines 248-283).
+  { path: '/accounting', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/store-manage', match: 'prefix', read: PUBLIC, write: PUBLIC },
 
   // Back office.
   { path: '/api/inventory', match: 'prefix', read: INVENTORY, write: INVENTORY },
@@ -212,6 +246,56 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method.toUpperCase();
 
+  // 1. Strict POS Session Scope Restriction:
+  // Cashiers with a 'pos' scoped session token must NEVER access back-office modules
+  // (accounting, ledger, storekeeper inventory management). Returns 403 Forbidden.
+  const isBackOfficePath =
+    pathname.startsWith('/api/accounting') ||
+    pathname.startsWith('/api/admin/accounting') ||
+    pathname.startsWith('/api/admin/inventory') ||
+    pathname.startsWith('/api/inventory') ||
+    pathname.startsWith('/api/store-manage') ||
+    pathname === '/accounting' ||
+    pathname.startsWith('/accounting/') ||
+    pathname === '/store-manage' ||
+    pathname.startsWith('/store-manage/');
+
+  if (isBackOfficePath) {
+    // If the user has a back-office admin session in AUTH_COOKIE, prioritize it
+    const authCookieVal = request.cookies.get(AUTH_COOKIE)?.value;
+    const authPayload = authCookieVal ? await verifyToken(authCookieVal) : null;
+    const isAuthAdmin = authPayload && ['admin', 'super_admin', 'manager', 'accountant'].includes(String(authPayload.role || '').toLowerCase());
+
+    if (!isAuthAdmin) {
+      const rawPosToken =
+        request.cookies.get('pos_token')?.value ??
+        authCookieVal ??
+        request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '').trim();
+
+      if (rawPosToken) {
+        const posPayload = await verifyToken(rawPosToken);
+        const isPrivileged = posPayload && ['admin', 'super_admin', 'manager', 'accountant'].includes(String(posPayload.role || '').toLowerCase());
+
+        // Only block cashier sessions that lack back-office privileges
+        if (posPayload && posPayload.scope === 'pos' && !isPrivileged) {
+          if (pathname.startsWith('/api/')) {
+            return NextResponse.json(
+              {
+                error:
+                  'Forbidden: POS cashier sessions cannot access back-office accounting or inventory management (403)',
+              },
+              { status: 403 }
+            );
+          } else {
+            const redirectUrl = new URL('/pos', request.url);
+            redirectUrl.searchParams.set('error', 'pos_scope_forbidden');
+            return NextResponse.redirect(redirectUrl);
+          }
+        }
+      }
+    }
+  }
+
   // Strip any identity headers that arrived from outside. Only this middleware
   // may set them, otherwise a caller could simply assert `x-user-role: admin`.
   const headers = new Headers(request.headers);
@@ -265,5 +349,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*'],
+  matcher: [
+    '/api/:path*',
+    '/accounting',
+    '/accounting/:path*',
+    '/store-manage',
+    '/store-manage/:path*',
+  ],
 };

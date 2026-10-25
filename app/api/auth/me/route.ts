@@ -9,42 +9,81 @@ export async function GET(request: NextRequest) {
     const payload = await getUserFromRequest(request);
 
     if (!payload) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 },
-      );
+      return NextResponse.json({ user: null });
     }
 
-    const [user] = await db
+    const userIdStr = String(payload.userId || '');
+    const isIntegerId = /^\d+$/.test(userIdStr);
+
+    if (isIntegerId) {
+      const [user] = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          role: users.role,
+          avatarUrl: users.avatarUrl,
+          isActive: users.isActive,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(eq(users.id, Number(userIdStr)))
+        .limit(1);
+
+      if (!user) {
+        return NextResponse.json({ user: null });
+      }
+
+      if (!user.isActive) {
+        return NextResponse.json(
+          { error: 'Account is deactivated' },
+          { status: 403 },
+        );
+      }
+
+      return NextResponse.json({ user });
+    }
+
+    // Otherwise, check if it is a staff UUID from pos-enterprise
+    const { staff } = await import('@/db/schema/pos-enterprise');
+    const [staffMember] = await db
       .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        phone: users.phone,
-        role: users.role,
-        avatarUrl: users.avatarUrl,
-        isActive: users.isActive,
-        createdAt: users.createdAt,
+        id: staff.id,
+        name: staff.name,
+        email: staff.email,
+        phone: staff.phone,
+        role: staff.role,
+        active: staff.active,
+        createdAt: staff.createdAt,
       })
-      .from(users)
-      .where(eq(users.id, payload.userId))
+      .from(staff)
+      .where(eq(staff.id, userIdStr))
       .limit(1);
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 },
-      );
+    if (staffMember) {
+      if (!staffMember.active) {
+        return NextResponse.json(
+          { error: 'Account is deactivated' },
+          { status: 403 },
+        );
+      }
+
+      return NextResponse.json({
+        user: {
+          id: staffMember.id,
+          name: staffMember.name,
+          email: staffMember.email,
+          phone: staffMember.phone,
+          role: staffMember.role,
+          avatarUrl: null,
+          isActive: staffMember.active,
+          createdAt: staffMember.createdAt,
+        },
+      });
     }
 
-    if (!user.isActive) {
-      return NextResponse.json(
-        { error: 'Account is deactivated' },
-        { status: 403 },
-      );
-    }
-
-    return NextResponse.json({ user });
+    return NextResponse.json({ user: null });
   } catch (error) {
     console.error('Error fetching user:', error);
     return NextResponse.json(
