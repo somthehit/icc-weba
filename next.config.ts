@@ -65,7 +65,6 @@ const nextConfig: NextConfig = {
       'faq',
       'customer-login',
       'customer-register',
-      'admin',
       'admin-login',
       'driver-tracking',
     ];
