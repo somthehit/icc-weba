@@ -672,16 +672,6 @@ export const AdminView: React.FC = () => {
                 <span className="block text-[10px] capitalize text-[#6B7280]">{activeAdmin?.role?.replace('_', ' ') || 'Administrator'}</span>
               </span>
             </button>
-
-            {/* Logout Button */}
-            <button
-              onClick={handleAdminLogout}
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 transition-colors shadow-2xs cursor-pointer"
-              title="Logout from Admin Console"
-            >
-              <LogOut className="w-3.5 h-3.5 text-red-600" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
           </div>
         </header>
 
