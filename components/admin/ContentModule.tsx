@@ -30,6 +30,7 @@ import {
   type FooterSettings,
   type FooterColumn,
   type FooterTrustPillar,
+  type FooterLinkItem,
 } from '@/types';
 import { DEFAULT_FOOTER_SETTINGS } from '@/lib/data/initial-data';
 import { ImageUploadField } from './ImageUploadField';
@@ -1079,7 +1080,7 @@ export const ContentModule: React.FC<{
               </p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {(footerData.trustPillars || DEFAULT_FOOTER_SETTINGS.trustPillars || []).map(
-                  (pillar, idx) => (
+                  (pillar: FooterTrustPillar, idx: number) => (
                     <div
                       key={idx}
                       className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 space-y-2.5"
@@ -1133,7 +1134,7 @@ export const ContentModule: React.FC<{
               </div>
 
               <div className="grid gap-5 md:grid-cols-2">
-                {(footerData.columns || []).map((col, cIdx) => (
+                {(footerData.columns || []).map((col: FooterColumn, cIdx: number) => (
                   <div
                     key={cIdx}
                     className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 space-y-3"
@@ -1158,7 +1159,7 @@ export const ContentModule: React.FC<{
                       <span className="text-[11px] font-bold text-slate-600 block">
                         Column Links:
                       </span>
-                      {col.links.map((link, lIdx) => (
+                      {col.links.map((link: FooterLinkItem, lIdx: number) => (
                         <div
                           key={lIdx}
                           className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center"

@@ -17,7 +17,8 @@ import {
   FaqItem,
   Testimonial,
   AdminUser,
-  AuditLogEntry
+  AuditLogEntry,
+  FooterSettings
 } from '@/types';
 import { SUDURPASHCHIM_CONFIG } from '@/config/regional';
 
