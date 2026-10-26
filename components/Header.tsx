@@ -21,8 +21,7 @@ import {
   ShieldCheck, 
   Package, 
   CheckCircle,
-  Truck,
-  Banknote
+  Truck
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -164,16 +163,6 @@ export const Header: React.FC = () => {
           >
             <Wrench className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Service</span>
-          </button>
-
-          {/* Modern Retail POS Terminal Quick Launcher */}
-          <button
-            onClick={() => navigateTo('pos')}
-            className="flex items-center gap-1.5 bg-[#006b45] hover:bg-[#036c46] text-white text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-full shadow-sm hover:shadow-green-900/20 transition-all cursor-pointer shrink-0 border border-[#82d8a9]/50"
-            title="Launch Apex Modern Retail POS System"
-          >
-            <Banknote className="w-3.5 h-3.5 text-[#82d8a9]" />
-            <span className="hidden sm:inline">POS Terminal</span>
           </button>
 
           {/* Wishlist */}
