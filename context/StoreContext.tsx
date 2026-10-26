@@ -662,7 +662,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return { success: false, error: 'Pop-up was blocked by your browser. Please allow pop-ups for this site.' };
         }
         if (firebaseError.code === 'auth/unauthorized-domain') {
-          return { success: false, error: 'This domain (localhost) is not authorized in Firebase Authentication.' };
+          const host = typeof window !== 'undefined' ? window.location.hostname : 'current domain';
+          return { success: false, error: `This domain (${host}) is not authorized in Firebase Authentication. Add it to Authorized domains in Firebase Console.` };
         }
         if (firebaseError.code === 'auth/operation-not-allowed') {
           return { success: false, error: 'Google sign-in provider is not enabled in Firebase Console.' };
