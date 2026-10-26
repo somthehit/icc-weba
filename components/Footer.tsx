@@ -75,9 +75,12 @@ export const Footer: React.FC = () => {
 
   const whatsappLink = siteSettings.whatsappNumber
     ? `https://wa.me/${siteSettings.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-        'Namaste! I would like to inquire about products and services at ICE Computers Dhangadhi.'
-      )}`
+      'Namaste! I would like to inquire about products and services at INTEL COMPUTER CENTER Dhangadhi.'
+    )}`
     : 'https://wa.me/9779848424859';
+
+  const viberNumber = (siteSettings.whatsappNumber || '+9779848424859').replace(/[^0-9]/g, '');
+  const viberLink = `viber://chat?number=%2B${viberNumber}`;
 
   const mapLink =
     siteSettings.googleMapLocationUrl ||
@@ -97,7 +100,7 @@ export const Footer: React.FC = () => {
       <div className="border-b border-slate-200/70 bg-white/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            
+
             {/* Trust Item 1 */}
             <div className="group flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200/70 hover:border-blue-400 hover:shadow-xs transition-all duration-200">
               <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600 group-hover:scale-105 transition-transform">
@@ -165,24 +168,33 @@ export const Footer: React.FC = () => {
       {/* 3. Main Directory Grid (Clean Light Aesthetic) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
-          
+
           {/* Brand & Showroom Information (5 Columns) */}
           <div className="lg:col-span-5 space-y-4">
-            
+
             {/* Brand Logo & Name */}
             <button
               onClick={() => navigateTo('home')}
-              className="group flex items-center gap-3 text-left focus:outline-none cursor-pointer"
+              className="group flex items-center gap-3.5 text-left focus:outline-none cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs group-hover:bg-blue-700 transition-colors">
-                <Cpu className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-center p-1 shrink-0 group-hover:border-blue-400 group-hover:shadow-sm transition-all duration-300 overflow-hidden">
+                <img
+                  src={siteSettings.logoUrl || '/logo.jpeg'}
+                  alt="Intel Computer Center Logo"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
               </div>
               <div>
-                <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors block">
-                  ICE COMPUTERS
+                <span className="text-base sm:text-lg font-black tracking-tight text-[#0056b3] group-hover:text-[#004494] transition-colors block">
+                  INTEL COMPUTER CENTER
                 </span>
-                <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase block">
-                  & Electronics • Dhangadhi
+                <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase block flex items-center gap-1.5 mt-0.5">
+                  <span>IT Solutions & Electronics</span>
+                  <span className="w-1 h-1 rounded-full bg-blue-500" />
+                  <span className="text-blue-600 font-bold">Dhangadhi</span>
                 </span>
               </div>
             </button>
@@ -196,14 +208,12 @@ export const Footer: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs shadow-2xs">
               <span className="relative flex h-2 w-2">
                 <span
-                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                    storeStatus.isOpen ? 'bg-emerald-500' : 'bg-amber-500'
-                  }`}
+                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${storeStatus.isOpen ? 'bg-emerald-500' : 'bg-amber-500'
+                    }`}
                 />
                 <span
-                  className={`relative inline-flex rounded-full h-2 w-2 ${
-                    storeStatus.isOpen ? 'bg-emerald-600' : 'bg-amber-600'
-                  }`}
+                  className={`relative inline-flex rounded-full h-2 w-2 ${storeStatus.isOpen ? 'bg-emerald-600' : 'bg-amber-600'
+                    }`}
                 />
               </span>
               <span className="font-medium text-slate-700">
@@ -218,9 +228,19 @@ export const Footer: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition-all group"
+                title="Chat on WhatsApp"
               >
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
                 <span>WhatsApp</span>
+              </a>
+
+              <a
+                href={viberLink}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#7360f2]/10 hover:bg-[#7360f2]/20 border border-[#7360f2]/30 text-[#604dec] text-xs font-semibold transition-all group"
+                title="Chat on Viber (+977-9848424859)"
+              >
+                <Phone className="w-3.5 h-3.5 text-[#7360f2] group-hover:scale-110 transition-transform" />
+                <span>Viber</span>
               </a>
 
               <a
@@ -431,7 +451,7 @@ export const Footer: React.FC = () => {
       {/* 4. Verified Nepal Payment Gateways Row (Minimal Light Badges) */}
       <div className="border-t border-slate-200 bg-white/80 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-3">
-          
+
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-700 text-xs">
               Accepted Nepal Payments:
@@ -486,11 +506,11 @@ export const Footer: React.FC = () => {
       {/* 5. Sub-Footer Bottom Copyright & Legal Links */}
       <div className="border-t border-slate-200 bg-slate-100/70 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          
+
           <div className="text-center sm:text-left">
             <span>
               {siteSettings.footerNotice ||
-                `© ${currentYear} Intel Computer Center (ICE Computers & Electronics). All rights reserved.`}
+                `© ${currentYear} Intel Computer Center (INTEL COMPUTER CENTER & Electronics). All rights reserved.`}
             </span>
           </div>
 
@@ -526,6 +546,13 @@ export const Footer: React.FC = () => {
               aria-label="WhatsApp"
             >
               WhatsApp
+            </a>
+            <a
+              href={viberLink}
+              className="text-slate-600 hover:text-[#7360f2] transition-colors"
+              aria-label="Viber"
+            >
+              Viber
             </a>
             <button
               onClick={() => navigateTo('faq')}

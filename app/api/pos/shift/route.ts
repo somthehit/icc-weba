@@ -626,7 +626,7 @@ export async function POST(request: NextRequest) {
       // Compile comprehensive EOD Z-Report snapshot
       const eodReport = {
         zReportNumber: `Z-REP-${shift.shiftNumber}`,
-        storeName: 'ICE COMPUTERS NEPAL',
+        storeName: 'INTEL COMPUTER CENTER', 
         storeBranch: 'Dhangadhi Main Branch, Nepal',
         registerCode: shift.registerCode,
         shiftNumber: shift.shiftNumber,
