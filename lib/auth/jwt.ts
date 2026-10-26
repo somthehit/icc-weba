@@ -55,10 +55,11 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
       audience: JWT_AUDIENCE,
       algorithms: ['HS256'],
     });
-    const { userId, email, role, scope } = payload as unknown as JWTPayload;
+    const { userId, email, role, scope, staffId } = payload as unknown as JWTPayload;
     // A token that verifies but lacks identity claims is not usable.
     if (
-      (typeof userId !== 'number' && typeof userId !== 'string') ||
+      typeof userId !== 'number' ||
+      !Number.isFinite(userId) ||
       typeof email !== 'string' ||
       typeof role !== 'string'
     ) {
@@ -66,6 +67,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     }
     return {
       userId,
+      staffId: typeof staffId === 'string' ? staffId : undefined,
       email,
       role,
       scope: scope ? String(scope) : undefined,
