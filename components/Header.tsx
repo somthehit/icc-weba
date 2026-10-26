@@ -18,7 +18,6 @@ import {
   Menu, 
   X, 
   ChevronRight, 
-  ShieldCheck, 
   Package, 
   CheckCircle,
   Truck
@@ -34,7 +33,6 @@ export const Header: React.FC = () => {
     setIsCartDrawerOpen, 
     setIsAiAssistantOpen,
     setIsServiceModalOpen,
-    isAdminLoggedIn,
     isUserLoggedIn,
     currentUser,
     siteSettings
@@ -195,17 +193,7 @@ export const Header: React.FC = () => {
             )}
           </button>
 
-          {/* Admin Console Shortcut (visible only when staff is logged in) */}
-          {isAdminLoggedIn && (
-            <button
-              onClick={() => navigateTo('admin')}
-              className="flex items-center gap-1.5 bg-[#0F1420] text-amber-400 hover:text-white hover:bg-black border border-amber-400/40 text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-full shadow-sm transition-all cursor-pointer shrink-0"
-              title="Open Admin Console"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Admin</span>
-            </button>
-          )}
+
 
           {/* Account */}
           <button
