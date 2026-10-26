@@ -27,8 +27,10 @@ import {
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
-// Initialize Firebase App safely
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase App safely, ensuring any stale instance with old keys is replaced
+const existingApps = getApps();
+const activeApp = existingApps.find(a => a.options.apiKey === firebaseConfig.apiKey);
+const app = activeApp || (existingApps.length === 0 ? initializeApp(firebaseConfig) : initializeApp(firebaseConfig, `icc-store-${Date.now()}`));
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
@@ -36,8 +38,8 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-export const db = firebaseConfig.firestoreDatabaseId 
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId) 
+export const db = (firebaseConfig as any).firestoreDatabaseId 
+  ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId) 
   : getFirestore(app);
 
 export {

@@ -621,14 +621,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       return { success: true };
     } catch (error: unknown) {
-      // Firebase throws a specific error when the user closes the popup.
-      if (error && typeof error === 'object' && 'code' in error) {
-        const firebaseError = error as { code: string };
+      console.error('[Google Auth Error]:', error);
+      if (error && typeof error === 'object') {
+        const firebaseError = error as { code?: string; message?: string };
         if (firebaseError.code === 'auth/popup-closed-by-user') {
           return { success: false, error: 'Sign-in cancelled.' };
         }
         if (firebaseError.code === 'auth/popup-blocked') {
           return { success: false, error: 'Pop-up was blocked by your browser. Please allow pop-ups for this site.' };
+        }
+        if (firebaseError.code === 'auth/unauthorized-domain') {
+          return { success: false, error: 'This domain (localhost) is not authorized in Firebase Authentication.' };
+        }
+        if (firebaseError.code === 'auth/operation-not-allowed') {
+          return { success: false, error: 'Google sign-in provider is not enabled in Firebase Console.' };
+        }
+        if (firebaseError.code === 'auth/configuration-not-found') {
+          return { success: false, error: 'Firebase authentication is not configured for this project.' };
+        }
+        if (firebaseError.code) {
+          return { success: false, error: `Google sign-in failed (${firebaseError.code}): ${firebaseError.message || 'Please check Firebase settings.'}` };
+        }
+        if (firebaseError.message) {
+          return { success: false, error: `Google sign-in error: ${firebaseError.message}` };
         }
       }
       return { success: false, error: 'Google sign-in failed. Please try again.' };
