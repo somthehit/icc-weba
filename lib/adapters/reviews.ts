@@ -5,8 +5,8 @@
 import type { Review } from '@/types';
 
 export interface DbReviewRow {
-  id: number;
-  productId: number;
+  id: string | number;
+  productId: string | number;
   rating: number;
   title?: string | null;
   comment?: string | null;

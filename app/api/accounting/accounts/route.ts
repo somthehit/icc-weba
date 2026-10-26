@@ -20,7 +20,7 @@ const createAccountSchema = z.object({
   type: z.enum(['asset', 'liability', 'equity', 'revenue', 'expense'], {
     message: 'Invalid account type',
   }),
-  parentId: z.number().int().positive().optional().nullable(),
+  parentId: z.string().trim().uuid().optional().nullable(),
 });
 
 export const POST = withRole(['admin'], async (request: NextRequest) => {

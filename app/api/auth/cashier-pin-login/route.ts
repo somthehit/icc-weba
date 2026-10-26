@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
       // Mint a signed POS-scoped JWT token
       const posJwt = await signToken({
-        userId: 0,
+        userId: cashierStaff.id,
         staffId: cashierStaff.id,
         email: cashierStaff.email || `${cashierStaff.staffCode.toLowerCase()}@pos.icecomputers.com.np`,
         role: cashierStaff.role,

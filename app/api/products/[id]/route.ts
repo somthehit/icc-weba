@@ -13,6 +13,12 @@ import {
   productSpecs,
   productVariants,
   reviews,
+  productSerials,
+  stockTransferItems,
+  auditSessionItems,
+  stockReturnItems,
+  warrantyClaims,
+  productBatches,
 } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { withRole } from '@/lib/auth/middleware';
@@ -44,7 +50,7 @@ async function readId(context: RouteContext) {
   return parsed.success ? parsed.data : null;
 }
 
-const BAD_ID = NextResponse.json({ error: 'Product id must be a positive integer' }, { status: 400 });
+const BAD_ID = NextResponse.json({ error: 'Product id must be a valid UUID' }, { status: 400 });
 const NOT_FOUND = () => NextResponse.json({ error: 'Product not found' }, { status: 404 });
 
 /**
@@ -238,7 +244,14 @@ export const DELETE = withRole<RouteContext>(['admin'], async (request, _auth, c
         }
       }
 
-      // Delete dependent records
+      // Delete dependent records (enterprise warehouse, batches, serials, and specs)
+      await tx.delete(productSerials).where(eq(productSerials.productId, productId));
+      await tx.delete(stockTransferItems).where(eq(stockTransferItems.productId, productId));
+      await tx.delete(auditSessionItems).where(eq(auditSessionItems.productId, productId));
+      await tx.delete(stockReturnItems).where(eq(stockReturnItems.productId, productId));
+      await tx.delete(warrantyClaims).where(eq(warrantyClaims.productId, productId));
+      await tx.delete(productBatches).where(eq(productBatches.productId, productId));
+
       await tx.delete(inventory).where(eq(inventory.productId, productId));
       await tx.delete(productImages).where(eq(productImages.productId, productId));
       await tx.delete(productSpecs).where(eq(productSpecs.productId, productId));

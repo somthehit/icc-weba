@@ -28,14 +28,14 @@ import {
 } from '@/db/schema';
 
 export interface AdminCategory {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;
   iconName: string | null;
   imageUrl: string | null;
   subcategories: string[];
-  parentId: number | null;
+  parentId: string | null;
   displayOrder: number;
   isActive: boolean;
   /** Products referencing this category, any status — the delete guard's number. */
@@ -43,7 +43,7 @@ export interface AdminCategory {
 }
 
 export interface AdminBrand {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   logoUrl: string | null;
@@ -56,14 +56,14 @@ export interface AdminBrand {
 }
 
 export interface AdminAttributeOption {
-  id: number;
+  id: string;
   value: string;
   slug: string;
   displayOrder: number;
 }
 
 export interface AdminAttribute {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;
@@ -73,14 +73,14 @@ export interface AdminAttribute {
   displayOrder: number;
   isActive: boolean;
   /** Empty means "applies to every category". */
-  categoryIds: number[];
+  categoryIds: string[];
   options: AdminAttributeOption[];
   /** Product values recorded against this attribute — the delete guard's number. */
   valueCount: number;
 }
 
 export interface AdminFilterTag {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;
@@ -157,7 +157,7 @@ export async function queryAdminBrands(includeInactive = false): Promise<AdminBr
  * queries.
  */
 export async function queryAdminAttributes(
-  opts: { includeInactive?: boolean; categoryId?: number } = {},
+  opts: { includeInactive?: boolean; categoryId?: string } = {},
 ): Promise<AdminAttribute[]> {
   const conditions: SQL[] = [];
   if (!opts.includeInactive) conditions.push(eq(attributes.isActive, true));
@@ -207,7 +207,7 @@ export async function queryAdminAttributes(
     .from(attributeCategories)
     .where(inArray(attributeCategories.attributeId, ids));
 
-  const optionsByAttr = new Map<number, AdminAttributeOption[]>();
+  const optionsByAttr = new Map<string, AdminAttributeOption[]>();
   for (const o of optionRows) {
     const entry = { id: o.id, value: o.value, slug: o.slug, displayOrder: o.displayOrder };
     const bucket = optionsByAttr.get(o.attributeId);
@@ -215,7 +215,7 @@ export async function queryAdminAttributes(
     else optionsByAttr.set(o.attributeId, [entry]);
   }
 
-  const scopeByAttr = new Map<number, number[]>();
+  const scopeByAttr = new Map<string, string[]>();
   for (const s of scopeRows) {
     const bucket = scopeByAttr.get(s.attributeId);
     if (bucket) bucket.push(s.categoryId);

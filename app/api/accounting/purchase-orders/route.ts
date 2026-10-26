@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       .insert(purchaseOrders)
       .values({
         poNumber,
-        supplierId: Number(supplierId),
+        supplierId: String(supplierId),
         orderDate: orderDate || new Date().toISOString().slice(0, 10),
         expectedDeliveryDate: expectedDeliveryDate || null,
         subtotal: subtotal.toFixed(2),
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       const cost = Number(it.unitCost) || 0;
       await db.insert(purchaseOrderItems).values({
         purchaseOrderId: newPo.id,
-        productId: it.productId ? Number(it.productId) : null,
+        productId: it.productId ? String(it.productId) : null,
         sku: it.sku || null,
         description: it.description || 'Procured item',
         quantityOrdered: qty,
@@ -161,7 +161,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'PO ID is required' }, { status: 400 });
     }
 
-    const [po] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, Number(id))).limit(1);
+    const [po] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, String(id))).limit(1);
     if (!po) {
       return NextResponse.json({ success: false, error: 'Purchase Order not found' }, { status: 404 });
     }
@@ -170,7 +170,7 @@ export async function PATCH(request: NextRequest) {
       const [updated] = await db
         .update(purchaseOrders)
         .set({ status, updatedAt: new Date() })
-        .where(eq(purchaseOrders.id, Number(id)))
+        .where(eq(purchaseOrders.id, String(id)))
         .returning();
 
       return NextResponse.json({ success: true, purchaseOrder: updated });
@@ -180,7 +180,7 @@ export async function PATCH(request: NextRequest) {
       let fullyReceived = true;
 
       for (const rec of itemsReceived) {
-        const itemId = Number(rec.itemId);
+        const itemId = String(rec.itemId);
         const qtyToReceive = Number(rec.quantityReceived) || 0;
 
         if (qtyToReceive > 0) {
@@ -249,7 +249,7 @@ export async function PATCH(request: NextRequest) {
       const [updatedPo] = await db
         .update(purchaseOrders)
         .set({ status: newStatus, updatedAt: new Date() })
-        .where(eq(purchaseOrders.id, Number(id)))
+        .where(eq(purchaseOrders.id, String(id)))
         .returning();
 
       return NextResponse.json({

@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   integer,
   varchar,
   numeric,
@@ -17,8 +17,8 @@ import { users } from './users';
 export const driverLocations = pgTable(
   'driver_locations',
   {
-    id: serial('id').primaryKey(),
-    driverId: integer('driver_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    driverId: uuid('driver_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     latitude: numeric('latitude', { precision: 10, scale: 7 }).notNull(),
@@ -38,14 +38,14 @@ export const driverLocations = pgTable(
 export const deliveryRoutes = pgTable(
   'delivery_routes',
   {
-    id: serial('id').primaryKey(),
-    orderId: integer('order_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    orderId: uuid('order_id')
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
-    driverId: integer('driver_id')
+    driverId: uuid('driver_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    deliveryPartnerId: integer('delivery_partner_id').references(
+    deliveryPartnerId: uuid('delivery_partner_id').references(
       () => deliveryPartners.id,
       { onDelete: 'set null' },
     ),

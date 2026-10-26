@@ -18,10 +18,9 @@ interface RouteContext {
 
 export const GET = withRole<RouteContext>(['admin', 'sales'], async (request: NextRequest, _auth, context) => {
   try {
-    const { id } = await context.params;
-    const accountId = Number(id);
+    const { id: accountId } = await context.params;
 
-    if (!Number.isInteger(accountId) || accountId <= 0) {
+    if (!accountId) {
       return NextResponse.json({ error: 'Invalid account ID' }, { status: 400 });
     }
 

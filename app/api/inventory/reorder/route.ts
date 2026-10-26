@@ -29,13 +29,8 @@ export const GET = withInventory(async (request) => {
   try {
     const { searchParams } = new URL(request.url);
     const raw = searchParams.get('limit');
-    const parsedLimit = raw === null ? null : idParamSchema.safeParse(raw);
-
-    if (parsedLimit && !parsedLimit.success) {
-      return NextResponse.json({ error: 'limit must be a positive integer' }, { status: 400 });
-    }
-
-    const limit = parsedLimit?.success ? Math.min(parsedLimit.data, 500) : 100;
+    const limitNum = raw !== null ? parseInt(raw, 10) : 100;
+    const limit = Number.isInteger(limitNum) && limitNum > 0 ? Math.min(limitNum, 500) : 100;
 
     const data = await queryReorderList(limit);
     return NextResponse.json({ data, limit, truncated: data.length === limit });
@@ -104,7 +99,7 @@ export const PUT = withInventory(async (request) => {
         product = updated;
       }
 
-      let warehouseId: number | null = null;
+      let warehouseId: string | null = null;
 
       if (reorderPoint !== undefined) {
         warehouseId =

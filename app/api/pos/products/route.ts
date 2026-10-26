@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { brands, categories, products, productImages } from '@/db/schema';
-import { eq, or, ilike, sql, and, asc } from 'drizzle-orm';
+import { eq, or, ilike, sql, and, asc, inArray } from 'drizzle-orm';
 import { PosProfiler } from '@/lib/pos/perf';
 import { posCache } from '@/lib/redis/client';
 
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     // 4. Batch Fetch Images
     const stopImgTimer = profiler.start('db_images', 'Product Images Batch');
     const productIds = rows.map((r) => r.id);
-    const imagesByProduct: Record<number, string> = {};
+    const imagesByProduct: Record<string, string> = {};
 
     if (productIds.length > 0) {
       const imgRows = await db
@@ -124,12 +124,7 @@ export async function GET(request: NextRequest) {
           isPrimary: productImages.isPrimary,
         })
         .from(productImages)
-        .where(
-          sql`${productImages.productId} = ANY(ARRAY[${sql.join(
-            productIds.map((id) => sql`${id}`),
-            sql`, `
-          )}]::int[])`
-        );
+        .where(inArray(productImages.productId, productIds));
 
       for (const img of imgRows) {
         if (!imagesByProduct[img.productId] || img.isPrimary) {

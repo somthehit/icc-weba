@@ -58,8 +58,8 @@ export function stockStatusFrom(
 
 /** One product's worth of what just happened, ready to be written to the ledger. */
 export interface StockChange {
-  productId: number;
-  variantId: number | null;
+  productId: string;
+  variantId: string | null;
   productName: string;
   sku: string;
   /** Signed: negative when units left the shelf. */
@@ -151,11 +151,11 @@ export async function decrementStock(
 export async function recordSaleMovements(
   client: DbClient,
   args: {
-    orderId: number;
+    orderId: string;
     changes: StockChange[];
     reason: Extract<InventoryMovementReason, 'sale' | 'sale_cancelled'>;
     note?: string | null;
-    performedBy?: number | null;
+    performedBy?: string | null;
     performedByName?: string | null;
   },
 ): Promise<void> {
@@ -202,8 +202,8 @@ export async function recordSaleMovements(
  */
 export async function restockOrder(
   client: DbClient,
-  orderId: number,
-  actor?: { userId: number; name?: string | null },
+  orderId: string,
+  actor?: { userId: string; name?: string | null },
 ): Promise<void> {
   const lines = await client
     .select({

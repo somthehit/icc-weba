@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   integer,
   boolean,
@@ -14,7 +14,7 @@ import { products } from './catalog';
 import { contentStatusEnum } from './enums';
 
 export const heroSlides = pgTable('hero_slides', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   title: varchar('title', { length: 200 }).notNull(),
   eyebrowText: varchar('eyebrow_text', { length: 120 }),
   subtitle: varchar('subtitle', { length: 400 }),
@@ -23,7 +23,7 @@ export const heroSlides = pgTable('hero_slides', {
   desktopImageUrl: varchar('desktop_image_url', { length: 500 }),
   mobileImageUrl: varchar('mobile_image_url', { length: 500 }),
   badgeText: varchar('badge_text', { length: 30 }), // e.g. "-7% OFF"
-  featuredProductId: integer('featured_product_id').references(() => products.id, {
+  featuredProductId: uuid('featured_product_id').references(() => products.id, {
     onDelete: 'set null',
   }),
   status: contentStatusEnum('status').notNull().default('draft'),
@@ -37,7 +37,7 @@ export const heroSlides = pgTable('hero_slides', {
 export const pages = pgTable(
   'pages',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     title: varchar('title', { length: 200 }).notNull(),
     slug: varchar('slug', { length: 220 }).notNull(),
     content: jsonb('content'), // block-based page builder content
@@ -52,11 +52,11 @@ export const pages = pgTable(
 );
 
 export const navigationMenuItems = pgTable('navigation_menu_items', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   label: varchar('label', { length: 80 }).notNull(),
   url: varchar('url', { length: 300 }),
-  pageId: integer('page_id').references(() => pages.id, { onDelete: 'set null' }),
-  parentId: integer('parent_id').references(
+  pageId: uuid('page_id').references(() => pages.id, { onDelete: 'set null' }),
+  parentId: uuid('parent_id').references(
     (): AnyPgColumn => navigationMenuItems.id,
     { onDelete: 'set null' },
   ),
@@ -65,7 +65,7 @@ export const navigationMenuItems = pgTable('navigation_menu_items', {
 });
 
 export const announcementBar = pgTable('announcement_bar', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   text: varchar('text', { length: 300 }).notNull(),
   backgroundColor: varchar('background_color', { length: 20 }).default('#1B3A8C'),
   isEnabled: boolean('is_enabled').notNull().default(true),
@@ -74,7 +74,7 @@ export const announcementBar = pgTable('announcement_bar', {
 });
 
 export const homepageSections = pgTable('homepage_sections', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   sectionType: varchar('section_type', { length: 40 }).notNull(),
   title: varchar('title', { length: 150 }),
   configuration: jsonb('configuration').$type<Record<string, unknown>>().notNull().default({}),
@@ -84,7 +84,7 @@ export const homepageSections = pgTable('homepage_sections', {
 }, (t) => ({ orderIdx: index('homepage_sections_order_idx').on(t.displayOrder) }));
 
 export const siteContentSettings = pgTable('site_content_settings', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   socialLinks: jsonb('social_links').$type<Record<string, string>>().notNull().default({}),
   footerColumns: jsonb('footer_columns').$type<Array<{ title: string; links: Array<{ label: string; url: string }> }>>().notNull().default([]),
   copyrightText: varchar('copyright_text', { length: 300 }),

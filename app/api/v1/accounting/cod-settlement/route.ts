@@ -27,11 +27,11 @@ import { parseJson } from '@/lib/validation/parse';
 const TRANSIT_ACCOUNT_CODE = '1250';
 
 const settlementSchema = z.object({
-  driverUserId: z.number().int().positive().optional(),
+  driverUserId: z.string().trim().uuid().optional(),
   driverName: z.string().trim().min(2, 'Name the driver or courier').max(150),
   orderReference: z.string().trim().max(60).optional().or(z.literal('')),
   collectedAmount: z.number().positive('Amount collected must be greater than zero').max(100_000_000),
-  depositAccountId: z.number().int().positive(),
+  depositAccountId: z.string().trim().uuid(),
   bankReference: z.string().trim().max(80).optional().or(z.literal('')),
   attachmentUrl: z.string().trim().max(500).optional().or(z.literal('')),
   notes: z.string().trim().max(1000).optional().or(z.literal('')),

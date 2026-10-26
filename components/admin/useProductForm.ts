@@ -621,13 +621,11 @@ export const useProductForm = ({
     setPrimaryImageKey(null);
     setIsProductModalOpen(true);
 
-    const numericId = Number(p.id);
-    // Products created locally before the API existed have ids like `p-3`; there
-    // is no row to fetch, so the seeded values are all there is.
-    if (!Number.isInteger(numericId) || numericId <= 0) return;
+    const isLegacyMockId = typeof p.id === 'string' && p.id.startsWith('p-') && !/^[0-9a-f]{8}-[0-9a-f]{4}/i.test(p.id);
+    if (!p.id || isLegacyMockId) return;
 
     setIsLoadingProductRow(true);
-    const result = await fetchProductRow(numericId);
+    const result = await fetchProductRow(p.id);
     setIsLoadingProductRow(false);
 
     if (!result.ok) {

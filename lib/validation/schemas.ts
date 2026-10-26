@@ -72,6 +72,16 @@ export const registerSchema = z.object({
   address: addressSchema,
 });
 
+export const avatarUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .refine(
+    (value) => !value || value.startsWith('/') || /^https?:\/\//i.test(value),
+    { message: 'Avatar must be a valid URL or path' },
+  )
+  .optional();
+
 /** Staff-created accounts, where setting a role is legitimate. */
 export const createUserSchema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(150),
@@ -79,7 +89,7 @@ export const createUserSchema = z.object({
   password: passwordSchema.optional(),
   phone: nepaliPhoneSchema.optional(),
   role: userRoleSchema.default('customer'),
-  avatarUrl: z.url().max(500).optional(),
+  avatarUrl: avatarUrlSchema,
   staffProfile: z.object({
     staffRole: staffRoleSchema,
     department: z.string().trim().max(120).optional(),
@@ -105,7 +115,7 @@ export const updateOwnProfileSchema = z
   .object({
     name: z.string().trim().min(2).max(150).optional(),
     phone: nepaliPhoneSchema.optional(),
-    avatarUrl: z.url().max(500).optional(),
+    avatarUrl: avatarUrlSchema,
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'Provide at least one field to update',
@@ -144,5 +154,5 @@ export const updateUserAsStaffSchema = z
     message: 'Provide at least one field to update',
   });
 
-/** A positive integer arriving as a string in a path or query parameter. */
-export const idParamSchema = z.coerce.number().int().positive();
+/** A UUID string arriving in a path or query parameter. */
+export const idParamSchema = z.string().trim().uuid({ message: 'Invalid UUID identifier' });

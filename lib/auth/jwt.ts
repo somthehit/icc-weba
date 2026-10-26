@@ -8,7 +8,7 @@
 import { jwtVerify, SignJWT } from 'jose';
 
 export interface JWTPayload {
-  userId: number;
+  userId: string;
   staffId?: string;
   email: string;
   role: string;
@@ -58,8 +58,8 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     const { userId, email, role, scope, staffId } = payload as unknown as JWTPayload;
     // A token that verifies but lacks identity claims is not usable.
     if (
-      typeof userId !== 'number' ||
-      !Number.isFinite(userId) ||
+      typeof userId !== 'string' ||
+      !userId ||
       typeof email !== 'string' ||
       typeof role !== 'string'
     ) {

@@ -14,7 +14,7 @@ async function verifySupervisor(
 ): Promise<{ ok: boolean; supervisor?: any; error?: string }> {
   let sup = null;
   if (supervisorId) {
-    [sup] = await db.select().from(users).where(eq(users.id, Number(supervisorId))).limit(1);
+    [sup] = await db.select().from(users).where(eq(users.id, String(supervisorId))).limit(1);
   } else if (supervisorEmail) {
     [sup] = await db.select().from(users).where(eq(users.email, String(supervisorEmail).trim().toLowerCase())).limit(1);
   }
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
     // Get shift by ID or get current active shift (OPEN or SUBMITTED pending reconciliation)
     let currentShift = null;
     if (shiftIdParam) {
-      [currentShift] = await db.select().from(posShifts).where(eq(posShifts.id, Number(shiftIdParam))).limit(1);
+      [currentShift] = await db.select().from(posShifts).where(eq(posShifts.id, String(shiftIdParam))).limit(1);
     } else {
       currentShift = recentShifts.find((s) => s.status === 'OPEN' || s.status === 'SUBMITTED') || null;
     }
@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
         .values({
           shiftNumber,
           registerCode,
-          cashierId: cashierId ? Number(cashierId) : null,
+          cashierId: cashierId ? String(cashierId) : null,
           cashierName,
           openingFloat: String(calculatedFloat.toFixed(2)),
           openingDenominations: openingDenominations || null,
@@ -362,7 +362,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Check active shift
-      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, Number(shiftId))).limit(1);
+      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, String(shiftId))).limit(1);
       if (!shift || shift.status !== 'OPEN') {
         return NextResponse.json(
           { success: false, error: 'An active OPEN shift is required to record cash movements.' },
@@ -400,7 +400,7 @@ export async function POST(request: NextRequest) {
       const [txRow] = await db
         .insert(posCashTransactions)
         .values({
-          shiftId: Number(shiftId),
+          shiftId: String(shiftId),
           type, // CASH_IN, CASH_OUT, SAFE_DROP, PETTY_CASH, REFUND_PAYOUT
           amount: String(numAmount.toFixed(2)),
           reason: formattedReason.slice(0, 250),
@@ -415,7 +415,7 @@ export async function POST(request: NextRequest) {
         .set({
           expectedCash: sql`${posShifts.expectedCash} + ${delta}`,
         })
-        .where(eq(posShifts.id, Number(shiftId)));
+        .where(eq(posShifts.id, String(shiftId)));
 
       // Record audit log
       try {
@@ -451,7 +451,7 @@ export async function POST(request: NextRequest) {
         submittedByName,
       } = body;
 
-      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, Number(shiftId))).limit(1);
+      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, String(shiftId))).limit(1);
       if (!shift) {
         return NextResponse.json({ success: false, error: 'Shift not found' }, { status: 404 });
       }
@@ -547,7 +547,7 @@ export async function POST(request: NextRequest) {
 
       const verifiedSupervisor = authCheck.supervisor;
 
-      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, Number(shiftId))).limit(1);
+      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, String(shiftId))).limit(1);
       if (!shift) {
         return NextResponse.json({ success: false, error: 'Shift not found' }, { status: 404 });
       }

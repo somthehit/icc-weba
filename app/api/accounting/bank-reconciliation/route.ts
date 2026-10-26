@@ -204,7 +204,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
       .limit(100);
 
     const rawStatements = await (selectedAccountId
-      ? statementsQuery.where(eq(bankStatements.bankAccountId, parseInt(selectedAccountId, 10)))
+      ? statementsQuery.where(eq(bankStatements.bankAccountId, selectedAccountId))
       : statementsQuery);
 
     // Map clean, bulletproof fields for the UI
@@ -482,7 +482,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         );
       }
 
-      let targetChartAccountId: number | null = chartAccountId ? Number(chartAccountId) : null;
+      let targetChartAccountId: string | null = chartAccountId ? String(chartAccountId) : null;
 
       // If user requested auto-creation of COA account or did not provide an existing one
       if (autoCreateCoa || !targetChartAccountId) {
@@ -568,10 +568,10 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         return NextResponse.json({ success: false, error: 'Bank account ID is required.' }, { status: 400 });
       }
 
-      let targetChartAccountId: number | null = chartAccountId ? Number(chartAccountId) : null;
+      let targetChartAccountId: string | null = chartAccountId ? String(chartAccountId) : null;
 
       if (autoCreateCoa) {
-        const [targetBank] = await db.select().from(bankAccounts).where(eq(bankAccounts.id, Number(bankAccountId)));
+        const [targetBank] = await db.select().from(bankAccounts).where(eq(bankAccounts.id, String(bankAccountId)));
         if (!targetBank) return NextResponse.json({ success: false, error: 'Bank account not found.' }, { status: 404 });
 
         let newCode = coaCode?.trim();
@@ -607,11 +607,11 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       await db
         .update(bankAccounts)
         .set({ chartAccountId: targetChartAccountId, updatedAt: new Date() })
-        .where(eq(bankAccounts.id, Number(bankAccountId)));
+        .where(eq(bankAccounts.id, String(bankAccountId)));
 
       await db.insert(reconciliationAuditLogs).values({
         action: 'link_coa',
-        bankAccountId: Number(bankAccountId),
+        bankAccountId: String(bankAccountId),
         userId: user?.userId || null,
         userName: user?.name || 'Administrator',
         detailsJson: { chartAccountId: targetChartAccountId },
@@ -650,7 +650,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       if (provider) updateData.provider = provider.trim();
       if (branch !== undefined) updateData.branch = branch ? branch.trim() : null;
       if (accountType) updateData.accountType = accountType;
-      if (chartAccountId !== undefined) updateData.chartAccountId = chartAccountId ? Number(chartAccountId) : null;
+      if (chartAccountId !== undefined) updateData.chartAccountId = chartAccountId ? String(chartAccountId) : null;
       if (openingBalance !== undefined) updateData.openingBalance = sanitizeNumericAmount(openingBalance);
       if (accountNumber) {
         const cleanNum = accountNumber.trim();
@@ -658,7 +658,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         updateData.maskedAccountNumber = cleanNum.length > 4 ? `**** **** **** ${cleanNum.slice(-4)}` : cleanNum;
       }
 
-      await db.update(bankAccounts).set(updateData).where(eq(bankAccounts.id, Number(id)));
+      await db.update(bankAccounts).set(updateData).where(eq(bankAccounts.id, String(id)));
 
       return NextResponse.json({
         success: true,
@@ -678,15 +678,15 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       const [stmtCount] = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(bankStatements)
-        .where(eq(bankStatements.bankAccountId, Number(bankAccountId)));
+        .where(eq(bankStatements.bankAccountId, String(bankAccountId)));
 
       if (stmtCount?.count && stmtCount.count > 0) {
         await db
           .update(bankAccounts)
           .set({ isActive: false, updatedAt: new Date() })
-          .where(eq(bankAccounts.id, Number(bankAccountId)));
+          .where(eq(bankAccounts.id, String(bankAccountId)));
       } else {
-        await db.delete(bankAccounts).where(eq(bankAccounts.id, Number(bankAccountId)));
+        await db.delete(bankAccounts).where(eq(bankAccounts.id, String(bankAccountId)));
       }
 
       return NextResponse.json({
@@ -765,7 +765,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         return NextResponse.json({ success: false, error: 'Bank account is required.' }, { status: 400 });
       }
 
-      const [targetAccount] = await db.select().from(bankAccounts).where(eq(bankAccounts.id, Number(bankAccountId)));
+      const [targetAccount] = await db.select().from(bankAccounts).where(eq(bankAccounts.id, String(bankAccountId)));
       if (!targetAccount) {
         return NextResponse.json({ success: false, error: 'Target bank account not found.' }, { status: 404 });
       }
@@ -780,7 +780,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         .from(statementImports)
         .where(
           and(
-            eq(statementImports.bankAccountId, Number(bankAccountId)),
+            eq(statementImports.bankAccountId, String(bankAccountId)),
             eq(statementImports.fileHash, fileHash),
             eq(statementImports.status, 'completed')
           )
@@ -822,7 +822,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
           .from(bankStatements)
           .where(
             and(
-              eq(bankStatements.bankAccountId, Number(bankAccountId)),
+              eq(bankStatements.bankAccountId, String(bankAccountId)),
               eq(bankStatements.rowFingerprint, fingerprint)
             )
           )
@@ -833,7 +833,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         } else {
           importedCount++;
           validLines.push({
-            bankAccountId: Number(bankAccountId),
+            bankAccountId: String(bankAccountId),
             statementDate: stmtDate,
             description: descText,
             referenceNo: refNo || null,
@@ -859,12 +859,12 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       }
 
       // Execute Commit
-      let importBatchId: number | null = null;
+      let importBatchId: string | null = null;
       if (validLines.length > 0) {
         const [newImport] = await db
           .insert(statementImports)
           .values({
-            bankAccountId: Number(bankAccountId),
+            bankAccountId: String(bankAccountId),
             filename: filename || 'Statement_Upload.csv',
             fileHash,
             importSource: 'csv',
@@ -893,13 +893,13 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
           await db
             .update(bankAccounts)
             .set({ currentBalance: lastRunningBalance, updatedAt: new Date() })
-            .where(eq(bankAccounts.id, Number(bankAccountId)));
+            .where(eq(bankAccounts.id, String(bankAccountId)));
         }
 
         // Log audit
         await db.insert(reconciliationAuditLogs).values({
           action: 'import',
-          bankAccountId: Number(bankAccountId),
+          bankAccountId: String(bankAccountId),
           userId: user?.userId || null,
           userName: user?.name || 'Administrator',
           detailsJson: {
@@ -929,7 +929,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         return NextResponse.json({ success: false, error: 'Statement ID is required.' }, { status: 400 });
       }
 
-      const [stmt] = await db.select().from(bankStatements).where(eq(bankStatements.id, Number(statementId)));
+      const [stmt] = await db.select().from(bankStatements).where(eq(bankStatements.id, String(statementId)));
       if (!stmt) {
         return NextResponse.json({ success: false, error: 'Statement line not found.' }, { status: 404 });
       }
@@ -938,7 +938,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         .update(bankStatements)
         .set({
           isReconciled: true,
-          matchedJournalId: matchedJournalId ? Number(matchedJournalId) : null,
+          matchedJournalId: matchedJournalId ? String(matchedJournalId) : null,
           matchType,
           matchConfidence: '100.00',
           reconciledAt: new Date(),
@@ -946,13 +946,13 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
           reconciledByName: user?.name || 'Administrator',
           notes: notes || stmt.notes,
         })
-        .where(eq(bankStatements.id, Number(statementId)));
+        .where(eq(bankStatements.id, String(statementId)));
 
       if (matchedJournalId) {
-        const [jl] = await db.select({ id: journalLines.id }).from(journalLines).where(eq(journalLines.journalEntryId, Number(matchedJournalId))).limit(1);
+        const [jl] = await db.select({ id: journalLines.id }).from(journalLines).where(eq(journalLines.journalEntryId, String(matchedJournalId))).limit(1);
         await db.insert(reconciliationMatches).values({
-          statementId: Number(statementId),
-          journalEntryId: Number(matchedJournalId),
+          statementId: String(statementId),
+          journalEntryId: String(matchedJournalId),
           journalLineId: jl?.id || null,
           matchedAmount: parseFloat(stmt.debitAmount) > 0 ? stmt.debitAmount : stmt.creditAmount,
           matchConfidence: '100.00',
@@ -965,7 +965,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       await db.insert(reconciliationAuditLogs).values({
         action: 'match',
         bankAccountId: stmt.bankAccountId,
-        statementId: Number(statementId),
+        statementId: String(statementId),
         userId: user?.userId || null,
         userName: user?.name || 'Administrator',
         detailsJson: { matchedJournalId, matchType, notes },
@@ -986,7 +986,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         return NextResponse.json({ success: false, error: 'Statement ID is required.' }, { status: 400 });
       }
 
-      const [stmt] = await db.select().from(bankStatements).where(eq(bankStatements.id, Number(statementId)));
+      const [stmt] = await db.select().from(bankStatements).where(eq(bankStatements.id, String(statementId)));
       if (!stmt) {
         return NextResponse.json({ success: false, error: 'Statement line not found.' }, { status: 404 });
       }
@@ -1003,14 +1003,14 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
           reconciledByName: null,
           notes: reason ? `Unreconciled: ${reason}` : stmt.notes,
         })
-        .where(eq(bankStatements.id, Number(statementId)));
+        .where(eq(bankStatements.id, String(statementId)));
 
-      await db.delete(reconciliationMatches).where(eq(reconciliationMatches.statementId, Number(statementId)));
+      await db.delete(reconciliationMatches).where(eq(reconciliationMatches.statementId, String(statementId)));
 
       await db.insert(reconciliationAuditLogs).values({
         action: 'unmatch',
         bankAccountId: stmt.bankAccountId,
-        statementId: Number(statementId),
+        statementId: String(statementId),
         userId: user?.userId || null,
         userName: user?.name || 'Administrator',
         detailsJson: { reason },
@@ -1033,7 +1033,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         notes = '',
       } = body;
 
-      const [stmt] = await db.select().from(bankStatements).where(eq(bankStatements.id, Number(statementId)));
+      const [stmt] = await db.select().from(bankStatements).where(eq(bankStatements.id, String(statementId)));
       if (!stmt) {
         return NextResponse.json({ success: false, error: 'Statement line not found.' }, { status: 404 });
       }
@@ -1145,7 +1145,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       // Unreconciled statements
       const stmtConditions = [eq(bankStatements.isReconciled, false)];
       if (bankAccountId) {
-        stmtConditions.push(eq(bankStatements.bankAccountId, Number(bankAccountId)));
+        stmtConditions.push(eq(bankStatements.bankAccountId, String(bankAccountId)));
       }
       const unreconciledStmts = await db.select().from(bankStatements).where(and(...stmtConditions));
 
@@ -1253,7 +1253,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
 
       await db.insert(reconciliationAuditLogs).values({
         action: 'auto_match',
-        bankAccountId: bankAccountId ? Number(bankAccountId) : null,
+        bankAccountId: bankAccountId ? String(bankAccountId) : null,
         userId: user?.userId || null,
         userName: user?.name || 'Auto-Match Engine',
         detailsJson: {
@@ -1294,7 +1294,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         return NextResponse.json({ success: false, error: 'Invalid Supervisor PIN. Chief Accountant / Manager PIN required to close period.' }, { status: 403 });
       }
 
-      const [acc] = await db.select().from(bankAccounts).where(eq(bankAccounts.id, Number(bankAccountId)));
+      const [acc] = await db.select().from(bankAccounts).where(eq(bankAccounts.id, String(bankAccountId)));
       if (!acc) {
         return NextResponse.json({ success: false, error: 'Bank account not found.' }, { status: 404 });
       }
@@ -1326,7 +1326,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       await db
         .insert(bankPeriodReconciliations)
         .values({
-          bankAccountId: Number(bankAccountId),
+          bankAccountId: String(bankAccountId),
           periodYear: Number(periodYear),
           periodMonth: Number(periodMonth),
           periodMonthName: monthName,
@@ -1403,7 +1403,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
           approvedAt: null,
           notes: `Period reopened by ${pinCheck.name}. Reason: ${reason || 'Correction requested'}`,
         })
-        .where(eq(bankPeriodReconciliations.id, Number(periodId)));
+        .where(eq(bankPeriodReconciliations.id, String(periodId)));
 
       await db.insert(reconciliationAuditLogs).values({
         action: 'reopen_period',
@@ -1434,7 +1434,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
           clearingDate: status === 'cleared' ? new Date().toISOString().slice(0, 10) : null,
           bounceReason: status === 'bounced' ? bounceReason : null,
         })
-        .where(eq(cheques.id, Number(chequeId)));
+        .where(eq(cheques.id, String(chequeId)));
 
       return NextResponse.json({
         success: true,
@@ -1465,7 +1465,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
           name: ruleName,
           matchType: ruleType,
           pattern: patternText,
-          targetAccountId: targetChartAccountId ? Number(targetChartAccountId) : null,
+          targetAccountId: targetChartAccountId ? String(targetChartAccountId) : null,
           toleranceAmount: '0.00',
           toleranceDays: 3,
           confidenceScore: '90.00',

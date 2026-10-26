@@ -27,7 +27,7 @@ const publicUserColumns = {
 } as const;
 
 const listQuerySchema = z.object({
-  id: z.coerce.number().int().positive().optional(),
+  id: z.string().trim().optional(),
   email: z.string().trim().toLowerCase().optional(),
   search: z.string().trim().max(100).optional(),
   role: userRoleSchema.optional(),

@@ -21,9 +21,8 @@ async function verifySupervisorCredentials(supervisorId: string | number, pin: s
   }
 
   // 2. Legacy / Admin fallback
-  const numericId = Number(supervisorId);
-  if (!isNaN(numericId)) {
-    const [u] = await db.select().from(users).where(eq(users.id, numericId)).limit(1);
+  if (supervisorId) {
+    const [u] = await db.select().from(users).where(eq(users.id, String(supervisorId))).limit(1);
     if (u && (u.role === 'admin' || u.role === 'sales')) {
       if (u.posPin) {
         const ok = (u.posPin.startsWith('$2a$') || u.posPin.startsWith('$2b$'))
@@ -284,7 +283,7 @@ export async function POST(request: NextRequest) {
           .values({
             shiftNumber,
             registerCode: terminalCode,
-            cashierId: typeof cashierId === 'number' ? cashierId : null,
+            cashierId: cashierId ? String(cashierId) : null,
             cashierName: cashierName || 'Cashier on Duty',
             openingFloat: numOpeningFloat.toFixed(2),
             openingDenominations,
@@ -351,7 +350,7 @@ export async function POST(request: NextRequest) {
               status: reason === 'Shift End' ? 'PAUSED' : 'PAUSED',
               note: reason ? `Paused: ${reason}` : 'Paused',
             })
-            .where(eq(posShifts.id, Number(shiftId)));
+            .where(eq(posShifts.id, String(shiftId)));
         }
 
         // Lock terminal so nobody can use it until next supervisor handover
@@ -428,7 +427,7 @@ export async function POST(request: NextRequest) {
             closedAt: new Date(),
             eodReport: handoverSlip,
           })
-          .where(eq(posShifts.id, Number(shiftId)));
+          .where(eq(posShifts.id, String(shiftId)));
 
         // Lock terminal
         await tx

@@ -12,7 +12,7 @@ export { computeProductEffectivePrice, formatCountdownTime } from "../lib/offers
 
 // 1. Launch a time-bound offer on a product. Default window is 7 days.
 export async function applyTimedOffer(params: {
-  productId: number;
+  productId: string;
   discountType: "percentage" | "fixed";
   discountValue: number;
   days?: number; // default 7
@@ -44,7 +44,7 @@ export async function applyTimedOffer(params: {
 
 // 2. Compute the effective price for a product from its offer columns. Once `now`
 //    passes offerEndsAt the offer simply stops applying — automatic revert.
-export async function getEffectivePrice(productId: number, sellingPrice: number) {
+export async function getEffectivePrice(productId: string, sellingPrice: number) {
   const now = new Date();
 
   const [p] = await db

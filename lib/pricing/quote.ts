@@ -46,14 +46,14 @@ export function toRupees(paisa: number): string {
 }
 
 export interface LineInput {
-  productId: number;
-  variantId?: number | null;
+  productId: string;
+  variantId?: string | null;
   quantity: number;
 }
 
 export interface QuoteLine {
-  productId: number;
-  variantId: number | null;
+  productId: string;
+  variantId: string | null;
   /** Copied onto `order_items` so a later product rename can't rewrite history. */
   productNameSnapshot: string;
   skuSnapshot: string;
@@ -82,7 +82,7 @@ export interface Quote {
   deliveryFeePaisa: number;
   vatPaisa: number;
   totalPaisa: number;
-  couponId: number | null;
+  couponId: string | null;
   couponCode: string | null;
   /** The coupon's terms in words, for the cart to show beside the code. */
   couponDescription: string | null;
@@ -101,12 +101,12 @@ export type QuoteResult =
 interface QuoteOptions {
   items: LineInput[];
   couponCode?: string;
-  deliveryZoneId?: number;
+  deliveryZoneId?: string;
   now?: Date;
 }
 
 /** The saved cart, as quotable lines. Empty when the customer has no cart. */
-export async function loadCartLines(client: DbClient, userId: number): Promise<LineInput[]> {
+export async function loadCartLines(client: DbClient, userId: string): Promise<LineInput[]> {
   const [cart] = await client
     .select({ id: carts.id })
     .from(carts)
@@ -156,7 +156,7 @@ export function mergeLines(input: LineInput[]): LineInput[] {
 }
 
 type ProductRow = {
-  id: number;
+  id: string;
   name: string;
   sku: string;
   basePrice: string;
@@ -307,7 +307,7 @@ export async function quoteOrder(client: DbClient, options: QuoteOptions): Promi
 
   const variantIds = requested
     .map((line) => line.variantId)
-    .filter((id): id is number => typeof id === 'number');
+    .filter((id): id is string => typeof id === 'string');
 
   const variantRows = variantIds.length
     ? await client
@@ -396,7 +396,7 @@ export async function quoteOrder(client: DbClient, options: QuoteOptions): Promi
     });
   }
 
-  let couponId: number | null = null;
+  let couponId: string | null = null;
   let couponCode: string | null = null;
   let couponDescription: string | null = null;
   let discountPaisa = 0;
@@ -514,7 +514,7 @@ export function quoteTotals(quote: Quote) {
 }
 
 /** Removes the priced lines from the customer's cart once an order owns them. */
-export async function clearCart(client: DbClient, userId: number): Promise<void> {
+export async function clearCart(client: DbClient, userId: string): Promise<void> {
   const [cart] = await client
     .select({ id: carts.id })
     .from(carts)

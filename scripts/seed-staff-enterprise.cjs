@@ -251,11 +251,13 @@ async function seed() {
 
   for (const st of allStaff) {
     for (const term of allTerminals) {
-      await sql`
-        INSERT INTO staff_terminals (staff_id, terminal_id, is_primary)
-        VALUES (${st.id}, ${term.id}, ${term.code === 'REG-01'})
-        ON CONFLICT (staff_id, terminal_id) DO NOTHING
-      `;
+      const existing = await sql`SELECT id FROM staff_terminals WHERE staff_id = ${st.id} AND terminal_id = ${term.id}`;
+      if (existing.length === 0) {
+        await sql`
+          INSERT INTO staff_terminals (staff_id, terminal_id, is_primary)
+          VALUES (${st.id}, ${term.id}, ${term.code === 'REG-01'})
+        `;
+      }
     }
   }
   console.log('Linked staff to registered terminals.');

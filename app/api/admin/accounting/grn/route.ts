@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       const [grn] = await db
         .select()
         .from(goodsReceiptNotes)
-        .where(eq(goodsReceiptNotes.id, Number(grnId)))
+        .where(eq(goodsReceiptNotes.id, String(grnId)))
         .limit(1);
 
       if (!grn) {

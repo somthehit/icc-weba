@@ -126,7 +126,7 @@ export const GET = withAuth(async (request, { user }) => {
             )
         : [];
 
-    const itemsByOrder = new Map<number, typeof lineItems>();
+    const itemsByOrder = new Map<string, typeof lineItems>();
     for (const item of lineItems) {
       const bucket = itemsByOrder.get(item.orderId);
       if (bucket) bucket.push(item);

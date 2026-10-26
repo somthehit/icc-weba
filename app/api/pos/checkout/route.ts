@@ -18,7 +18,7 @@ import { PosProfiler } from '@/lib/pos/perf';
 export const dynamic = 'force-dynamic';
 
 interface PosCartLine {
-  productId: number;
+  productId: string;
   sku: string;
   name: string;
   quantity: number;
@@ -40,9 +40,9 @@ interface PosCheckoutRequest {
   customerPan?: string;
   customerLoyaltyId?: string;
   cashierName?: string;
-  cashierId?: number | null;
+  cashierId?: string | null;
   registerCode?: string;
-  shiftId?: number | null;
+  shiftId?: string | null;
   idempotencyKey?: string;
 }
 
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     const result = await db.transaction(async (tx) => {
       const stockChanges: Array<{
-        productId: number;
+        productId: string;
         productName: string;
         sku: string;
         previousStock: number;
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
         .insert(orders)
         .values({
           orderNumber,
-          userId: typeof cashierId === 'number' ? cashierId : null,
+          userId: cashierId ? String(cashierId) : null,
           status: 'delivered',
           subtotal: String(subtotal.toFixed(2)),
           vatAmount: String(vatPortion.toFixed(2)),
@@ -258,14 +258,14 @@ export async function POST(request: NextRequest) {
             totalTransactions: sql`${posShifts.totalTransactions} + 1`,
             expectedCash: sql`${posShifts.expectedCash} + ${cashContribution}`,
           })
-          .where(eq(posShifts.id, shiftId));
+          .where(eq(posShifts.id, String(shiftId)));
       }
 
       // F. Record in pos_transactions table
       try {
         await tx.insert(posTransactions).values({
-          shiftId: shiftId ? Number(shiftId) : null,
-          cashierId: typeof cashierId === 'number' ? cashierId : null,
+          shiftId: shiftId ? String(shiftId) : null,
+          cashierId: cashierId ? String(cashierId) : null,
           cashierName,
           terminalCode: registerCode,
           invoiceNumber: orderNumber,

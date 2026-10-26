@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   numeric,
   integer,
@@ -13,7 +13,7 @@ import { discountTypeEnum } from './enums';
 export const coupons = pgTable(
   'coupons',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     code: varchar('code', { length: 40 }).notNull(),
     discountType: discountTypeEnum('discount_type').notNull(),
     discountValue: numeric('discount_value', { precision: 12, scale: 2 }).notNull(),

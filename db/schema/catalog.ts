@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   text,
   integer,
@@ -19,7 +19,7 @@ import { discountTypeEnum, productStatusEnum, stockStatusEnum } from './enums';
 export const brands = pgTable(
   'brands',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name', { length: 120 }).notNull(),
     slug: varchar('slug', { length: 140 }).notNull(),
     logoUrl: varchar('logo_url', { length: 500 }),
@@ -45,7 +45,7 @@ export const brands = pgTable(
 export const categories = pgTable(
   'categories',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name', { length: 120 }).notNull(),
     slug: varchar('slug', { length: 140 }).notNull(),
     description: text('description'),
@@ -55,7 +55,7 @@ export const categories = pgTable(
     // rather than a self-join through categories.parentId.
     subcategories: jsonb('subcategories').$type<string[]>(),
     // self-referencing for nested categories, e.g. Laptops > Gaming Laptops
-    parentId: integer('parent_id').references((): AnyPgColumn => categories.id, {
+    parentId: uuid('parent_id').references((): AnyPgColumn => categories.id, {
       onDelete: 'set null',
     }),
     imageUrl: varchar('image_url', { length: 500 }),
@@ -71,7 +71,7 @@ export const categories = pgTable(
 export const products = pgTable(
   'products',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     sku: varchar('sku', { length: 60 }).notNull(),
     // Manufacturer EAN/UPC, where there is one. Nullable because most of this
     // catalogue has none — the printable shelf label falls back to encoding the SKU,
@@ -81,8 +81,8 @@ export const products = pgTable(
     barcode: varchar('barcode', { length: 64 }),
     name: varchar('name', { length: 200 }).notNull(),
     slug: varchar('slug', { length: 220 }).notNull(),
-    brandId: integer('brand_id').references(() => brands.id, { onDelete: 'set null' }),
-    categoryId: integer('category_id').references(() => categories.id, {
+    brandId: uuid('brand_id').references(() => brands.id, { onDelete: 'set null' }),
+    categoryId: uuid('category_id').references(() => categories.id, {
       onDelete: 'set null',
     }),
     description: text('description'),
@@ -160,8 +160,8 @@ export const products = pgTable(
 export const productSpecs = pgTable(
   'product_specs',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
     specKey: varchar('spec_key', { length: 60 }).notNull(), // "CPU", "RAM", "GPU", "DISPLAY"...
@@ -176,8 +176,8 @@ export const productSpecs = pgTable(
 export const productVariants = pgTable(
   'product_variants',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
     variantName: varchar('variant_name', { length: 120 }).notNull(), // e.g. "16GB / 512GB"
@@ -196,8 +196,8 @@ export const productVariants = pgTable(
 export const productImages = pgTable(
   'product_images',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
     url: varchar('url', { length: 500 }).notNull(),

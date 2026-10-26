@@ -1,7 +1,6 @@
 import {
   pgTable,
-  serial,
-  integer,
+  uuid,
   varchar,
   jsonb,
   timestamp,
@@ -13,11 +12,11 @@ import { users } from './users';
 export const auditLogs = pgTable(
   'audit_logs',
   {
-    id: serial('id').primaryKey(),
-    userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
     action: varchar('action', { length: 100 }).notNull(), // e.g. "order.status_changed"
     entityType: varchar('entity_type', { length: 60 }).notNull(), // e.g. "order", "product"
-    entityId: integer('entity_id'),
+    entityId: varchar('entity_id', { length: 64 }),
     metadata: jsonb('metadata'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },

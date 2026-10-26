@@ -1,7 +1,6 @@
 import {
   pgTable,
-  serial,
-  integer,
+  uuid,
   varchar,
   text,
   boolean,
@@ -20,15 +19,15 @@ import { users } from './users';
 export const notifications = pgTable(
   'notifications',
   {
-    id: serial('id').primaryKey(),
-    userId: integer('user_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     title: varchar('title', { length: 200 }).notNull(),
     message: text('message').notNull(),
     type: varchar('type', { length: 50 }).notNull().default('info'),
     // order_update, warranty, price_drop, promotion, system, etc.
-    relatedOrderId: integer('related_order_id'),
+    relatedOrderId: uuid('related_order_id'),
     read: boolean('read').notNull().default(false),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
@@ -47,7 +46,7 @@ export const notifications = pgTable(
 export const otpCodes = pgTable(
   'otp_codes',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     phone: varchar('phone', { length: 15 }).notNull(),
     code: varchar('code', { length: 6 }).notNull(),
     purpose: varchar('purpose', { length: 30 }).notNull().default('phone_verify'),

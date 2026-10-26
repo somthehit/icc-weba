@@ -71,4 +71,4 @@ export const updateRoleSchema = z
     { message: 'Grant at least one permission', path: ['permissions'] },
   );
 
-export const roleIdParamSchema = z.coerce.number().int().positive();
+export const roleIdParamSchema = z.string().trim().uuid();

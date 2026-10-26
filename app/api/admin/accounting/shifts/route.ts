@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
             varianceReason: notes || 'Cash and paper vouchers verified in Cash Office',
             status: 'CLOSED',
           })
-          .where(eq(posShifts.id, Number(shiftId)))
+          .where(eq(posShifts.id, String(shiftId)))
           .returning();
 
         // 3. Append Cryptographic SHA-256 Audit Log

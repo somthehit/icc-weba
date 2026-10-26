@@ -13,28 +13,23 @@ export async function GET(request: NextRequest) {
     }
 
     const userIdStr = String(payload.userId || '');
-    const isIntegerId = /^\d+$/.test(userIdStr);
 
-    if (isIntegerId) {
-      const [user] = await db
-        .select({
-          id: users.id,
-          name: users.name,
-          email: users.email,
-          phone: users.phone,
-          role: users.role,
-          avatarUrl: users.avatarUrl,
-          isActive: users.isActive,
-          createdAt: users.createdAt,
-        })
-        .from(users)
-        .where(eq(users.id, Number(userIdStr)))
-        .limit(1);
+    const [user] = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+        role: users.role,
+        avatarUrl: users.avatarUrl,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, userIdStr))
+      .limit(1);
 
-      if (!user) {
-        return NextResponse.json({ user: null });
-      }
-
+    if (user) {
       if (!user.isActive) {
         return NextResponse.json(
           { error: 'Account is deactivated' },

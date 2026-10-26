@@ -63,15 +63,15 @@ const primaryImage = sql<string | null>`(
 /* ------------------------------------------------------------- stock levels */
 
 export interface StockLevelRow {
-  productId: number;
+  productId: string;
   sku: string;
   barcode: string | null;
   productName: string;
   slug: string;
   imageUrl: string | null;
-  categoryId: number | null;
+  categoryId: string | null;
   categoryName: string | null;
-  brandId: number | null;
+  brandId: string | null;
   brandName: string | null;
   /** `products.stock_quantity` — the authoritative count. */
   stockQuantity: number;
@@ -93,7 +93,7 @@ export interface StockLevelRow {
   warehouseQuantity: number | null;
   warehouseCount: number;
   /** The warehouse, when exactly one is in scope for this product. */
-  warehouseId: number | null;
+  warehouseId: string | null;
   warehouseName: string | null;
   /**
    * True when the mirror disagrees with the authoritative count. Null when the query
@@ -122,7 +122,7 @@ export interface Paginated<T> {
  * arriving at a new branch.
  */
 export async function queryStockLevels(
-  query: StockLevelQuery & { productId?: number },
+  query: StockLevelQuery & { productId?: string },
 ): Promise<Paginated<StockLevelRow>> {
   const scoped = query.warehouseId !== undefined;
 
@@ -136,13 +136,13 @@ export async function queryStockLevels(
       ),
       // Only meaningful when the product sits in exactly one warehouse; null otherwise,
       // which is what stops the UI labelling a four-branch total with one branch's name.
-      soleWarehouseId: sql<number | null>`CASE
+      soleWarehouseId: sql<string | null>`CASE
         WHEN count(DISTINCT ${inventory.warehouseId}) = 1
-        THEN min(${inventory.warehouseId})
+        THEN min(${inventory.warehouseId}::text)
       END`.as('sole_warehouse_id'),
     })
     .from(inventory)
-    .where(scoped ? eq(inventory.warehouseId, query.warehouseId as number) : undefined)
+    .where(scoped ? eq(inventory.warehouseId, query.warehouseId as string) : undefined)
     .groupBy(inventory.productId)
     .as('mirror');
 
@@ -274,8 +274,8 @@ export async function queryStockLevels(
  * possible.
  */
 export async function queryStockLevel(
-  productId: number,
-  warehouseId?: number,
+  productId: string,
+  warehouseId?: string,
 ): Promise<StockLevelRow | null> {
   const result = await queryStockLevels({
     productId,
@@ -298,7 +298,7 @@ export async function queryStockLevel(
 /* ----------------------------------------------------------- reorder planner */
 
 export interface ReorderRow {
-  productId: number;
+  productId: string;
   sku: string;
   productName: string;
   imageUrl: string | null;
@@ -394,10 +394,10 @@ export async function queryReorderList(limit = 100): Promise<ReorderRow[]> {
 /* ----------------------------------------------------------------- movements */
 
 export interface MovementView {
-  id: number;
+  id: string;
   createdAt: string;
-  productId: number;
-  variantId: number | null;
+  productId: string;
+  variantId: string | null;
   sku: string;
   productName: string;
   quantityDelta: number;
@@ -405,20 +405,20 @@ export interface MovementView {
   reason: InventoryMovementReason;
   note: string | null;
   referenceNo: string | null;
-  warehouseId: number | null;
+  warehouseId: string | null;
   warehouseName: string | null;
-  performedBy: number | null;
+  performedBy: string | null;
   performedByName: string | null;
   unitCost: number | null;
   /** `unitCost × quantityDelta`, signed. Negative when value left the business. */
   valueImpact: number | null;
-  orderId: number | null;
+  orderId: string | null;
   orderNumber: string | null;
-  expenseId: number | null;
+  expenseId: string | null;
   expenseAmount: number | null;
-  reversesMovementId: number | null;
+  reversesMovementId: string | null;
   /** Set when a later movement undid this one. */
-  reversedByMovementId: number | null;
+  reversedByMovementId: string | null;
   /**
    * Whether the Reverse action applies. A sale is undone by cancelling the order, an
    * opening balance has nothing before it to return to, and a movement that has
@@ -430,7 +430,7 @@ export interface MovementView {
 
 export interface MovementFacets {
   /** Distinct actors present in the ledger, for the filter dropdown. */
-  staff: Array<{ id: number | null; name: string }>;
+  staff: Array<{ id: string | null; name: string }>;
   reasons: Array<{ reason: InventoryMovementReason; count: number }>;
 }
 
@@ -581,7 +581,7 @@ async function queryMovementFacets(): Promise<MovementFacets> {
   // Rows written by the seed and by migration 0008's opening-balance backfill have no
   // actor. Labelling them "System" is accurate; leaving them unlabelled would make the
   // filter look broken.
-  const staff = new Map<string, { id: number | null; name: string }>();
+  const staff = new Map<string, { id: string | null; name: string }>();
   for (const row of staffRows) {
     const key = row.id === null ? 'system' : String(row.id);
     if (!staff.has(key)) {
@@ -595,7 +595,7 @@ async function queryMovementFacets(): Promise<MovementFacets> {
 /* ---------------------------------------------------------------- warehouses */
 
 export interface WarehouseView {
-  id: number;
+  id: string;
   name: string;
   province: string | null;
   district: string | null;

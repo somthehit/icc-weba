@@ -26,7 +26,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest, { u
     // VIEW 1: SINGLE SHIFT DRILL-DOWN (Details, Line-by-line Txns, Reports, Logs)
     // -------------------------------------------------------------------------
     if (shiftIdParam) {
-      const shiftId = Number(shiftIdParam);
+      const shiftId = String(shiftIdParam);
       const [shift] = await db
         .select()
         .from(posShifts)
@@ -106,11 +106,11 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest, { u
         .where(
           and(
             eq(posShifts.registerCode, shift.registerCode),
-            sql`${posShifts.id} < ${shift.id}`,
+            sql`${posShifts.openedAt} < ${shift.openedAt}`,
             eq(posShifts.status, 'CLOSED')
           )
         )
-        .orderBy(desc(posShifts.id))
+        .orderBy(desc(posShifts.openedAt))
         .limit(1);
 
       // Fetch tamper-evident audit logs for this shift
@@ -410,7 +410,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest, { u
     // DEFAULT VIEW: LIST OF SHIFTS (with enriched transaction count & expected)
     // -------------------------------------------------------------------------
     const conditions = [
-      cashierId ? eq(posShifts.cashierId, Number(cashierId)) : undefined,
+      cashierId ? eq(posShifts.cashierId, String(cashierId)) : undefined,
     ].filter(Boolean) as any[];
 
     const shifts = await db
@@ -466,7 +466,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
     };
 
     // Helper: verify supervisor with Maker-Checker guarantee
-    const verifySupervisorAuth = async (supPin: string, cashierUserId?: number) => {
+    const verifySupervisorAuth = async (supPin: string, cashierUserId?: string) => {
       if (!supPin) {
         return { ok: false, error: 'Supervisor PIN is strictly required for this authorization.' };
       }
@@ -620,7 +620,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         return NextResponse.json({ success: false, error: 'Shift ID, amount, and movement type are required' }, { status: 400 });
       }
 
-      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, Number(shiftId))).limit(1);
+      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, String(shiftId))).limit(1);
       if (!shift || shift.status !== 'OPEN') {
         return NextResponse.json({ success: false, error: 'Active open shift required for cash drawer movements' }, { status: 400 });
       }
@@ -692,7 +692,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         return NextResponse.json({ success: false, error: 'Shift ID is required' }, { status: 400 });
       }
 
-      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, Number(shiftId))).limit(1);
+      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, String(shiftId))).limit(1);
       if (!shift) {
         return NextResponse.json({ success: false, error: 'Shift not found' }, { status: 404 });
       }
@@ -754,7 +754,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         return NextResponse.json({ success: false, error: 'Shift ID is required' }, { status: 400 });
       }
 
-      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, Number(shiftId))).limit(1);
+      const [shift] = await db.select().from(posShifts).where(eq(posShifts.id, String(shiftId))).limit(1);
       if (!shift) {
         return NextResponse.json({ success: false, error: 'Shift not found' }, { status: 404 });
       }
@@ -796,7 +796,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       const absDiscrepancy = Math.abs(discrepancy);
 
       let varianceApproved = false;
-      let approverId: number | null = null;
+      let approverId: string | null = null;
       let approverName: string | null = null;
 
       // Variance tolerance check: If discrepancy > NPR 50, require supervisor approval
@@ -894,7 +894,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
           minDurationOverrideReason: minDurationOverrideReason || null,
           isZeroSales,
         })
-        .where(eq(posShifts.id, Number(shiftId)))
+        .where(eq(posShifts.id, String(shiftId)))
         .returning();
 
       // Auto-Post Cash Variance Journal to General Ledger if discrepancy exists

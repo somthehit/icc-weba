@@ -28,7 +28,7 @@ class TerminalBroadcaster {
     }
   }
 
-  broadcastStockChange(productId: number, newStock: number, stockStatus: string) {
+  broadcastStockChange(productId: string | number, newStock: number, stockStatus: string) {
     this.broadcast('stock_change', {
       productId,
       newStock,
@@ -37,7 +37,7 @@ class TerminalBroadcaster {
     });
   }
 
-  broadcastPriceChange(productId: number, newPrice: number) {
+  broadcastPriceChange(productId: string | number, newPrice: number) {
     this.broadcast('price_change', {
       productId,
       newPrice,

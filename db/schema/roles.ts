@@ -11,7 +11,7 @@
 
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   text,
   boolean,
@@ -29,7 +29,7 @@ import { users } from './users';
 export const customRoles = pgTable(
   'custom_roles',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     roleName: varchar('role_name', { length: 80 }).notNull(),
     /** Derived from `roleName`; the uniqueness key, so "Store Lead" and "store-lead" collide. */
     roleSlug: varchar('role_slug', { length: 60 }).notNull(),
@@ -62,7 +62,7 @@ export const customRoles = pgTable(
      */
     isSystem: boolean('is_system').notNull().default(false),
     isActive: boolean('is_active').notNull().default(true),
-    createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -92,14 +92,14 @@ export const customRolesRelations = relations(customRoles, ({ one, many }) => ({
 export const staffRoleAssignments = pgTable(
   'staff_role_assignments',
   {
-    id: serial('id').primaryKey(),
-    userId: integer('user_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    customRoleId: integer('custom_role_id')
+    customRoleId: uuid('custom_role_id')
       .notNull()
       .references(() => customRoles.id, { onDelete: 'restrict' }),
-    assignedBy: integer('assigned_by').references(() => users.id, { onDelete: 'set null' }),
+    assignedBy: uuid('assigned_by').references(() => users.id, { onDelete: 'set null' }),
     assignedAt: timestamp('assigned_at').notNull().defaultNow(),
   },
   (t) => ({

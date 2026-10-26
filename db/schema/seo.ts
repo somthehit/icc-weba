@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   text,
   boolean,
@@ -28,9 +28,9 @@ import { regionalScopeEnum, sitemapFrequencyEnum } from './enums';
 // Per-product and per-page overrides already exist on `products.meta_title` and
 // `pages.meta_title`; this schema deliberately does not duplicate them.
 
-/** Single-row table — read the one row, `id = 1` after the migration seeds it. */
+/** Single-row table — read the one row, seeded on startup. */
 export const seoSettings = pgTable('seo_settings', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
 
   // ---- global metadata ---------------------------------------------------
   siteName: varchar('site_name', { length: 150 }).notNull().default('Intel Computer Center'),
@@ -100,7 +100,7 @@ export const seoSettings = pgTable('seo_settings', {
 export const seoPageMeta = pgTable(
   'seo_page_meta',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     pageKey: varchar('page_key', { length: 60 }).notNull(),
     label: varchar('label', { length: 120 }).notNull(),
     path: varchar('path', { length: 300 }).notNull(),
@@ -128,7 +128,7 @@ export const seoPageMeta = pgTable(
 export const seoRedirects = pgTable(
   'seo_redirects',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     fromPath: varchar('from_path', { length: 300 }).notNull(),
     toPath: varchar('to_path', { length: 300 }).notNull(),
     statusCode: integer('status_code').notNull().default(301),

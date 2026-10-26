@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 export const purchaseOrderLineSchema = z.object({
   id: z.string().or(z.number()).optional(),
-  productId: z.number().int().positive().nullable().optional(),
+  productId: z.string().nullable().optional(),
   sku: z.string().min(1, 'SKU is required'),
   supplierPartNo: z.string().optional().default(''),
   description: z.string().min(2, 'Item description is required'),
@@ -33,7 +33,7 @@ export const purchaseOrderLineSchema = z.object({
 
 export const purchaseOrderFormSchema = z
   .object({
-    supplierId: z.number().int().positive('Please select a valid supplier'),
+    supplierId: z.string().min(1, 'Please select a valid supplier'),
     fiscalYear: z.string().default('2082/83'),
     orderDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Valid order date (YYYY-MM-DD) is required'),
     expectedDeliveryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Valid delivery date (YYYY-MM-DD) is required'),

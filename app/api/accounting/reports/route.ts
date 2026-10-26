@@ -88,9 +88,9 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
     const isTrialBalanced = Math.abs(totalTrialDebit - totalTrialCredit) < 0.01;
 
     // 2. Build Profit & Loss Statement (Revenue vs Expenses & COGS)
-    const revenueRows: Array<{ id: number; code: string; name: string; amount: number }> = [];
-    const cogsRows: Array<{ id: number; code: string; name: string; amount: number }> = [];
-    const expenseRows: Array<{ id: number; code: string; name: string; amount: number }> = [];
+    const revenueRows: Array<{ id: string; code: string; name: string; amount: number }> = [];
+    const cogsRows: Array<{ id: string; code: string; name: string; amount: number }> = [];
+    const expenseRows: Array<{ id: string; code: string; name: string; amount: number }> = [];
 
     let totalRevenue = 0;
     let totalCogs = 0;

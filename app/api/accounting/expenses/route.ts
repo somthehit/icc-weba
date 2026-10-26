@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Default category fallback if none provided
-    let finalCategoryId = Number(categoryId);
+    let finalCategoryId = categoryId ? String(categoryId) : '';
     if (!finalCategoryId) {
       const [firstCat] = await db.select().from(expenseCategories).limit(1);
       if (firstCat) {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       .insert(expenses)
       .values({
         categoryId: finalCategoryId,
-        supplierId: supplierId ? Number(supplierId) : null,
+        supplierId: supplierId ? String(supplierId) : null,
         description: description.trim(),
         amount: String(Number(amount).toFixed(2)),
         vatAmount: vatAmount ? String(Number(vatAmount).toFixed(2)) : '0.00',

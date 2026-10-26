@@ -27,7 +27,7 @@
 
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   integer,
   boolean,
@@ -42,7 +42,7 @@ import { categories, products } from './catalog';
 export const attributes = pgTable(
   'attributes',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name', { length: 120 }).notNull(),
     slug: varchar('slug', { length: 140 }).notNull(),
     description: varchar('description', { length: 300 }),
@@ -65,8 +65,8 @@ export const attributes = pgTable(
 export const attributeOptions = pgTable(
   'attribute_options',
   {
-    id: serial('id').primaryKey(),
-    attributeId: integer('attribute_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    attributeId: uuid('attribute_id')
       .notNull()
       .references(() => attributes.id, { onDelete: 'cascade' }),
     value: varchar('value', { length: 120 }).notNull(),
@@ -98,11 +98,11 @@ export const attributeOptions = pgTable(
 export const attributeCategories = pgTable(
   'attribute_categories',
   {
-    id: serial('id').primaryKey(),
-    attributeId: integer('attribute_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    attributeId: uuid('attribute_id')
       .notNull()
       .references(() => attributes.id, { onDelete: 'cascade' }),
-    categoryId: integer('category_id')
+    categoryId: uuid('category_id')
       .notNull()
       .references(() => categories.id, { onDelete: 'cascade' }),
   },
@@ -127,14 +127,14 @@ export const attributeCategories = pgTable(
 export const productAttributeValues = pgTable(
   'product_attribute_values',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
-    attributeId: integer('attribute_id')
+    attributeId: uuid('attribute_id')
       .notNull()
       .references(() => attributes.id, { onDelete: 'cascade' }),
-    optionId: integer('option_id').references(() => attributeOptions.id, {
+    optionId: uuid('option_id').references(() => attributeOptions.id, {
       onDelete: 'cascade',
     }),
     valueText: varchar('value_text', { length: 200 }),
@@ -149,7 +149,7 @@ export const productAttributeValues = pgTable(
 export const filterTags = pgTable(
   'filter_tags',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name', { length: 80 }).notNull(),
     slug: varchar('slug', { length: 100 }).notNull(),
     description: varchar('description', { length: 300 }),
@@ -168,11 +168,11 @@ export const filterTags = pgTable(
 export const productFilterTags = pgTable(
   'product_filter_tags',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
-    filterTagId: integer('filter_tag_id')
+    filterTagId: uuid('filter_tag_id')
       .notNull()
       .references(() => filterTags.id, { onDelete: 'cascade' }),
   },

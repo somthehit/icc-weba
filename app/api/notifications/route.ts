@@ -60,14 +60,10 @@ export const PUT = withAuth(async (request, { user }) => {
     }
 
     if (id) {
-      const notifId = parseInt(id, 10);
-      if (isNaN(notifId)) {
-        return NextResponse.json({ error: 'Invalid notification id' }, { status: 400 });
-      }
       await db
         .update(notifications)
         .set({ read: true })
-        .where(eq(notifications.id, notifId));
+        .where(eq(notifications.id, String(id)));
       return NextResponse.json({ success: true });
     }
 

@@ -73,11 +73,11 @@ const productColumns = {
 } as const;
 
 export interface ProductQuery {
-  id?: number;
+  id?: string;
   slug?: string;
-  categoryId?: number;
+  categoryId?: string;
   categorySlug?: string;
-  brandId?: number;
+  brandId?: string;
   brandSlug?: string;
   search?: string;
   /** DB product_status. Defaults to 'active' for storefront reads. */
@@ -108,14 +108,14 @@ async function attachRelations(
     .where(inArray(productImages.productId, ids))
     .orderBy(desc(productImages.isPrimary), asc(productImages.displayOrder), asc(productImages.id));
 
-  const imagesByProduct = new Map<number, string[]>();
+  const imagesByProduct = new Map<string, string[]>();
   for (const img of imageRows) {
     const bucket = imagesByProduct.get(img.productId);
     if (bucket) bucket.push(img.url);
     else imagesByProduct.set(img.productId, [img.url]);
   }
 
-  let specsByProduct: Map<number, Array<{ specKey: string; specValue: string }>> | null = null;
+  let specsByProduct: Map<string, Array<{ specKey: string; specValue: string }>> | null = null;
   if (includeSpecs) {
     const specRows = await db
       .select({
@@ -203,7 +203,7 @@ export async function queryProducts(
 
 /** Single product by slug or id, with spec sheet attached. */
 export async function queryProduct(
-  by: { slug: string } | { id: number },
+  by: { slug: string } | { id: string },
 ): Promise<DbProductRow | null> {
   const { rows } = await queryProducts({
     ...by,

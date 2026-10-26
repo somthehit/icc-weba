@@ -78,6 +78,9 @@ import {
   Star,
   Globe2,
   Banknote,
+  AlertTriangle,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 
 export const AdminView: React.FC = () => {
@@ -224,28 +227,45 @@ export const AdminView: React.FC = () => {
     logAuditAction('Sales', 'Export CSV', 'Exported sales orders list to CSV.');
   };
 
-  // Delete product handler (permanent delete by default)
-  const handleDeleteProduct = async (prodId: string, prodName: string, permanent = true) => {
-    const message = permanent
-      ? `Are you sure you want to permanently delete "${prodName}"?\n\nThis will completely remove the product, images, specs, and inventory records from the database.`
-      : `Set product status to discontinued for "${prodName}"? Past order history will be preserved.`;
+  // In-app confirmation modal state for deleting products
+  const [deleteProductConfirm, setDeleteProductConfirm] = useState<{
+    id: string;
+    name: string;
+    permanent: boolean;
+  } | null>(null);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-    if (!confirm(message)) {
-      return;
-    }
-    const result = await deleteProduct(prodId, permanent);
-    if (!result.ok) {
-      alert(`Could not ${permanent ? 'delete' : 'discontinue'} "${prodName}": ${result.error}`);
-      return;
-    }
-    logAuditAction(
-      'Catalog',
-      permanent ? 'Delete Product (Permanent)' : 'Discontinue Product',
-      `${permanent ? 'Permanently deleted' : 'Discontinued'} product: ${prodName} (ID: ${prodId})`,
-    );
+  // Delete product handler (opens in-app modal instead of fragile window.confirm)
+  const handleDeleteProduct = (prodId: string, prodName: string, permanent = true) => {
+    setDeleteError(null);
+    setDeleteProductConfirm({ id: prodId, name: prodName, permanent });
   };
 
-  const handleSoftDeleteProduct = async (prodId: string, prodName: string) => {
+  const handleConfirmDelete = async () => {
+    if (!deleteProductConfirm) return;
+    setIsDeletingProduct(true);
+    setDeleteError(null);
+    try {
+      const result = await deleteProduct(deleteProductConfirm.id, deleteProductConfirm.permanent);
+      if (!result.ok) {
+        setDeleteError(result.error);
+        return;
+      }
+      logAuditAction(
+        'Catalog',
+        deleteProductConfirm.permanent ? 'Delete Product (Permanent)' : 'Discontinue Product',
+        `${deleteProductConfirm.permanent ? 'Permanently deleted' : 'Discontinued'} product: ${deleteProductConfirm.name} (ID: ${deleteProductConfirm.id})`,
+      );
+      setDeleteProductConfirm(null);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'An error occurred while deleting the product.');
+    } finally {
+      setIsDeletingProduct(false);
+    }
+  };
+
+  const handleSoftDeleteProduct = (prodId: string, prodName: string) => {
     return handleDeleteProduct(prodId, prodName, false);
   };
 
@@ -737,7 +757,7 @@ export const AdminView: React.FC = () => {
 
           {activeModule === 'staff' && <StaffModule adminUsers={adminUsers} auditLogs={auditLogs} onAdminUsersChange={setAdminUsers} />}
 
-          {activeModule === 'account' && <AccountModule />}
+          {activeModule === 'account' && <AccountModule auditLogs={auditLogs} />}
 
           </div>
         </main>
@@ -758,6 +778,86 @@ export const AdminView: React.FC = () => {
 
       {productForm.isProductModalOpen && (
         <ProductFormModal form={productForm} brands={brands} categories={categories} />
+      )}
+
+      {/* Delete Product Confirmation Modal */}
+      {deleteProductConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 text-rose-600">
+                  <Trash2 className="w-6 h-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 id="delete-dialog-title" className="text-base font-bold text-gray-900">
+                    {deleteProductConfirm.permanent ? 'Delete Product' : 'Discontinue Product'}
+                  </h3>
+                  <p className="mt-1.5 text-xs text-gray-600 leading-relaxed">
+                    {deleteProductConfirm.permanent ? (
+                      <>
+                        Are you sure you want to permanently delete <strong className="text-gray-900 font-semibold">{deleteProductConfirm.name}</strong>?
+                        This will completely remove the product, images, specifications, and inventory records from the database.
+                      </>
+                    ) : (
+                      <>
+                        Set product status to discontinued for <strong className="text-gray-900 font-semibold">{deleteProductConfirm.name}</strong>?
+                        Past order history will be preserved.
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {deleteError && (
+                <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{deleteError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isDeletingProduct) {
+                    setDeleteProductConfirm(null);
+                    setDeleteError(null);
+                  }
+                }}
+                disabled={isDeletingProduct}
+                className="px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200/60 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeletingProduct}
+                data-testid="confirm-delete-product-btn"
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs flex items-center gap-2 disabled:opacity-50"
+              >
+                {isDeletingProduct ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{deleteProductConfirm.permanent ? 'Permanently Delete' : 'Discontinue'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

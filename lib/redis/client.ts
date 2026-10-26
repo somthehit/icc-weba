@@ -227,7 +227,7 @@ export const posCache = {
    * Atomic stock reservation counter.
    * Decrements available stock in Redis with a reservation TTL (default 15 mins).
    */
-  async reserveStock(productId: number, qty: number, terminalId: string, ttlSeconds = 900): Promise<{
+  async reserveStock(productId: number | string, qty: number, terminalId: string, ttlSeconds = 900): Promise<{
     success: boolean;
     availableStock: number;
     reservationId?: string;
@@ -282,7 +282,7 @@ export const posCache = {
   /**
    * Release reserved stock on cart clear or completed sale
    */
-  async releaseReservation(productId: number, terminalId: string, returnToPool = true): Promise<void> {
+  async releaseReservation(productId: number | string, terminalId: string, returnToPool = true): Promise<void> {
     const stockKey = `stock:${productId}`;
     const reservationKey = `reservation:${productId}:${terminalId}`;
     const reservedQty = (await this.get<number>(reservationKey)) || 0;

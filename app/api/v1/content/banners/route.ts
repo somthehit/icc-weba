@@ -15,7 +15,7 @@ const optionalText = (max: number) => z.preprocess(
 );
 
 const bannerSchema = z.object({
-  id: z.number().int().positive().optional(),
+  id: z.string().trim().uuid().optional(),
   title: z.string().trim().min(1, 'Banner title is required').max(200),
   subtitle: optionalText(400),
   desktopImageUrl: optionalText(500),
@@ -106,8 +106,8 @@ export const PUT = withRole(['admin'], async (request: NextRequest) => {
 });
 
 export const DELETE = withRole(['admin'], async (request: NextRequest) => {
-  const id = Number(new URL(request.url).searchParams.get('id'));
-  if (!Number.isInteger(id) || id <= 0) {
+  const id = new URL(request.url).searchParams.get('id');
+  if (!id) {
     return NextResponse.json({ error: 'Banner id required' }, { status: 400 });
   }
 

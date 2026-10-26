@@ -3,7 +3,7 @@
 
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   text,
   integer,
@@ -28,8 +28,8 @@ import { suppliers, purchaseOrders, goodsReceiptNotes, goodsReceiptNoteItems } f
 export const warehouseBins = pgTable(
   'warehouse_bins',
   {
-    id: serial('id').primaryKey(),
-    warehouseId: integer('warehouse_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    warehouseId: uuid('warehouse_id')
       .notNull()
       .references(() => warehouses.id, { onDelete: 'cascade' }),
     zone: varchar('zone', { length: 30 }).notNull().default('A'), // Zone e.g. A, B, Bulk
@@ -65,25 +65,25 @@ export type SerialStatus =
 export const productSerials = pgTable(
   'product_serials',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'restrict' }),
     serialNumber: varchar('serial_number', { length: 100 }).notNull(),
-    grnItemId: integer('grn_item_id').references(() => goodsReceiptNoteItems.id, {
+    grnItemId: uuid('grn_item_id').references(() => goodsReceiptNoteItems.id, {
       onDelete: 'set null',
     }),
-    grnId: integer('grn_id').references(() => goodsReceiptNotes.id, {
+    grnId: uuid('grn_id').references(() => goodsReceiptNotes.id, {
       onDelete: 'set null',
     }),
     status: varchar('status', { length: 30 })
       .$type<SerialStatus>()
       .notNull()
       .default('in_stock'),
-    warehouseId: integer('warehouse_id').references(() => warehouses.id, {
+    warehouseId: uuid('warehouse_id').references(() => warehouses.id, {
       onDelete: 'set null',
     }),
-    binId: integer('bin_id').references(() => warehouseBins.id, {
+    binId: uuid('bin_id').references(() => warehouseBins.id, {
       onDelete: 'set null',
     }),
     costPrice: numeric('cost_price', { precision: 12, scale: 2 }),
@@ -93,7 +93,7 @@ export const productSerials = pgTable(
     warrantyEndDate: date('warranty_end_date', { mode: 'string' }),
     soldInvoiceNo: varchar('sold_invoice_no', { length: 60 }),
     soldDate: timestamp('sold_date'),
-    customerId: integer('customer_id'),
+    customerId: uuid('customer_id'),
     notes: text('notes'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -115,12 +115,12 @@ export const productSerials = pgTable(
 export const productBatches = pgTable(
   'product_batches',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
     batchNumber: varchar('batch_number', { length: 80 }).notNull(),
-    grnId: integer('grn_id').references(() => goodsReceiptNotes.id, { onDelete: 'set null' }),
+    grnId: uuid('grn_id').references(() => goodsReceiptNotes.id, { onDelete: 'set null' }),
     initialQuantity: integer('initial_quantity').notNull().default(0),
     currentQuantity: integer('current_quantity').notNull().default(0),
     unitCost: numeric('unit_cost', { precision: 12, scale: 2 }).notNull().default('0'),
@@ -154,12 +154,12 @@ export type TransferStatus =
 export const stockTransfers = pgTable(
   'stock_transfers',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     transferNumber: varchar('transfer_number', { length: 60 }).notNull(), // e.g. "TRF-2026-0001"
-    sourceWarehouseId: integer('source_warehouse_id')
+    sourceWarehouseId: uuid('source_warehouse_id')
       .notNull()
       .references(() => warehouses.id, { onDelete: 'restrict' }),
-    destWarehouseId: integer('dest_warehouse_id')
+    destWarehouseId: uuid('dest_warehouse_id')
       .notNull()
       .references(() => warehouses.id, { onDelete: 'restrict' }),
     status: varchar('status', { length: 30 })
@@ -169,9 +169,9 @@ export const stockTransfers = pgTable(
     totalItems: integer('total_items').notNull().default(0),
     totalQuantity: integer('total_quantity').notNull().default(0),
     notes: text('notes'),
-    requestedById: integer('requested_by_id').references(() => users.id, { onDelete: 'set null' }),
+    requestedById: uuid('requested_by_id').references(() => users.id, { onDelete: 'set null' }),
     requestedByName: varchar('requested_by_name', { length: 150 }),
-    approvedById: integer('approved_by_id').references(() => users.id, { onDelete: 'set null' }),
+    approvedById: uuid('approved_by_id').references(() => users.id, { onDelete: 'set null' }),
     approvedByName: varchar('approved_by_name', { length: 150 }),
     shippedAt: timestamp('shipped_at'),
     receivedAt: timestamp('received_at'),
@@ -189,11 +189,11 @@ export const stockTransfers = pgTable(
 export const stockTransferItems = pgTable(
   'stock_transfer_items',
   {
-    id: serial('id').primaryKey(),
-    transferId: integer('transfer_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    transferId: uuid('transfer_id')
       .notNull()
       .references(() => stockTransfers.id, { onDelete: 'cascade' }),
-    productId: integer('product_id')
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'restrict' }),
     sku: varchar('sku', { length: 60 }).notNull(),
@@ -221,14 +221,14 @@ export type AuditSessionType = 'full' | 'cycle_category' | 'cycle_zone' | 'abc_h
 export const auditSessions = pgTable(
   'audit_sessions',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     sessionNumber: varchar('session_number', { length: 60 }).notNull(), // e.g. "AUD-2026-0001"
     title: varchar('title', { length: 150 }).notNull(),
     auditType: varchar('audit_type', { length: 30 })
       .$type<AuditSessionType>()
       .notNull()
       .default('full'),
-    warehouseId: integer('warehouse_id')
+    warehouseId: uuid('warehouse_id')
       .notNull()
       .references(() => warehouses.id, { onDelete: 'restrict' }),
     status: varchar('status', { length: 30 })
@@ -241,9 +241,9 @@ export const auditSessions = pgTable(
     totalVarianceValue: numeric('total_variance_value', { precision: 14, scale: 2 })
       .notNull()
       .default('0'),
-    startedById: integer('started_by_id').references(() => users.id, { onDelete: 'set null' }),
+    startedById: uuid('started_by_id').references(() => users.id, { onDelete: 'set null' }),
     startedByName: varchar('started_by_name', { length: 150 }),
-    approvedById: integer('approved_by_id').references(() => users.id, { onDelete: 'set null' }),
+    approvedById: uuid('approved_by_id').references(() => users.id, { onDelete: 'set null' }),
     approvedByName: varchar('approved_by_name', { length: 150 }),
     notes: text('notes'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -259,11 +259,11 @@ export const auditSessions = pgTable(
 export const auditSessionItems = pgTable(
   'audit_session_items',
   {
-    id: serial('id').primaryKey(),
-    sessionId: integer('session_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    sessionId: uuid('session_id')
       .notNull()
       .references(() => auditSessions.id, { onDelete: 'cascade' }),
-    productId: integer('product_id')
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'restrict' }),
     sku: varchar('sku', { length: 60 }).notNull(),
@@ -296,14 +296,14 @@ export type ReturnStatus = 'draft' | 'approved' | 'completed' | 'rejected';
 export const stockReturns = pgTable(
   'stock_returns',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     returnNumber: varchar('return_number', { length: 60 }).notNull(), // e.g. "RET-2026-0001" or "RTV-2026-0001"
     returnType: varchar('return_type', { length: 30 })
       .$type<ReturnType>()
       .notNull()
       .default('customer_return'),
     referenceInvoiceOrPo: varchar('reference_invoice_or_po', { length: 80 }),
-    supplierId: integer('supplier_id').references(() => suppliers.id, { onDelete: 'set null' }),
+    supplierId: uuid('supplier_id').references(() => suppliers.id, { onDelete: 'set null' }),
     status: varchar('status', { length: 30 })
       .$type<ReturnStatus>()
       .notNull()
@@ -311,7 +311,7 @@ export const stockReturns = pgTable(
     totalAmount: numeric('total_amount', { precision: 12, scale: 2 }).notNull().default('0'),
     reason: varchar('reason', { length: 200 }).notNull(),
     notes: text('notes'),
-    createdById: integer('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+    createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
     createdByName: varchar('created_by_name', { length: 150 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -326,14 +326,14 @@ export const stockReturns = pgTable(
 export const stockReturnItems = pgTable(
   'stock_return_items',
   {
-    id: serial('id').primaryKey(),
-    returnId: integer('return_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    returnId: uuid('return_id')
       .notNull()
       .references(() => stockReturns.id, { onDelete: 'cascade' }),
-    productId: integer('product_id')
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'restrict' }),
-    serialId: integer('serial_id').references(() => productSerials.id, { onDelete: 'set null' }),
+    serialId: uuid('serial_id').references(() => productSerials.id, { onDelete: 'set null' }),
     sku: varchar('sku', { length: 60 }).notNull(),
     quantity: integer('quantity').notNull().default(1),
     unitCost: numeric('unit_cost', { precision: 12, scale: 2 }).notNull().default('0'),
@@ -362,10 +362,10 @@ export type ClaimStatus =
 export const warrantyClaims = pgTable(
   'warranty_claims',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     claimNumber: varchar('claim_number', { length: 60 }).notNull(), // e.g. "RMA-2026-0001"
-    serialId: integer('serial_id').references(() => productSerials.id, { onDelete: 'set null' }),
-    productId: integer('product_id')
+    serialId: uuid('serial_id').references(() => productSerials.id, { onDelete: 'set null' }),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'restrict' }),
     customerName: varchar('customer_name', { length: 150 }).notNull(),
@@ -384,10 +384,10 @@ export const warrantyClaims = pgTable(
     technicianNotes: text('technician_notes'),
     resolution: text('resolution'),
     supplierRmaNumber: varchar('supplier_rma_number', { length: 80 }),
-    supplierId: integer('supplier_id').references(() => suppliers.id, { onDelete: 'set null' }),
+    supplierId: uuid('supplier_id').references(() => suppliers.id, { onDelete: 'set null' }),
     receivedDate: date('received_date', { mode: 'string' }).notNull(),
     resolvedDate: date('resolved_date', { mode: 'string' }),
-    handledById: integer('handled_by_id').references(() => users.id, { onDelete: 'set null' }),
+    handledById: uuid('handled_by_id').references(() => users.id, { onDelete: 'set null' }),
     handledByName: varchar('handled_by_name', { length: 150 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -413,7 +413,7 @@ export type InventoryAlertType =
 export const inventoryAlerts = pgTable(
   'inventory_alerts',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     alertType: varchar('alert_type', { length: 40 })
       .$type<InventoryAlertType>()
       .notNull(),
@@ -421,12 +421,12 @@ export const inventoryAlerts = pgTable(
       .$type<'info' | 'warning' | 'critical'>()
       .notNull()
       .default('warning'),
-    productId: integer('product_id').references(() => products.id, { onDelete: 'set null' }),
+    productId: uuid('product_id').references(() => products.id, { onDelete: 'set null' }),
     referenceId: varchar('reference_id', { length: 80 }),
     title: varchar('title', { length: 200 }).notNull(),
     message: text('message').notNull(),
     isResolved: boolean('is_resolved').notNull().default(false),
-    resolvedById: integer('resolved_by_id').references(() => users.id, { onDelete: 'set null' }),
+    resolvedById: uuid('resolved_by_id').references(() => users.id, { onDelete: 'set null' }),
     resolvedAt: timestamp('resolved_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },

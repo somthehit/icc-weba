@@ -22,7 +22,7 @@ const querySchema = z.object({
  */
 const lineSchema = z
   .object({
-    accountId: z.number().int().positive(),
+    accountId: z.string().trim().uuid(),
     description: z.string().trim().max(300).optional(),
     debit: z.number().min(0).default(0),
     credit: z.number().min(0).default(0),

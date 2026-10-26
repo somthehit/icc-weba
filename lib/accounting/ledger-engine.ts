@@ -24,8 +24,8 @@ export interface PostJournalOptions {
   entryDate: string; // YYYY-MM-DD
   description: string;
   sourceType: 'pos_sale' | 'ecom_order' | 'grn' | 'supplier_bill' | 'supplier_payment' | 'stock_adjustment' | 'damage_write_off' | 'cash_drop' | 'petty_cash' | 'eod_variance' | 'manual' | 'ecom_settlement';
-  sourceId?: number | null;
-  postedBy?: number | null;
+  sourceId?: string | null;
+  postedBy?: string | null;
   attachmentUrl?: string | null;
   lines: LedgerLineInput[];
 }
@@ -134,7 +134,7 @@ export async function postDoubleEntryJournal(
  * Auto-Post POS Counter Sale / E-Commerce Order
  */
 export async function postSalesJournal(params: {
-  orderId: number;
+  orderId: string;
   orderNumber: string;
   orderDate: string;
   channel: 'POS' | 'ECOM';
@@ -143,7 +143,7 @@ export async function postSalesJournal(params: {
   discountAmount?: number;
   paymentMethod: string;
   cogsAmount: number;
-  postedBy?: number | null;
+  postedBy?: string | null;
 }) {
   const {
     orderId,
@@ -243,12 +243,12 @@ export async function postSalesJournal(params: {
  * Cr GRN Clearing Account (2020)
  */
 export async function postGrnJournal(params: {
-  grnId: number;
+  grnId: string;
   grnNumber: string;
   receivedDate: string;
   totalAmount: number;
   supplierName: string;
-  storekeeperId?: number | null;
+  storekeeperId?: string | null;
 }) {
   const { grnId, grnNumber, receivedDate, totalAmount, supplierName, storekeeperId } = params;
 
@@ -281,14 +281,14 @@ export async function postGrnJournal(params: {
  * Cr Accounts Payable (2010)
  */
 export async function postSupplierBillJournal(params: {
-  billId: number;
+  billId: string;
   billNumber: string;
   billDate: string;
   supplierName: string;
   subtotal: number;
   vatAmount: number;
   totalAmount: number;
-  postedBy?: number | null;
+  postedBy?: string | null;
 }) {
   const { billId, billNumber, billDate, supplierName, subtotal, vatAmount, totalAmount, postedBy } = params;
 
@@ -326,7 +326,7 @@ export async function postSupplierBillJournal(params: {
  * Cr Bank / Cash (1030 / 1010) - Net Paid Out
  */
 export async function postSupplierPaymentJournal(params: {
-  paymentId: number;
+  paymentId: string;
   paymentNumber: string;
   paymentDate: string;
   supplierName: string;
@@ -335,7 +335,7 @@ export async function postSupplierPaymentJournal(params: {
   netPaidAmount: number;
   paymentMethod: string;
   bankReference?: string | null;
-  postedBy?: number | null;
+  postedBy?: string | null;
 }) {
   const { paymentId, paymentNumber, paymentDate, supplierName, settledAmount, tdsAmount, netPaidAmount, paymentMethod, postedBy } = params;
 
@@ -379,12 +379,12 @@ export async function postSupplierPaymentJournal(params: {
  * Auto-Post Cashier Till Over / Short Variance at EOD Blind Close
  */
 export async function postCashVarianceJournal(params: {
-  shiftId: number;
+  shiftId: string;
   shiftNumber: string;
   businessDate: string;
   cashierName: string;
   varianceAmount: number; // positive = overage, negative = shortage
-  supervisorId?: number | null;
+  supervisorId?: string | null;
 }) {
   const { shiftId, shiftNumber, businessDate, cashierName, varianceAmount, supervisorId } = params;
   if (Math.abs(varianceAmount) < 0.01) return null;
@@ -433,12 +433,12 @@ export async function postCashVarianceJournal(params: {
  * Auto-Post Cash Drop (POS Drawer to Main Safe/Vault)
  */
 export async function postCashDropJournal(params: {
-  dropId: number;
-  shiftId: number;
+  dropId: string;
+  shiftId: string;
   dropDate: string;
   amount: number;
   cashierName: string;
-  receiverId?: number | null;
+  receiverId?: string | null;
 }) {
   const { dropId, shiftId, dropDate, amount, cashierName, receiverId } = params;
 
@@ -468,14 +468,14 @@ export async function postCashDropJournal(params: {
  * Auto-Post Inventory Shrinkage or Damage Write-Off
  */
 export async function postInventoryWriteOffJournal(params: {
-  auditId: number;
+  auditId: string;
   writeOffDate: string;
   productName: string;
   sku: string;
   quantity: number;
   costValue: number;
   reason: string;
-  approvedBy?: number | null;
+  approvedBy?: string | null;
 }) {
   const { auditId, writeOffDate, productName, sku, quantity, costValue, reason, approvedBy } = params;
 

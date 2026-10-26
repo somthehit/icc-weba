@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         })
         .from(goodsReceiptNotes)
         .leftJoin(suppliers, eq(goodsReceiptNotes.supplierId, suppliers.id))
-        .where(eq(goodsReceiptNotes.id, Number(grnId)))
+        .where(eq(goodsReceiptNotes.id, String(grnId)))
         .limit(1);
 
       if (!grn) {
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
 
     let totalQuantityReceived = 0;
     let totalGrnAmount = 0;
-    const rejectedItems: Array<{ productId: number; sku: string; qty: number; reason: string; unitCost: number }> = [];
+    const rejectedItems: Array<{ productId: string; sku: string; qty: number; reason: string; unitCost: number }> = [];
 
     const processedItems = items.map((item: any) => {
       const qty = parseInt(String(item.quantityReceived), 10) || 0;
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
 
       if (item.qcStatus === 'rejected') {
         rejectedItems.push({
-          productId: Number(item.productId),
+          productId: String(item.productId),
           sku: item.sku || '',
           qty,
           reason: item.rejectionReason || 'Quality check failure on inward inspection',
@@ -166,8 +166,8 @@ export async function POST(request: NextRequest) {
       }
 
       return {
-        productId: item.productId ? Number(item.productId) : null,
-        poItemId: item.poItemId ? Number(item.poItemId) : null,
+        productId: item.productId ? String(item.productId) : null,
+        poItemId: item.poItemId ? String(item.poItemId) : null,
         sku: item.sku || '',
         description: item.description || 'Hardware SKU',
         quantityReceived: qty,
@@ -187,8 +187,8 @@ export async function POST(request: NextRequest) {
         .insert(goodsReceiptNotes)
         .values({
           grnNumber,
-          purchaseOrderId: purchaseOrderId ? Number(purchaseOrderId) : null,
-          supplierId: Number(supplierId),
+          purchaseOrderId: purchaseOrderId ? String(purchaseOrderId) : null,
+          supplierId: String(supplierId),
           supplierInvoiceNo,
           receivedDate,
           storekeeperName,
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
             // Append immutable ledger row
             await tx.insert(inventoryMovements).values({
               productId: product.id,
-              warehouseId: Number(warehouseId),
+              warehouseId: warehouseId ? String(warehouseId) : null,
               productNameSnapshot: product.name,
               skuSnapshot: product.sku,
               quantityDelta: item.quantityReceived,
@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
                       status: 'in_stock',
                       grnItemId: grnItem.id,
                       grnId: grn.id,
-                      warehouseId: Number(warehouseId),
+                      warehouseId: warehouseId ? String(warehouseId) : null,
                       costPrice: item.unitCost,
                       updatedAt: new Date(),
                     })
@@ -287,7 +287,7 @@ export async function POST(request: NextRequest) {
                     grnItemId: grnItem.id,
                     grnId: grn.id,
                     status: 'in_stock',
-                    warehouseId: Number(warehouseId),
+                    warehouseId: warehouseId ? String(warehouseId) : null,
                     costPrice: item.unitCost,
                     warrantyMonths: product?.warrantyMonths || 12,
                     warrantyStartDate: receivedDate,
@@ -314,7 +314,7 @@ export async function POST(request: NextRequest) {
         const poLines = await tx
           .select()
           .from(purchaseOrderItems)
-          .where(eq(purchaseOrderItems.purchaseOrderId, Number(purchaseOrderId)));
+          .where(eq(purchaseOrderItems.purchaseOrderId, String(purchaseOrderId)));
 
         const totalOrdered = poLines.reduce((acc, l) => acc + (l.quantityOrdered || 0), 0);
         const totalRcvd = poLines.reduce((acc, l) => acc + (l.quantityReceived || 0), 0);
@@ -327,7 +327,7 @@ export async function POST(request: NextRequest) {
             status: newPoStatus,
             updatedAt: new Date(),
           })
-          .where(eq(purchaseOrders.id, Number(purchaseOrderId)));
+          .where(eq(purchaseOrders.id, String(purchaseOrderId)));
       }
 
       // 4. If any items were REJECTED during QC inspection, automatically create a Return-to-Vendor (Debit Note draft)
@@ -341,7 +341,7 @@ export async function POST(request: NextRequest) {
             returnNumber: debitNoteNo,
             returnType: 'return_to_vendor',
             referenceInvoiceOrPo: supplierInvoiceNo || grnNumber,
-            supplierId: Number(supplierId),
+            supplierId: String(supplierId),
             status: 'draft',
             totalAmount: String(totalDebitAmount),
             reason: 'Inward QC inspection rejection: Defective / Non-compliant goods',

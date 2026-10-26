@@ -36,10 +36,10 @@ export async function resolveCatalogRefs(input: {
   brandSlug?: string;
   categorySlug?: string;
 }): Promise<
-  | { ok: true; brandId?: number; categoryId?: number }
+  | { ok: true; brandId?: string; categoryId?: string }
   | { ok: false; error: string }
 > {
-  const resolved: { brandId?: number; categoryId?: number } = {};
+  const resolved: { brandId?: string; categoryId?: string } = {};
 
   if (input.brandSlug) {
     const [brand] = await db
@@ -76,7 +76,7 @@ export async function resolveCatalogRefs(input: {
  */
 export async function replaceSpecs(
   tx: DbClient,
-  productId: number,
+  productId: string,
   specs: SpecInput[],
 ): Promise<void> {
   await tx.delete(productSpecs).where(eq(productSpecs.productId, productId));
@@ -102,7 +102,7 @@ export async function replaceSpecs(
  */
 export async function replaceImages(
   tx: DbClient,
-  productId: number,
+  productId: string,
   images: ImageInput[],
 ): Promise<void> {
   await tx.delete(productImages).where(eq(productImages.productId, productId));
@@ -162,7 +162,7 @@ export function deriveStockStatus(
  */
 export async function uniqueProductSlug(
   name: string,
-  excludeId?: number,
+  excludeId?: string,
 ): Promise<string> {
   const base =
     name

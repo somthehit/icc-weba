@@ -27,7 +27,7 @@ const intParam = (v: string | null): number | undefined => {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = intParam(searchParams.get('id'));
+    const id = searchParams.get('id') || undefined;
     const slug = searchParams.get('slug');
 
     if (id !== undefined || slug) {
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       }
 
       const fallback = INITIAL_PRODUCTS.find(
-        (p) => (id !== undefined && p.id === String(id)) || (slug && p.slug === slug),
+        (p) => (id !== undefined && p.id === id) || (slug && p.slug === slug),
       );
       if (fallback) {
         return NextResponse.json({ product: fallback });
@@ -51,9 +51,9 @@ export async function GET(request: NextRequest) {
 
     const status = searchParams.get('status');
     const { rows, total } = await queryProducts({
-      categoryId: intParam(searchParams.get('categoryId')),
+      categoryId: searchParams.get('categoryId') ?? undefined,
       categorySlug: searchParams.get('category') ?? undefined,
-      brandId: intParam(searchParams.get('brandId')),
+      brandId: searchParams.get('brandId') ?? undefined,
       brandSlug: searchParams.get('brand') ?? undefined,
       search: searchParams.get('search') ?? undefined,
       // ?status=all lets the admin catalogue see drafts and discontinued rows.
@@ -64,17 +64,9 @@ export async function GET(request: NextRequest) {
       includeSpecs: searchParams.get('includeSpecs') !== 'false',
     });
 
-    if (rows && rows.length > 0) {
-      return NextResponse.json({
-        products: rows.map(mapDbProductToProduct),
-        total,
-      });
-    }
-
-    // Fallback if DB table is empty
     return NextResponse.json({
-      products: INITIAL_PRODUCTS,
-      total: INITIAL_PRODUCTS.length,
+      products: rows ? rows.map(mapDbProductToProduct) : [],
+      total: total ?? 0,
     });
   } catch (error) {
     console.error('Error fetching products from DB, serving fallback initial data:', error);

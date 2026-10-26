@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
           .insert(stockTransfers)
           .values({
             transferNumber,
-            sourceWarehouseId: Number(sourceWarehouseId),
-            destWarehouseId: Number(destWarehouseId),
+            sourceWarehouseId: String(sourceWarehouseId),
+            destWarehouseId: String(destWarehouseId),
             status: 'requested',
             totalItems: items.length,
             totalQuantity: totalQty,
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         for (const item of items) {
           await tx.insert(stockTransferItems).values({
             transferId: transfer.id,
-            productId: Number(item.productId),
+            productId: String(item.productId),
             sku: item.sku || 'SKU',
             quantityRequested: parseInt(String(item.quantityRequested), 10) || 1,
           });
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       const [targetTransfer] = await db
         .select()
         .from(stockTransfers)
-        .where(eq(stockTransfers.id, Number(transferId)))
+        .where(eq(stockTransfers.id, String(transferId)))
         .limit(1);
 
       if (!targetTransfer) {
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
       const [targetTransfer] = await db
         .select()
         .from(stockTransfers)
-        .where(eq(stockTransfers.id, Number(transferId)))
+        .where(eq(stockTransfers.id, String(transferId)))
         .limit(1);
 
       if (!targetTransfer) {

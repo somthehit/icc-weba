@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Product ID is required' }, { status: 400 });
     }
 
-    const pid = Number(productId);
+    const pid = String(productId);
     const qty = Math.max(1, Number(quantity));
 
     // Release reservation

@@ -437,7 +437,7 @@ export const createProductRequest = (input: ProductWriteInput) =>
   });
 
 /** Update a catalog product. Every field is optional — send only what changed. */
-export const updateProductRequest = (id: number, input: Partial<ProductWriteInput>) =>
+export const updateProductRequest = (id: string | number, input: Partial<ProductWriteInput>) =>
   request<{ success: true; product: Product }>(`/api/products/${id}`, {
     method: 'PUT',
     body: JSON.stringify(input),
@@ -446,8 +446,8 @@ export const updateProductRequest = (id: number, input: Partial<ProductWriteInpu
 /**
  * Delete a product permanently from the database.
  */
-export const deleteProductRequest = (id: number, permanent = true) =>
-  request<{ success: true; product?: { id: number; status: string }; deletedProduct?: { id: number; name: string } }>(
+export const deleteProductRequest = (id: string | number, permanent = true) =>
+  request<{ success: true; product?: { id: string | number; status: string }; deletedProduct?: { id: string | number; name: string } }>(
     `/api/products/${id}?permanent=${permanent}`,
     {
       method: 'DELETE',
@@ -457,7 +457,7 @@ export const deleteProductRequest = (id: number, permanent = true) =>
 /**
  * Retire a product (soft delete / mark as discontinued).
  */
-export const archiveProductRequest = (id: number) =>
+export const archiveProductRequest = (id: string | number) =>
   deleteProductRequest(id, false);
 
 /**
@@ -470,7 +470,7 @@ export const archiveProductRequest = (id: number) =>
  * see. Staff-only, since `costPrice` is what the shop paid its supplier.
  */
 export interface AdminProductRow {
-  id: number;
+  id: string | number;
   sku: string;
   name: string;
   slug: string;
@@ -509,14 +509,14 @@ export interface AdminProductRow {
   isFreeShipping?: boolean;
   fixedShippingFee?: string | number | null;
   images: Array<{
-    id: number;
+    id: string | number;
     url: string;
     altText: string | null;
     displayOrder: number;
     isPrimary: boolean;
   }>;
-  specs: Array<{ id: number; specKey: string; specValue: string; displayOrder: number }>;
+  specs: Array<{ id: string | number; specKey: string; specValue: string; displayOrder: number }>;
 }
 
-export const fetchProductRow = (id: number) =>
+export const fetchProductRow = (id: string | number) =>
   request<AdminProductRow>(`/api/products/${id}`);

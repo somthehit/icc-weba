@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
             : null,
           updatedAt: new Date(),
         })
-        .where(eq(warrantyClaims.id, Number(id)))
+        .where(eq(warrantyClaims.id, String(id)))
         .returning();
 
       return NextResponse.json({
@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
 
     const claimNumber = `RMA-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
 
-    let resolvedSerialId: number | null = null;
-    let resolvedProductId: number = Number(productId);
+    let resolvedSerialId: string | null = null;
+    let resolvedProductId: string | null = productId ? String(productId) : null;
 
     if (serialNumber) {
       const [s] = await db
@@ -134,6 +134,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (!resolvedProductId) {
+      return NextResponse.json(
+        { success: false, error: 'Valid product ID or serial number is required to register a warranty claim.' },
+        { status: 400 }
+      );
+    }
+
     const [newClaim] = await db
       .insert(warrantyClaims)
       .values({
@@ -149,7 +156,7 @@ export async function POST(request: NextRequest) {
         claimStatus: 'received',
         technicianNotes,
         supplierRmaNumber,
-        supplierId: supplierId ? Number(supplierId) : null,
+        supplierId: supplierId ? String(supplierId) : null,
         receivedDate: new Date().toISOString().slice(0, 10),
         handledByName,
       })

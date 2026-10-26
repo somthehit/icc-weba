@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       const [session] = await db
         .select()
         .from(auditSessions)
-        .where(eq(auditSessions.id, Number(sessionId)))
+        .where(eq(auditSessions.id, String(sessionId)))
         .limit(1);
 
       if (!session) {
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         .from(products);
 
       if (categoryId) {
-        targetProducts = targetProducts.filter((p) => p.categoryId === Number(categoryId));
+        targetProducts = targetProducts.filter((p) => p.categoryId === String(categoryId));
       }
 
       const result = await db.transaction(async (tx) => {
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
             sessionNumber,
             title,
             auditType,
-            warehouseId: Number(warehouseId),
+            warehouseId: String(warehouseId),
             status: 'in_progress',
             blindCountEnabled: Boolean(blindCountEnabled),
             totalSkusCounted: 0,
@@ -162,14 +162,14 @@ export async function POST(request: NextRequest) {
         [targetItem] = await db
           .select()
           .from(auditSessionItems)
-          .where(and(eq(auditSessionItems.sessionId, Number(sessionId)), eq(auditSessionItems.productId, Number(productId))))
+          .where(and(eq(auditSessionItems.sessionId, String(sessionId)), eq(auditSessionItems.productId, String(productId))))
           .limit(1);
       } else if (skuOrBarcode) {
         const clean = String(skuOrBarcode).trim().toUpperCase();
         [targetItem] = await db
           .select()
           .from(auditSessionItems)
-          .where(and(eq(auditSessionItems.sessionId, Number(sessionId)), eq(auditSessionItems.sku, clean)))
+          .where(and(eq(auditSessionItems.sessionId, String(sessionId)), eq(auditSessionItems.sku, clean)))
           .limit(1);
       }
 
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Invalid Supervisor/Manager PIN.' }, { status: 401 });
       }
 
-      const [session] = await db.select().from(auditSessions).where(eq(auditSessions.id, Number(sessionId))).limit(1);
+      const [session] = await db.select().from(auditSessions).where(eq(auditSessions.id, String(sessionId))).limit(1);
       if (!session) {
         return NextResponse.json({ success: false, error: 'Audit session not found.' }, { status: 404 });
       }

@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     let totalStockUnits = 0;
     let totalValuationWac = 0;
     const categoryValuationMap: Record<string, { categoryName: string; units: number; valuation: number; skuCount: number }> = {};
-    const itemValuations: Array<{ id: number; name: string; sku: string; categoryName: string; stock: number; cost: number; totalValue: number }> = [];
+    const itemValuations: Array<{ id: string; name: string; sku: string; categoryName: string; stock: number; cost: number; totalValue: number }> = [];
 
     for (const p of allProducts) {
       const stock = Math.max(0, p.stockQuantity ?? 0);

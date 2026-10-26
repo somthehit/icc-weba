@@ -470,7 +470,7 @@ export async function POST(request: NextRequest) {
       const [targetPo] = await db
         .select()
         .from(purchaseOrders)
-        .where(eq(purchaseOrders.id, Number(poId)))
+        .where(eq(purchaseOrders.id, String(poId)))
         .limit(1);
 
       if (!targetPo) {
@@ -578,7 +578,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'PO ID required.' }, { status: 400 });
       }
 
-      const [targetPo] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, Number(poId))).limit(1);
+      const [targetPo] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, String(poId))).limit(1);
       if (!targetPo) {
         return NextResponse.json({ success: false, error: 'PO not found.' }, { status: 404 });
       }
@@ -644,7 +644,7 @@ export async function POST(request: NextRequest) {
     // -------------------------------------------------------------------------
     if (action === 'send') {
       const { poId, channel = 'email', recipient, senderName = 'Purchase Officer' } = body;
-      const [targetPo] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, Number(poId))).limit(1);
+      const [targetPo] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, String(poId))).limit(1);
       if (!targetPo) {
         return NextResponse.json({ success: false, error: 'PO not found.' }, { status: 404 });
       }
@@ -691,13 +691,13 @@ export async function POST(request: NextRequest) {
           notes: sql`CONCAT(COALESCE(${purchaseOrders.notes}, ''), ' [CANCELLED: ', ${reason}, ']')`,
           updatedAt: new Date(),
         })
-        .where(eq(purchaseOrders.id, Number(poId)))
+        .where(eq(purchaseOrders.id, String(poId)))
         .returning();
 
       await db.insert(auditLogs).values({
         action: 'purchase_order.cancelled',
         entityType: 'purchase_order',
-        entityId: Number(poId),
+        entityId: String(poId),
         metadata: { actorName, reason },
       });
 

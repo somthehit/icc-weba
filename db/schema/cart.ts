@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   integer,
   varchar,
   numeric,
@@ -14,8 +14,8 @@ import { products, productVariants } from './catalog';
 export const carts = pgTable(
   'carts',
   {
-    id: serial('id').primaryKey(),
-    userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
     sessionId: varchar('session_id', { length: 100 }), // for guest carts
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -29,14 +29,14 @@ export const carts = pgTable(
 export const cartItems = pgTable(
   'cart_items',
   {
-    id: serial('id').primaryKey(),
-    cartId: integer('cart_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    cartId: uuid('cart_id')
       .notNull()
       .references(() => carts.id, { onDelete: 'cascade' }),
-    productId: integer('product_id')
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
-    variantId: integer('variant_id').references(() => productVariants.id, {
+    variantId: uuid('variant_id').references(() => productVariants.id, {
       onDelete: 'set null',
     }),
     quantity: integer('quantity').notNull().default(1),
@@ -50,11 +50,11 @@ export const cartItems = pgTable(
 export const wishlists = pgTable(
   'wishlists',
   {
-    id: serial('id').primaryKey(),
-    userId: integer('user_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    productId: integer('product_id')
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),

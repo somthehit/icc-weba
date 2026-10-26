@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   numeric,
   integer,
@@ -9,7 +9,7 @@ import {
 import { deliveryPartnerTypeEnum } from './enums';
 
 export const deliveryZones = pgTable('delivery_zones', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 120 }).notNull(), // "Kailali Valley", "Outside Valley (Terai)"
   provinces: varchar('provinces', { length: 300 }), // comma-separated province codes covered
   districts: varchar('districts', { length: 500 }),
@@ -20,7 +20,7 @@ export const deliveryZones = pgTable('delivery_zones', {
 });
 
 export const deliveryPartners = pgTable('delivery_partners', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 120 }).notNull(), // "In-house Riders", "Pathao Courier"
   type: deliveryPartnerTypeEnum('type').notNull().default('in_house'),
   contactPhone: varchar('contact_phone', { length: 15 }),

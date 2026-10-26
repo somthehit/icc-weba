@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Map account code -> net balance
     // For Assets/Expenses: Net Balance = Debit - Credit
     // For Liabilities/Equity/Revenue: Net Balance = Credit - Debit
-    const accountSummaryMap = new Map<string, { id: number; name: string; type: string; debit: number; credit: number; balance: number }>();
+    const accountSummaryMap = new Map<string, { id: string; name: string; type: string; debit: number; credit: number; balance: number }>();
 
     for (const row of glBalances) {
       const debit = Number(row.totalDebit || 0);

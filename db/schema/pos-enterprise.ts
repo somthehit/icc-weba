@@ -142,8 +142,8 @@ export type Shift = InferSelectModel<typeof shifts>;
 // Standard retail transactions record synced for central accounts
 export const posTransactions = pgTable('pos_transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  shiftId: integer('shift_id'),
-  cashierId: integer('cashier_id'),
+  shiftId: uuid('shift_id'),
+  cashierId: uuid('cashier_id'),
   cashierName: text('cashier_name'),
   terminalCode: text('terminal_code').notNull().default('REG-01'),
   invoiceNumber: text('invoice_number').notNull().unique(),

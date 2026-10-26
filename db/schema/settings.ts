@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   boolean,
   numeric,
@@ -12,7 +12,7 @@ import { paymentMethodEnum, notificationEventEnum, provinceEnum } from './enums'
 
 // Single-row table holding store-wide configuration (read the one row your app expects)
 export const storeProfile = pgTable('store_profile', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   storeName: varchar('store_name', { length: 150 }).notNull().default('Intel Computer Center'),
   tagline: varchar('tagline', { length: 300 }),
   contactEmail: varchar('contact_email', { length: 200 }),
@@ -52,7 +52,7 @@ export const storeProfile = pgTable('store_profile', {
 export const paymentMethodSettings = pgTable(
   'payment_method_settings',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     method: paymentMethodEnum('method').notNull(),
     isEnabled: boolean('is_enabled').notNull().default(false),
     merchantId: varchar('merchant_id', { length: 150 }),
@@ -68,7 +68,7 @@ export const paymentMethodSettings = pgTable(
 export const notificationPreferences = pgTable(
   'notification_preferences',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     eventType: notificationEventEnum('event_type').notNull(),
     emailEnabled: boolean('email_enabled').notNull().default(true),
     smsEnabled: boolean('sms_enabled').notNull().default(false),

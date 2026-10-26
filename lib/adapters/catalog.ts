@@ -42,7 +42,7 @@ const iso = (v: Date | string | null | undefined): string | undefined => {
  * row and for its JSON round-trip.
  */
 export interface DbProductRow {
-  id: number;
+  id: string;
   sku: string;
   name: string;
   slug: string;
@@ -179,7 +179,7 @@ export function mapDbProductToProduct(row: DbProductRow): Product {
 }
 
 export interface DbCategoryRow {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description?: string | null;
@@ -204,7 +204,7 @@ export function mapDbCategoryToCategoryItem(row: DbCategoryRow): CategoryItem {
 }
 
 export interface DbBrandRow {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   logoUrl?: string | null;

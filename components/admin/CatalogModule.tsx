@@ -189,9 +189,12 @@ export const CatalogModule: React.FC<CatalogModuleProps> = ({
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
+                            type="button"
                             onClick={() => (handleDeleteProduct ? handleDeleteProduct(p.id, p.name, true) : handleSoftDeleteProduct?.(p.id, p.name))}
                             title="Delete Product Permanently"
-                            className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
+                            aria-label={`Delete ${p.name}`}
+                            data-testid={`delete-product-${p.id}`}
+                            className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

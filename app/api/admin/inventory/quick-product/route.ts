@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString().slice(-4)}`;
 
     // Resolve or find brand
-    let brandId: number | null = null;
+    let brandId: string | null = null;
     const [existingBrand] = await db.select().from(brands).where(eq(brands.name, brand)).limit(1);
     if (existingBrand) {
       brandId = existingBrand.id;
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Resolve or find category
-    let categoryId: number | null = null;
+    let categoryId: string | null = null;
     const [existingCat] = await db.select().from(categories).where(eq(categories.name, category)).limit(1);
     if (existingCat) {
       categoryId = existingCat.id;

@@ -53,7 +53,7 @@ export class AdjustmentError extends Error {
 }
 
 export interface AdjustmentActor {
-  userId: number;
+  userId: string;
   /** Snapshotted onto the movement, so "who did this" survives a deactivated user. */
   name: string | null;
   /** Only an owner may drive a count below zero. */
@@ -61,13 +61,13 @@ export interface AdjustmentActor {
 }
 
 export interface ApplyAdjustmentInput {
-  productId: number;
-  variantId?: number | null;
+  productId: string;
+  variantId?: string | null;
   /**
    * `undefined` asks for the shop's only active warehouse; explicit `null` records the
    * movement against the product-level count with no warehouse named.
    */
-  warehouseId?: number | null;
+  warehouseId?: string | null;
   quantityDelta: number;
   reason: InventoryMovementReason;
   note?: string | null;
@@ -76,7 +76,7 @@ export interface ApplyAdjustmentInput {
   expectedQuantity?: number;
   allowNegative?: boolean;
   /** Set when this movement undoes an earlier one. */
-  reversesMovementId?: number | null;
+  reversesMovementId?: string | null;
   /**
    * Overrides `products.cost_price`. Used by a reversal so it books against the cost
    * the original froze, even if someone has corrected the purchase price since.
@@ -103,7 +103,7 @@ export interface ApplyAdjustmentInput {
 export interface AdjustmentResult {
   movement: MovementRow;
   product: {
-    id: number;
+    id: string;
     sku: string;
     name: string;
     stockQuantity: number;
@@ -113,12 +113,12 @@ export interface AdjustmentResult {
   previousQuantity: number;
   newQuantity: number;
   /** Null when nothing was booked — see `costMissing` for whether that was a gap. */
-  bookedExpense: { id: number; amount: number; categoryName: string } | null;
+  bookedExpense: { id: string; amount: number; categoryName: string } | null;
   /** True when this should have booked a cost but the product has none on record. */
   costMissing: boolean;
   /** False when there was no warehouse to mirror into, which is not an error. */
   mirrored: boolean;
-  warehouseId: number | null;
+  warehouseId: string | null;
 }
 
 /**
@@ -328,7 +328,7 @@ const MANUAL_SET = new Set<string>(MANUAL_REASONS);
  */
 export async function reverseMovement(
   client: DbClient,
-  args: { movementId: number; note?: string | null },
+  args: { movementId: string; note?: string | null },
   actor: AdjustmentActor,
 ): Promise<AdjustmentResult & { original: MovementRow }> {
   const [original] = await client

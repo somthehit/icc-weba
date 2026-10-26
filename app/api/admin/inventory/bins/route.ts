@@ -13,7 +13,11 @@ import { eq, desc, count } from 'drizzle-orm';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const warehouseId = searchParams.get('warehouseId') || '1';
+    let warehouseId = searchParams.get('warehouseId');
+    if (!warehouseId) {
+      const [firstWh] = await db.select({ id: warehouses.id }).from(warehouses).limit(1);
+      warehouseId = firstWh?.id || '00000000-0000-0000-0000-000000000001';
+    }
 
     const bins = await db
       .select({
@@ -33,7 +37,7 @@ export async function GET(request: NextRequest) {
       })
       .from(warehouseBins)
       .leftJoin(warehouses, eq(warehouseBins.warehouseId, warehouses.id))
-      .where(eq(warehouseBins.warehouseId, Number(warehouseId)))
+      .where(eq(warehouseBins.warehouseId, warehouseId))
       .orderBy(warehouseBins.zone, warehouseBins.rack, warehouseBins.shelf, warehouseBins.bin);
 
     // If no bins exist yet, seed standard zones
@@ -51,7 +55,7 @@ export async function GET(request: NextRequest) {
 
       for (const b of defaultBins) {
         await db.insert(warehouseBins).values({
-          warehouseId: Number(warehouseId),
+          warehouseId,
           ...b,
           capacityUnits: 150,
           currentUsage: 12,
@@ -59,7 +63,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Re-fetch
-      const seeded = await db.select().from(warehouseBins).where(eq(warehouseBins.warehouseId, Number(warehouseId)));
+      const seeded = await db.select().from(warehouseBins).where(eq(warehouseBins.warehouseId, warehouseId));
       return NextResponse.json({ success: true, bins: seeded });
     }
 
@@ -82,7 +86,7 @@ export async function POST(request: NextRequest) {
     // 1. Create / Configure Warehouse Bin
     if (action === 'create-bin') {
       const {
-        warehouseId = 1,
+        warehouseId,
         zone = 'A',
         rack = '01',
         shelf = 'S1',
@@ -91,12 +95,18 @@ export async function POST(request: NextRequest) {
         capacityUnits = 100,
       } = body;
 
-      const code = `WH${warehouseId}-Z-${zone.toUpperCase()}-R${rack}-S${shelf}-B${bin}`.toUpperCase();
+      let targetWarehouseId = warehouseId ? String(warehouseId) : null;
+      if (!targetWarehouseId) {
+        const [firstWh] = await db.select({ id: warehouses.id }).from(warehouses).limit(1);
+        targetWarehouseId = firstWh?.id || '00000000-0000-0000-0000-000000000001';
+      }
+
+      const code = `WH-Z-${zone.toUpperCase()}-R${rack}-S${shelf}-B${bin}`.toUpperCase();
 
       const [newBin] = await db
         .insert(warehouseBins)
         .values({
-          warehouseId: Number(warehouseId),
+          warehouseId: targetWarehouseId,
           zone: zone.toUpperCase(),
           rack,
           shelf,

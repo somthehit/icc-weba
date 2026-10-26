@@ -65,7 +65,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
       totalOutstanding: 0,
     };
 
-    const supplierOutstandingMap = new Map<number, { id: number; name: string; outstanding: number; billsCount: number }>();
+    const supplierOutstandingMap = new Map<string, { id: string; name: string; outstanding: number; billsCount: number }>();
 
     for (const b of allBills) {
       const remaining = Number(b.totalAmount) - Number(b.amountPaid || 0);
@@ -85,10 +85,12 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
       }
 
       const sId = b.supplierId;
-      const curr = supplierOutstandingMap.get(sId) || { id: sId, name: b.supplierName || 'Unknown', outstanding: 0, billsCount: 0 };
-      curr.outstanding += remaining;
-      curr.billsCount += 1;
-      supplierOutstandingMap.set(sId, curr);
+      if (sId) {
+        const curr = supplierOutstandingMap.get(sId) || { id: sId, name: b.supplierName || 'Unknown', outstanding: 0, billsCount: 0 };
+        curr.outstanding += remaining;
+        curr.billsCount += 1;
+        supplierOutstandingMap.set(sId, curr);
+      }
     }
 
     return NextResponse.json({
@@ -112,7 +114,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       return NextResponse.json({ success: false, error: 'Supplier and a valid gross amount are required' }, { status: 400 });
     }
 
-    const [supplier] = await db.select().from(suppliers).where(eq(suppliers.id, Number(supplierId))).limit(1);
+    const [supplier] = await db.select().from(suppliers).where(eq(suppliers.id, String(supplierId))).limit(1);
     if (!supplier) {
       return NextResponse.json({ success: false, error: 'Supplier not found' }, { status: 404 });
     }
@@ -129,7 +131,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
       .values({
         paymentNumber: paymentNum,
         supplierId: supplier.id,
-        billId: billId ? Number(billId) : null,
+        billId: billId ? String(billId) : null,
         paymentDate: payDate,
         amountPaid: String(gross.toFixed(2)),         // gross settled amount
         tdsRate: String(Number(tdsRate).toFixed(2)),
@@ -145,7 +147,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
 
     // 2. If attached to a specific bill, update the bill's amountPaid
     if (billId) {
-      const [bill] = await db.select().from(purchaseBills).where(eq(purchaseBills.id, Number(billId))).limit(1);
+      const [bill] = await db.select().from(purchaseBills).where(eq(purchaseBills.id, String(billId))).limit(1);
       if (bill) {
         const newPaid = Number(bill.amountPaid || 0) + gross;
         const total = Number(bill.totalAmount || 0);
@@ -153,7 +155,7 @@ export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { 
         await db
           .update(purchaseBills)
           .set({ amountPaid: String(newPaid.toFixed(2)), status })
-          .where(eq(purchaseBills.id, Number(billId)));
+          .where(eq(purchaseBills.id, String(billId)));
       }
     }
 

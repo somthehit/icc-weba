@@ -22,9 +22,8 @@ async function verifySupervisorCredentials(supervisorId: string | number, pin: s
   }
 
   // 2. Legacy / Admin fallback
-  const numericId = Number(supervisorId);
-  if (!isNaN(numericId)) {
-    const [u] = await db.select().from(users).where(eq(users.id, numericId)).limit(1);
+  if (supervisorId) {
+    const [u] = await db.select().from(users).where(eq(users.id, String(supervisorId))).limit(1);
     if (u && (u.role === 'admin' || u.role === 'sales')) {
       if (u.posPin) {
         const ok = u.posPin.startsWith('$2a$') || u.posPin.startsWith('$2b$')
@@ -102,7 +101,7 @@ export async function POST(request: NextRequest) {
     const [existingOrder] = await db
       .select()
       .from(orders)
-      .where(orderId ? eq(orders.id, Number(orderId)) : eq(orders.orderNumber, String(orderNumber)))
+      .where(orderId ? eq(orders.id, String(orderId)) : eq(orders.orderNumber, String(orderNumber)))
       .limit(1);
 
     if (!existingOrder) {
@@ -135,7 +134,7 @@ export async function POST(request: NextRequest) {
                 stockQuantity: sql`${products.stockQuantity} + ${it.quantity}`,
                 updatedAt: new Date(),
               })
-              .where(eq(products.id, Number(it.productId)));
+              .where(eq(products.id, String(it.productId)));
           }
         }
       }
@@ -143,7 +142,7 @@ export async function POST(request: NextRequest) {
       // C. Record in posCashTransactions if refund is cash
       if (refundMethod === 'cash' && shiftId) {
         await tx.insert(posCashTransactions).values({
-          shiftId: Number(shiftId),
+          shiftId: String(shiftId),
           type: 'CASH_OUT',
           amount: (-Math.abs(parsedRefundAmount)).toFixed(2),
           reason: `REFUND: #${existingOrder.orderNumber} (${reason}) - Auth: ${supervisorName}`,

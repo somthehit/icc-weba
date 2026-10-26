@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   integer,
   numeric,
@@ -33,9 +33,9 @@ export interface ShippingAddressSnapshot {
 export const orders = pgTable(
   'orders',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     orderNumber: varchar('order_number', { length: 30 }).notNull(), // e.g. "ICE-2026-1042"
-    userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
     status: orderStatusEnum('status').notNull().default('pending'),
     subtotal: numeric('subtotal', { precision: 12, scale: 2 }).notNull(),
     vatAmount: numeric('vat_amount', { precision: 12, scale: 2 }).notNull().default('0'),
@@ -43,9 +43,9 @@ export const orders = pgTable(
     discountAmount: numeric('discount_amount', { precision: 12, scale: 2 })
       .notNull()
       .default('0'),
-    couponId: integer('coupon_id').references(() => coupons.id, { onDelete: 'set null' }),
+    couponId: uuid('coupon_id').references(() => coupons.id, { onDelete: 'set null' }),
     totalAmount: numeric('total_amount', { precision: 12, scale: 2 }).notNull(),
-    shippingAddressId: integer('shipping_address_id').references(() => addresses.id, {
+    shippingAddressId: uuid('shipping_address_id').references(() => addresses.id, {
       onDelete: 'set null',
     }),
     /**
@@ -56,7 +56,7 @@ export const orders = pgTable(
      * `order_items` snapshots product name and SKU for the same reason.
      */
     shippingAddressSnapshot: jsonb('shipping_address_snapshot').$type<ShippingAddressSnapshot>(),
-    deliveryZoneId: integer('delivery_zone_id').references(() => deliveryZones.id, {
+    deliveryZoneId: uuid('delivery_zone_id').references(() => deliveryZones.id, {
       onDelete: 'set null',
     }),
     paymentMethod: paymentMethodEnum('payment_method').notNull(),
@@ -75,12 +75,12 @@ export const orders = pgTable(
 export const orderItems = pgTable(
   'order_items',
   {
-    id: serial('id').primaryKey(),
-    orderId: integer('order_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    orderId: uuid('order_id')
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
-    productId: integer('product_id').references(() => products.id, { onDelete: 'set null' }),
-    variantId: integer('variant_id').references(() => productVariants.id, {
+    productId: uuid('product_id').references(() => products.id, { onDelete: 'set null' }),
+    variantId: uuid('variant_id').references(() => productVariants.id, {
       onDelete: 'set null',
     }),
     // snapshots protect historical order records from later product edits/deletion
@@ -105,13 +105,13 @@ export const orderItems = pgTable(
 export const orderStatusHistory = pgTable(
   'order_status_history',
   {
-    id: serial('id').primaryKey(),
-    orderId: integer('order_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    orderId: uuid('order_id')
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
     status: orderStatusEnum('status').notNull(),
     note: varchar('note', { length: 300 }),
-    changedBy: integer('changed_by').references(() => users.id, { onDelete: 'set null' }),
+    changedBy: uuid('changed_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => ({
@@ -122,11 +122,11 @@ export const orderStatusHistory = pgTable(
 export const shipments = pgTable(
   'shipments',
   {
-    id: serial('id').primaryKey(),
-    orderId: integer('order_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    orderId: uuid('order_id')
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
-    deliveryPartnerId: integer('delivery_partner_id').references(() => deliveryPartners.id, {
+    deliveryPartnerId: uuid('delivery_partner_id').references(() => deliveryPartners.id, {
       onDelete: 'set null',
     }),
     riderName: varchar('rider_name', { length: 120 }),
@@ -142,8 +142,8 @@ export const shipments = pgTable(
 export const payments = pgTable(
   'payments',
   {
-    id: serial('id').primaryKey(),
-    orderId: integer('order_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    orderId: uuid('order_id')
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
     method: paymentMethodEnum('method').notNull(),

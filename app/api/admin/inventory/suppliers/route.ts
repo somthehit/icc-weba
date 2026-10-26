@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
           isActive,
           updatedAt: new Date(),
         })
-        .where(eq(suppliers.id, Number(id)))
+        .where(eq(suppliers.id, String(id)))
         .returning();
 
       await db.insert(auditLogs).values({

@@ -380,12 +380,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       let loadedProducts: Product[] = [];
       let loadedCategories: CategoryItem[] = [];
+      let hasProductResponse = false;
 
       if (productRes && productRes.ok) {
         try {
           const productData = await productRes.json();
-          if (Array.isArray(productData.products) && productData.products.length > 0) {
+          if (Array.isArray(productData.products)) {
             loadedProducts = productData.products;
+            hasProductResponse = true;
           }
         } catch (e) {
           console.warn('Failed to parse products json:', e);
@@ -403,7 +405,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
 
-      setProducts(loadedProducts.length > 0 ? loadedProducts : INITIAL_PRODUCTS);
+      setProducts(hasProductResponse ? loadedProducts : INITIAL_PRODUCTS);
       setCategories(loadedCategories.length > 0 ? loadedCategories : INITIAL_CATEGORIES);
 
       // Brands and reviews
@@ -1557,18 +1559,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     input: ProductWriteInput,
     productId?: string,
   ): Promise<{ ok: true; product: Product } | { ok: false; error: string }> => {
-    if (productId !== undefined) {
-      const numericId = Number(productId);
-      if (Number.isInteger(numericId) && numericId > 0) {
-        const result = await updateProductRequest(numericId, input);
-        if (!result.ok) return result;
-        const saved = result.data.product;
-        setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
-        return { ok: true, product: saved };
+    if (productId !== undefined && productId !== '') {
+      const isLegacyMockId = productId.startsWith('p-') && !/^[0-9a-f]{8}-[0-9a-f]{4}/i.test(productId);
+      if (!isLegacyMockId) {
+        const result = await updateProductRequest(productId, input);
+        if (result.ok) {
+          const saved = result.data.product;
+          setProducts((prev) => prev.map((p) => (p.id === saved.id || p.id === productId ? saved : p)));
+          return { ok: true, product: saved };
+        }
+        // If not found in DB, we can try creating or slug matching below
+        if (!/not found/i.test(result.error)) {
+          return result;
+        }
       }
 
-      // If productId is not a positive integer (e.g. initial-data string id like 'p-lenovo-legion-pro-5'),
-      // automatically insert it into the database so it gets a real DB ID and persists properly.
+      // If productId is a legacy mock id or not found in DB, insert it into the database
       const createRes = await createProductRequest(input);
       if (createRes.ok) {
         const saved = createRes.data.product;
@@ -1582,9 +1588,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const fetchRes = await fetch(`/api/products?slug=${encodeURIComponent(input.slug)}`);
           if (fetchRes.ok) {
             const data = await fetchRes.json();
-            const dbNumericId = Number(data.product?.id);
-            if (Number.isInteger(dbNumericId) && dbNumericId > 0) {
-              const updRes = await updateProductRequest(dbNumericId, input);
+            const dbId = data.product?.id;
+            if (dbId) {
+              const updRes = await updateProductRequest(dbId, input);
               if (updRes.ok) {
                 const saved = updRes.data.product;
                 setProducts((prev) => prev.map((p) => (p.id === productId || p.id === saved.id ? saved : p)));
@@ -1614,8 +1620,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     productId: string,
     permanent = true,
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
-    const numericId = Number(productId);
-    if (!Number.isInteger(numericId) || numericId <= 0) {
+    const isLegacyMockId = productId.startsWith('p-') && !/^[0-9a-f]{8}-[0-9a-f]{4}/i.test(productId);
+    if (isLegacyMockId) {
       if (permanent) {
         setProducts((prev) => prev.filter((p) => p.id !== productId));
       } else {
@@ -1625,7 +1631,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return { ok: true };
     }
-    const result = await deleteProductRequest(numericId, permanent);
+    const result = await deleteProductRequest(productId, permanent);
     if (!result.ok) return result;
     if (permanent) {
       setProducts((prev) => prev.filter((p) => p.id !== productId));

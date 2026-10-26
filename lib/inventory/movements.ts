@@ -56,13 +56,13 @@ export function todayInNepal(): string {
 }
 
 export interface MovementInput {
-  productId: number;
-  variantId?: number | null;
+  productId: string;
+  variantId?: string | null;
   /**
    * Null means "against the authoritative product-level count" — which is what a
    * sale is, since `products.stock_quantity` is not per-warehouse.
    */
-  warehouseId?: number | null;
+  warehouseId?: string | null;
   productName: string;
   sku: string;
   /** Signed. Zero is rejected by a CHECK constraint, so callers must not pass it. */
@@ -74,10 +74,10 @@ export interface MovementInput {
   unitCost?: string | null;
   note?: string | null;
   referenceNo?: string | null;
-  orderId?: number | null;
-  expenseId?: number | null;
-  reversesMovementId?: number | null;
-  performedBy?: number | null;
+  orderId?: string | null;
+  expenseId?: string | null;
+  reversesMovementId?: string | null;
+  performedBy?: string | null;
   performedByName?: string | null;
 }
 
@@ -127,7 +127,7 @@ export async function recordMovement(
  * branch, guessing which one a web order shipped from would be an invention, and a
  * null mirror is more honest than a wrong one.
  */
-export async function resolveDefaultWarehouse(client: DbClient): Promise<number | null> {
+export async function resolveDefaultWarehouse(client: DbClient): Promise<string | null> {
   const active = await client
     .select({ id: warehouses.id })
     .from(warehouses)
@@ -163,9 +163,9 @@ export async function resolveDefaultWarehouse(client: DbClient): Promise<number 
 export async function mirrorWarehouseStock(
   client: DbClient,
   args: {
-    productId: number;
-    variantId?: number | null;
-    warehouseId: number | null;
+    productId: string;
+    variantId?: string | null;
+    warehouseId: string | null;
     quantityOnHand: number;
   },
 ): Promise<boolean> {
@@ -203,7 +203,7 @@ export async function mirrorWarehouseStock(
  * utilities…); none of them fits stock that was destroyed, so this one is created on
  * demand rather than requiring a reseed before the first write-off can be recorded.
  */
-export async function ensureWriteOffCategory(client: DbClient): Promise<number> {
+export async function ensureWriteOffCategory(client: DbClient): Promise<string> {
   const [created] = await client
     .insert(expenseCategories)
     .values({
@@ -233,13 +233,13 @@ export interface WriteOffInput {
   reason: InventoryMovementReason;
   note?: string | null;
   referenceNo?: string | null;
-  performedBy?: number | null;
+  performedBy?: string | null;
   /** Set when this is undoing an earlier write-off, which is the only positive movement that books. */
   isReversal?: boolean;
 }
 
 export interface WriteOffResult {
-  expenseId: number | null;
+  expenseId: string | null;
   /** Rupees, signed — negative on a reversal. Null when nothing was booked. */
   amount: string | null;
   /** True when the movement should have booked but the product has no cost price. */

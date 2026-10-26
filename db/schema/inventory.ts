@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   integer,
   numeric,
@@ -18,7 +18,7 @@ import { users } from './users';
 import { inventoryMovementReasonEnum, provinceEnum } from './enums';
 
 export const warehouses = pgTable('warehouses', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 120 }).notNull(), // e.g. "Kailali Warehouse"
   province: provinceEnum('province'),
   district: varchar('district', { length: 100 }),
@@ -28,14 +28,14 @@ export const warehouses = pgTable('warehouses', {
 export const inventory = pgTable(
   'inventory',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
-    variantId: integer('variant_id').references(() => productVariants.id, {
+    variantId: uuid('variant_id').references(() => productVariants.id, {
       onDelete: 'cascade',
     }),
-    warehouseId: integer('warehouse_id')
+    warehouseId: uuid('warehouse_id')
       .notNull()
       .references(() => warehouses.id, { onDelete: 'restrict' }),
     quantityOnHand: integer('quantity_on_hand').notNull().default(0),
@@ -68,18 +68,18 @@ export const inventory = pgTable(
 export const inventoryMovements = pgTable(
   'inventory_movements',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     // restrict: a ledger that cascades away with the product is not a ledger.
-    productId: integer('product_id')
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'restrict' }),
-    variantId: integer('variant_id').references(() => productVariants.id, {
+    variantId: uuid('variant_id').references(() => productVariants.id, {
       onDelete: 'set null',
     }),
     // Nullable: a manual adjustment always names a warehouse, but a sale comes off
     // `products.stockQuantity`, which is not per-warehouse. Null means "against the
     // authoritative product-level count".
-    warehouseId: integer('warehouse_id').references(() => warehouses.id, {
+    warehouseId: uuid('warehouse_id').references(() => warehouses.id, {
       onDelete: 'restrict',
     }),
     // Snapshots, matching the order_items precedent — the log must still read
@@ -100,14 +100,14 @@ export const inventoryMovements = pgTable(
     // Damage report number, supplier invoice, stock count sheet — the spec's
     // `referenceId`, e.g. "DMG-2026-0811".
     referenceNo: varchar('reference_no', { length: 60 }),
-    orderId: integer('order_id').references(() => orders.id, { onDelete: 'set null' }),
+    orderId: uuid('order_id').references(() => orders.id, { onDelete: 'set null' }),
     // The expenses row this movement booked, for write-offs with a known cost.
-    expenseId: integer('expense_id').references(() => expenses.id, { onDelete: 'set null' }),
-    reversesMovementId: integer('reverses_movement_id').references(
+    expenseId: uuid('expense_id').references(() => expenses.id, { onDelete: 'set null' }),
+    reversesMovementId: uuid('reverses_movement_id').references(
       (): AnyPgColumn => inventoryMovements.id,
       { onDelete: 'restrict' },
     ),
-    performedBy: integer('performed_by').references(() => users.id, { onDelete: 'set null' }),
+    performedBy: uuid('performed_by').references(() => users.id, { onDelete: 'set null' }),
     // Name snapshot so "who did this" survives the user being deactivated.
     performedByName: varchar('performed_by_name', { length: 150 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),

@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   varchar,
   boolean,
   timestamp,
@@ -15,7 +15,7 @@ import { userRoleEnum, provinceEnum, staffRoleEnum, shiftStatusEnum } from './en
 export const users = pgTable(
   'users',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name', { length: 150 }).notNull(),
     email: varchar('email', { length: 200 }).notNull(),
     phone: varchar('phone', { length: 15 }), // Nepali format e.g. 98XXXXXXXX — validate at app layer
@@ -25,7 +25,7 @@ export const users = pgTable(
     avatarUrl: varchar('avatar_url', { length: 500 }),
     isActive: boolean('is_active').notNull().default(true),
     emailVerifiedAt: timestamp('email_verified_at'),
-    invitedBy: integer('invited_by'),
+    invitedBy: uuid('invited_by'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -39,8 +39,8 @@ export const users = pgTable(
 export const addresses = pgTable(
   'addresses',
   {
-    id: serial('id').primaryKey(),
-    userId: integer('user_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     label: varchar('label', { length: 50 }).default('Home'), // Home / Office / Other
@@ -69,8 +69,8 @@ export const addresses = pgTable(
 export const staffProfiles = pgTable(
   'staff_profiles',
   {
-    id: serial('id').primaryKey(),
-    userId: integer('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
     staffRole: staffRoleEnum('staff_role').notNull(),
     department: varchar('department', { length: 120 }),
     skills: text('skills').array().notNull().default([]),

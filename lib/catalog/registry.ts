@@ -46,7 +46,7 @@ const scalarCount = async (query: Promise<Array<{ count: number }>>): Promise<nu
 };
 
 /** Products pointing at a category, any status — a discontinued product still references it. */
-export const categoryProductCount = (categoryId: number) =>
+export const categoryProductCount = (categoryId: string) =>
   scalarCount(
     db
       .select({ count: sql<number>`count(*)::int` })
@@ -54,7 +54,7 @@ export const categoryProductCount = (categoryId: number) =>
       .where(eq(products.categoryId, categoryId)),
   );
 
-export const brandProductCount = (brandId: number) =>
+export const brandProductCount = (brandId: string) =>
   scalarCount(
     db
       .select({ count: sql<number>`count(*)::int` })
@@ -62,7 +62,7 @@ export const brandProductCount = (brandId: number) =>
       .where(eq(products.brandId, brandId)),
   );
 
-export const attributeValueCount = (attributeId: number) =>
+export const attributeValueCount = (attributeId: string) =>
   scalarCount(
     db
       .select({ count: sql<number>`count(*)::int` })
@@ -70,7 +70,7 @@ export const attributeValueCount = (attributeId: number) =>
       .where(eq(productAttributeValues.attributeId, attributeId)),
   );
 
-export const filterTagProductCount = (filterTagId: number) =>
+export const filterTagProductCount = (filterTagId: string) =>
   scalarCount(
     db
       .select({ count: sql<number>`count(*)::int` })
@@ -79,7 +79,7 @@ export const filterTagProductCount = (filterTagId: number) =>
   );
 
 /** Child categories, so the tree view can warn before a parent is deactivated. */
-export const categoryChildCount = (categoryId: number) =>
+export const categoryChildCount = (categoryId: string) =>
   scalarCount(
     db
       .select({ count: sql<number>`count(*)::int` })
@@ -101,11 +101,11 @@ export const categoryChildCount = (categoryId: number) =>
  * function return rather than loop forever.
  */
 export async function categoryWouldCycle(
-  categoryId: number,
-  parentId: number,
+  categoryId: string,
+  parentId: string,
 ): Promise<boolean> {
-  let cursor: number | null = parentId;
-  const seen = new Set<number>();
+  let cursor: string | null = parentId;
+  const seen = new Set<string>();
 
   while (cursor !== null) {
     if (cursor === categoryId) return true;
@@ -134,8 +134,8 @@ export async function categoryWouldCycle(
  */
 export async function replaceAttributeCategories(
   tx: DbClient,
-  attributeId: number,
-  categoryIds: number[],
+  attributeId: string,
+  categoryIds: string[],
 ): Promise<void> {
   await tx
     .delete(attributeCategories)
@@ -168,7 +168,7 @@ export async function replaceAttributeCategories(
  */
 export async function replaceAttributeOptions(
   tx: DbClient,
-  attributeId: number,
+  attributeId: string,
   options: AttributeOptionInput[],
 ): Promise<number> {
   const existing = await tx
@@ -177,7 +177,7 @@ export async function replaceAttributeOptions(
     .where(eq(attributeOptions.attributeId, attributeId));
 
   const keep = new Set(
-    options.map((o) => o.id).filter((id): id is number => id !== undefined),
+    options.map((o) => o.id).filter((id): id is string => id !== undefined),
   );
   const remove = existing.filter((row) => !keep.has(row.id)).map((row) => row.id);
   if (remove.length > 0) {
@@ -231,7 +231,7 @@ export async function replaceAttributeOptions(
 /** Drops every option, for an attribute that is no longer a `select`. */
 export async function clearAttributeOptions(
   tx: DbClient,
-  attributeId: number,
+  attributeId: string,
 ): Promise<void> {
   await tx.delete(attributeOptions).where(eq(attributeOptions.attributeId, attributeId));
 }

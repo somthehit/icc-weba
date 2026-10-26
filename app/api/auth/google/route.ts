@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       .where(eq(users.email, email))
       .limit(1);
 
-    let user: { id: number; name: string; email: string; phone: string | null; role: string; avatarUrl: string | null; isActive: boolean };
+    let user: { id: string; name: string; email: string; phone: string | null; role: string; avatarUrl: string | null; isActive: boolean };
 
     if (existingUser) {
       // Update avatar if Google provides one and the user doesn't have one yet

@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       const cost = parseFloat(String(i.unitCost)) || 0;
       totalAmountNum += qty * cost;
       return {
-        productId: Number(i.productId),
+        productId: String(i.productId),
         sku: i.sku || 'SKU',
         quantity: qty,
         unitCost: String(cost),
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
           returnNumber,
           returnType: returnType as any,
           referenceInvoiceOrPo,
-          supplierId: supplierId ? Number(supplierId) : null,
+          supplierId: supplierId ? String(supplierId) : null,
           status: 'completed',
           totalAmount: String(totalAmountNum),
           reason,
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         .returning();
 
       for (const item of processedItems) {
-        let serialId: number | null = null;
+        let serialId: string | null = null;
         if (item.serialNumber) {
           const [s] = await tx
             .select()

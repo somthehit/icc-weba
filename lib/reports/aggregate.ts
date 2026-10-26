@@ -249,7 +249,7 @@ export async function salesSeries(query: ReportQuery): Promise<SalesSeriesReport
 /* --------------------------------------------------------- products & ranges */
 
 export interface RankedRow {
-  id: number | null;
+  id: string | null;
   name: string;
   units: number;
   revenue: number;
@@ -270,7 +270,7 @@ export interface RankedReport {
 
 function rankRows(
   raw: Array<{
-    id: number | null;
+    id: string | null;
     name: string | null;
     units: number;
     revenue: string;
@@ -665,9 +665,9 @@ export interface PayableBucket {
 }
 
 export interface PayableBill {
-  id: number;
+  id: string;
   billNumber: string;
-  supplierId: number;
+  supplierId: string;
   supplierName: string;
   billDate: string;
   dueDate: string | null;

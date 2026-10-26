@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       // Find product
       let targetProduct = null;
       if (productId) {
-        [targetProduct] = await db.select().from(products).where(eq(products.id, Number(productId))).limit(1);
+        [targetProduct] = await db.select().from(products).where(eq(products.id, String(productId))).limit(1);
       } else if (barcodeOrSku) {
         const cleanIdentifier = String(barcodeOrSku).trim();
         [targetProduct] = await db
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const [targetProduct] = await db.select().from(products).where(eq(products.id, Number(productId))).limit(1);
+      const [targetProduct] = await db.select().from(products).where(eq(products.id, String(productId))).limit(1);
       if (!targetProduct) {
         return NextResponse.json({ success: false, error: 'Product not found.' }, { status: 404 });
       }
@@ -327,7 +327,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const [targetProduct] = await db.select().from(products).where(eq(products.id, Number(productId))).limit(1);
+      const [targetProduct] = await db.select().from(products).where(eq(products.id, String(productId))).limit(1);
       if (!targetProduct) {
         return NextResponse.json({ success: false, error: 'Product not found.' }, { status: 404 });
       }

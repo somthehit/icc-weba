@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   integer,
   varchar,
   text,
@@ -17,14 +17,14 @@ import { orders } from './orders';
 export const reviews = pgTable(
   'reviews',
   {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
-    userId: integer('user_id')
+    userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    orderId: integer('order_id').references(() => orders.id, { onDelete: 'set null' }), // verified purchase
+    orderId: uuid('order_id').references(() => orders.id, { onDelete: 'set null' }), // verified purchase
     rating: integer('rating').notNull(), // 1-5, validate at app layer
     title: varchar('title', { length: 150 }),
     comment: text('comment'),

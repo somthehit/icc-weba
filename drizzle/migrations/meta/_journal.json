@@ -43,6 +43,13 @@
       "when": 1789647882689,
       "tag": "0005_cultured_tomas",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793000190926,
+      "tag": "0006_equal_praxagora",
+      "breakpoints": true
     }
   ]
 }

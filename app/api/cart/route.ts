@@ -22,7 +22,7 @@ const MAX_QUANTITY_PER_LINE = 99;
  * design — the endpoint requires a session, and an anonymous visitor's cart
  * lives in the browser until they sign in.
  */
-async function findCart(userId: number) {
+async function findCart(userId: string) {
   const [cart] = await db
     .select()
     .from(carts)
@@ -32,7 +32,7 @@ async function findCart(userId: number) {
   return cart ?? null;
 }
 
-async function findOrCreateCart(userId: number) {
+async function findOrCreateCart(userId: string) {
   const existing = await findCart(userId);
   if (existing) return existing;
 

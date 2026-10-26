@@ -319,7 +319,7 @@ async function seed() {
     const userIdByEmail = new Map(insertedUsers.map((u) => [u.email, u.id]));
 
     // ---- addresses (one per order customer, from the order's shippingAddress)
-    const addressIdByEmail = new Map<string, number>();
+    const addressIdByEmail = new Map<string, string>();
     for (const o of INITIAL_ORDERS) {
       const email = customerEmailFor(o);
       if (addressIdByEmail.has(email)) continue;
@@ -448,7 +448,7 @@ async function seed() {
       .returning({ id: products.id, slug: products.slug });
     const productIdBySlug = new Map(insertedProducts.map((p) => [p.slug, p.id]));
     const frontendIdToSlug = new Map(INITIAL_PRODUCTS.map((p) => [p.id, p.slug]));
-    const dbProductId = (frontendId: string): number | undefined =>
+    const dbProductId = (frontendId: string): string | undefined =>
       productIdBySlug.get(frontendIdToSlug.get(frontendId) ?? '');
     // Cost keyed by the DB id, for the order-item snapshots below. Seeded orders
     // predate the snapshot column, so without this the P&L is empty by
@@ -507,7 +507,7 @@ async function seed() {
 
       // Options exist for `select` only — the endpoints reject them on any other
       // type, because a free-text value has no list to pick from.
-      const optionIdByValue = new Map<string, number>();
+      const optionIdByValue = new Map<string, string>();
       if (definition.dataType === 'select' && definition.options.length > 0) {
         const insertedOptions = await tx
           .insert(attributeOptions)
@@ -538,9 +538,9 @@ async function seed() {
       if (categoryLinks.length) await tx.insert(attributeCategories).values(categoryLinks);
 
       const valueRows: Array<{
-        productId: number;
-        attributeId: number;
-        optionId: number | null;
+        productId: string;
+        attributeId: string;
+        optionId: string | null;
         valueText: string | null;
       }> = [];
       for (const p of INITIAL_PRODUCTS) {
@@ -790,7 +790,7 @@ async function seed() {
         );
 
         const lineCount = between(1, 3);
-        const chosen = new Map<number, { item: (typeof sellable)[number]; quantity: number }>();
+        const chosen = new Map<string, { item: (typeof sellable)[number]; quantity: number }>();
         for (let l = 0; l < lineCount; l += 1) {
           const item = pick(sellable);
           const existing = chosen.get(item.dbId);

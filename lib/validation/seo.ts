@@ -121,7 +121,7 @@ export const seoPageMetaSchema = z.object({
 
 /** Per-product overrides, saved from the Product SEO Matrix tab. */
 export const productSeoSchema = z.object({
-  id: z.coerce.number().int().positive(),
+  id: z.string().trim().uuid(),
   metaTitle: optionalText(200),
   metaDescription: optionalText(500),
 });

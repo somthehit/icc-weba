@@ -106,18 +106,18 @@ export const ACCOUNT_CODES = {
   EXPENSE_PETTY_CASH: '6080',
 } as const;
 
-let cachedAccountMap: Map<string, number> | null = null;
+let cachedAccountMap: Map<string, string> | null = null;
 
 /**
  * Ensures standard Chart of Accounts exist in DB and returns a fast Code->ID lookup map.
  */
-export async function getAccountMap(): Promise<Map<string, number>> {
+export async function getAccountMap(): Promise<Map<string, string>> {
   if (cachedAccountMap && cachedAccountMap.size >= STANDARD_COA.length) {
     return cachedAccountMap;
   }
 
   const existing = await db.select().from(accounts);
-  const map = new Map<string, number>();
+  const map = new Map<string, string>();
 
   for (const acc of existing) {
     map.set(acc.code, acc.id);

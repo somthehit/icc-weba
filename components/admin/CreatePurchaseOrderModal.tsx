@@ -32,7 +32,7 @@ import { formatNpr } from '@/lib/nepal/money';
 import { adToBs, formatDualDate, getCurrentFiscalYear } from '@/lib/nepal/date';
 
 interface ProductItem {
-  id: number;
+  id: string | number;
   name: string;
   sku: string;
   barcode?: string | null;
@@ -45,7 +45,7 @@ interface ProductItem {
 }
 
 interface SupplierItem {
-  id: number;
+  id: string | number;
   name: string;
   vatPanNo?: string | null;
   phone?: string | null;
@@ -314,7 +314,7 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
 
       return {
         id: Math.random().toString(),
-        productId: p.id,
+        productId: String(p.id),
         sku: p.sku,
         supplierPartNo: '',
         description: p.name,
@@ -353,7 +353,7 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
       const next = [...prev];
       next[rowIdx] = {
         ...next[rowIdx],
-        productId: p.id,
+        productId: String(p.id),
         sku: p.sku,
         description: p.name,
         unitCost: lastCost > 0 ? lastCost : 0,
@@ -447,7 +447,7 @@ export const CreatePurchaseOrderModal: React.FC<CreatePurchaseOrderModalProps> =
 
         importedLines.push({
           id: Math.random().toString(),
-          productId: matched?.id || null,
+          productId: matched?.id ? String(matched.id) : null,
           sku: sku || matched?.sku || 'UNKNOWN',
           description: desc || matched?.name || 'Imported item',
           quantityOrdered: qty,

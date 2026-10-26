@@ -219,13 +219,13 @@ export async function POST(request: NextRequest) {
           varianceApprovedAt: now,
           varianceReason: reasonNote || 'Accountant / Supervisor Discrepancy Verified & Cleared',
         })
-        .where(eq(posShifts.id, Number(shiftId)));
+        .where(eq(posShifts.id, String(shiftId)));
 
       // Record tamper-evident audit log
       await db.insert(auditLogs).values({
         action: 'pos.shift_variance_approved',
         entityType: 'pos_shift',
-        entityId: Number(shiftId),
+        entityId: String(shiftId),
         metadata: {
           actorName: supStaff.name,
           actorRole: supStaff.role,
