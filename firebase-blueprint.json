@@ -1,5 +1,4 @@
 {
-  "$schema": "https://firebase.google.com/docs/firestore/blueprint/v1",
   "entities": {
     "users": {
       "title": "Users",
