@@ -11,7 +11,7 @@ import { withRole } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-export interface RoleLimitDefaults {
+interface RoleLimitDefaults {
   maxLineDiscountPct: number;
   maxInvoiceDiscountAmount: number;
   maxRefundAmount: number;
@@ -23,7 +23,7 @@ export interface RoleLimitDefaults {
   returnWindowDays: number;
 }
 
-export const ROLE_LIMIT_DEFAULTS: Record<string, RoleLimitDefaults> = {
+const ROLE_LIMIT_DEFAULTS: Record<string, RoleLimitDefaults> = {
   cashier: {
     maxLineDiscountPct: 5.0,
     maxInvoiceDiscountAmount: 500.0,
@@ -125,7 +125,7 @@ export const ROLE_LIMIT_DEFAULTS: Record<string, RoleLimitDefaults> = {
   },
 };
 
-export const MATRIX_CAPABILITIES = [
+const MATRIX_CAPABILITIES = [
   {
     domain: 'POS Counter Operations',
     description: 'Direct register sales, discounts, refunds, and cash drawer actions',

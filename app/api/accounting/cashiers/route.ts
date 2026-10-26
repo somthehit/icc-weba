@@ -18,7 +18,7 @@ import { validatePinStrength, generateSecureTempPin } from '@/lib/security/pin-p
 
 export const dynamic = 'force-dynamic';
 
-export const ROLE_METADATA: Record<
+const ROLE_METADATA: Record<
   string,
   { label: string; color: string; category: 'pos_staff' | 'back_office' }
 > = {

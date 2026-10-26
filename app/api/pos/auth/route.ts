@@ -13,7 +13,7 @@ import { hashCredential, verifyCredential } from '@/lib/security/crypto';
 import bcrypt from 'bcryptjs';
 import { comparePassword } from '@/lib/auth/utils';
 
-export interface PosSessionData {
+interface PosSessionData {
   id: string;
   name: string;
   staffCode: string;
