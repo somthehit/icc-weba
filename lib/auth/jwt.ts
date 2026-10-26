@@ -8,7 +8,8 @@
 import { jwtVerify, SignJWT } from 'jose';
 
 export interface JWTPayload {
-  userId: number | string;
+  userId: number;
+  staffId?: string;
   email: string;
   role: string;
   scope?: string; // 'pos' | 'backoffice'
