@@ -121,6 +121,7 @@ interface StoreContextType {
   // Admin State
   isAdminLoggedIn: boolean;
   adminRole: AdminRole;
+  adminUser?: { id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null;
 
   // User Auth State
   isUserLoggedIn: boolean;
@@ -130,7 +131,7 @@ interface StoreContextType {
    * a returning user to the login page before their session has been read.
    */
   authStatus: 'loading' | 'authenticated' | 'anonymous';
-  currentUser: { id?: number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null;
+  currentUser: { id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (isOpen: boolean) => void;
   logoutUser: () => void;
@@ -308,7 +309,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
    * Which user's saved cart has already been adopted, so a re-render doesn't merge
    * the guest basket in a second time.
    */
-  const cartSyncedForRef = useRef<number | null>(null);
+  const cartSyncedForRef = useRef<string | number | null>(null);
 
   useEffect(() => {
     const loadStoreProfile = () => fetch('/api/settings?type=profile')
@@ -551,20 +552,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // cache of who /api/auth/me says we are.
   const [isUserLoggedIn, setIsUserLoggedIn] = useState<boolean>(false);
   const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'anonymous'>('loading');
-  const [currentUser, setCurrentUser] = useState<{ id?: number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null>(null);
+  const [adminUser, setAdminUser] = useState<{ id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
-  /** Applies a signed-in user to both the customer and the staff view of state. */
-  const adoptSession = (user: { id?: number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string }) => {
-    setIsUserLoggedIn(true);
+  /** Applies a signed-in user based on whether their role is staff/admin or customer. */
+  const adoptSession = (user: { id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string }) => {
     setAuthStatus('authenticated');
-    setCurrentUser(user);
     const staffRole = user.role ? ADMIN_ROLE_BY_DB_ROLE[user.role] : undefined;
-    // One session covers both surfaces: a staff member browsing the storefront is
-    // still signed in, and their admin access follows from the role on the token
-    // rather than from a separate client-side flag.
-    setIsAdminLoggedIn(Boolean(staffRole));
-    if (staffRole) setAdminRole(staffRole);
+    if (staffRole) {
+      // Staff / Admin account — grants admin console access, NOT customer storefront profile
+      setIsAdminLoggedIn(true);
+      setAdminRole(staffRole);
+      setAdminUser(user);
+      setIsUserLoggedIn(false);
+      setCurrentUser(null);
+    } else {
+      // Customer account — grants customer storefront profile
+      setIsUserLoggedIn(true);
+      setCurrentUser(user);
+      setIsAdminLoggedIn(false);
+      setAdminUser(null);
+    }
   };
 
   const clearSession = () => {
@@ -572,6 +581,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAuthStatus('anonymous');
     setCurrentUser(null);
     setIsAdminLoggedIn(false);
+    setAdminUser(null);
   };
 
   const logoutUser = () => {
@@ -1695,6 +1705,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isServiceModalOpen,
         isAdminLoggedIn,
         adminRole,
+        adminUser,
         isUserLoggedIn,
         authStatus,
         currentUser,

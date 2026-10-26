@@ -172,6 +172,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string; // e.g., ICE-2026-8942
+  userId?: string | number;
   createdAt: string;
   customerName: string;
   customerPhone: string;
@@ -198,6 +199,7 @@ export interface Order {
   staffNotes?: StaffNote[];
   assignedRiderId?: string;
   assignedRiderName?: string;
+  assignedRiderPhone?: string;
 }
 
 export interface ServiceRequest {

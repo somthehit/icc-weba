@@ -223,6 +223,7 @@ export function toUiOrder(
 
   return {
     id: row.orderNumber,
+    userId: row.userId ?? undefined,
     createdAt: iso(row.createdAt),
     customerName: options.customerName ?? row.userName ?? address.fullName,
     customerPhone: address.phone,

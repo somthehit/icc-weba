@@ -492,8 +492,19 @@ export const AccountView: React.FC = () => {
 
   const wishlistedProducts = products.filter((p) => wishlist.includes(p.id));
 
-  // Find active in-flight order
-  const activeOrder = orders.find(o => o.status !== 'delivered' && o.status !== 'cancelled') || orders[0];
+  // Customer's own orders only (not all system/admin orders)
+  const customerOrders = isUserLoggedIn && currentUser
+    ? orders.filter(
+        (o) =>
+          (currentUser.id && String(o.userId) === String(currentUser.id)) ||
+          (currentUser.email && o.customerEmail && o.customerEmail.toLowerCase() === currentUser.email.toLowerCase())
+      )
+    : [];
+
+  // Find active in-flight order for this customer only
+  const activeOrder = customerOrders.find(
+    (o) => ['processing', 'dispatched', 'out_for_delivery'].includes(o.status)
+  );
 
   const handleReorder = (order: Order) => {
     order.items.forEach(item => {
@@ -580,18 +591,40 @@ export const AccountView: React.FC = () => {
             <div className="space-y-1">
               <div className="text-xs font-bold text-blue-200">Delivery Address:</div>
               <div className="font-semibold text-white">
-                {activeOrder.shippingAddress.addressLine}, Ward {activeOrder.shippingAddress.ward}, {activeOrder.shippingAddress.district}
+                {[
+                  activeOrder.shippingAddress?.addressLine,
+                  activeOrder.shippingAddress?.ward ? `Ward ${activeOrder.shippingAddress.ward}` : '',
+                  activeOrder.shippingAddress?.municipality,
+                  activeOrder.shippingAddress?.district,
+                ]
+                  .filter(Boolean)
+                  .join(', ') || 'Address on file'}
               </div>
-              <div className="text-[11px] text-blue-200">Est. Arrival: Today by 4:00 PM (Valley Dispatch)</div>
+              <div className="text-[11px] text-blue-200">
+                {activeOrder.status === 'out_for_delivery'
+                  ? 'Out for delivery to your address'
+                  : 'Estimated Dispatch: Processing in fulfillment center'}
+              </div>
             </div>
 
             <div className="bg-white/10 p-3 rounded-2xl space-y-1 backdrop-blur-sm border border-white/10">
-              <div className="text-[10px] uppercase font-bold text-blue-200">Assigned Kailali Rider</div>
-              <div className="font-bold text-white text-xs flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-blue-300" />
-                <span>Sujan Shrestha (+977 9851012345)</span>
-              </div>
-              <div className="text-[10px] text-blue-200">Vehicle: Ba 92 Pa 4012 (Yamaha FZ)</div>
+              <div className="text-[10px] uppercase font-bold text-blue-200">Delivery Status</div>
+              {activeOrder.assignedRiderName ? (
+                <>
+                  <div className="font-bold text-white text-xs flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-blue-300" />
+                    <span>{activeOrder.assignedRiderName}</span>
+                  </div>
+                  {activeOrder.assignedRiderPhone && (
+                    <div className="text-[10px] text-blue-200">{activeOrder.assignedRiderPhone}</div>
+                  )}
+                </>
+              ) : (
+                <div className="font-semibold text-blue-100 text-xs flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-blue-300" />
+                  <span>Rider assignment in progress</span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-2">
@@ -615,7 +648,7 @@ export const AccountView: React.FC = () => {
             }`}
         >
           <Package className="w-4 h-4" />
-          <span>My Orders ({orders.length})</span>
+          <span>My Orders ({customerOrders.length})</span>
         </button>
 
         <button
@@ -663,18 +696,18 @@ export const AccountView: React.FC = () => {
       {/* TAB 1: MY ORDERS */}
       {activeTab === 'orders' && (
         <div className="space-y-4">
-          {orders.length === 0 ? (
+          {customerOrders.length === 0 ? (
             <div className="bg-white p-8 rounded-3xl border border-gray-100 text-center space-y-3">
               <p className="text-gray-500">You have no past order history yet.</p>
               <button
                 onClick={() => navigateTo('shop')}
-                className="bg-[#1a1a1a] text-white font-bold py-2.5 px-6 rounded-xl"
+                className="bg-[#1a1a1a] text-white font-bold py-2.5 px-6 rounded-xl hover:bg-black transition-colors"
               >
                 Start Shopping
               </button>
             </div>
           ) : (
-            orders.map((ord) => (
+            customerOrders.map((ord) => (
               <div key={ord.id} className="bg-white rounded-3xl border border-gray-100 p-5 space-y-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-gray-100 pb-3">
                   <div>
