@@ -201,7 +201,7 @@ const specEntries = (
 // --- seed ------------------------------------------------------------------
 
 async function seed() {
-  console.log('🌱 Seeding ICE Computers database…');
+  console.log('🌱 Seeding INTEL COMPUTER CENTER database…');
 
   const demoHash = await bcrypt.hash(DEMO_PASSWORD, 12);
 

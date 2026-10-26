@@ -1896,7 +1896,7 @@ export const INITIAL_FAQS: FaqItem[] = [
 
 export const INITIAL_TESTIMONIALS: Testimonial[] = [
   { id: 'tst-1', customerName: 'Er. Sandeep Regmi', rating: 5, quote: 'Exceptional service! Ordered a Dell Vostro 3520 laptop and received same-day delivery with official VAT invoice and warranty card.', verified: true, date: '2026-08-05' },
-  { id: 'tst-2', customerName: 'Hotel Himalayan Heights', rating: 5, quote: 'ICE Computers installed a complete 16-camera Hikvision IP security system at our hotel property. Clean cabling and excellent remote app training.', verified: true, date: '2026-07-28' },
+  { id: 'tst-2', customerName: 'Hotel Himalayan Heights', rating: 5, quote: 'INTEL COMPUTER CENTER installed a complete 16-camera Hikvision IP security system at our hotel property. Clean cabling and excellent remote app training.', verified: true, date: '2026-07-28' },
 ];
 
 export const INITIAL_ADMIN_USERS: AdminUser[] = [

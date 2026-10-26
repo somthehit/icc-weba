@@ -1321,7 +1321,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ form, brands
                         patchProdForm({ metaTitle: e.target.value });
                       }}
                       maxLength={200}
-                      placeholder={prodForm.name || 'Lenovo Legion Pro 5 — ICE Computers Nepal'}
+                      placeholder={prodForm.name || 'Lenovo Legion Pro 5 — INTEL COMPUTER CENTER Nepal'}
                       className={inputClass(Boolean(productFieldErrors.metaTitle))}
                     />
                   </FormField>

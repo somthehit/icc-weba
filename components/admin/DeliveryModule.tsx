@@ -585,7 +585,7 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
         .row{display:flex;justify-content:space-between;font-size:12px;margin:3px 0}
         .cod{margin-top:10px;padding:8px;border:2px dashed #111;text-align:center;font-weight:800}
       </style></head><body>
-      <h1>ICE Computers &amp; Electronics</h1>
+      <h1>INTEL COMPUTER CENTER &amp; Electronics</h1>
       <div style="font-size:11px">Courier Label · ${shipment.zoneLabel}</div>
       <div class="code">${shipment.trackingCode || 'UNASSIGNED'}</div>
       <div class="box">
@@ -909,11 +909,10 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
               <button
                 type="button"
                 onClick={() => setIsQuickTesterOpen(!isQuickTesterOpen)}
-                className={`text-xs font-bold py-2 px-3 rounded-xl border flex items-center gap-1.5 transition-colors ${
-                  isQuickTesterOpen
+                className={`text-xs font-bold py-2 px-3 rounded-xl border flex items-center gap-1.5 transition-colors ${isQuickTesterOpen
                     ? 'bg-[#1E2433] text-white border-[#1E2433]'
                     : 'bg-white text-[#12151C] border-[#E6E8EE] hover:bg-[#F4F5F8]'
-                }`}
+                  }`}
               >
                 <Calculator className="w-3.5 h-3.5 text-[#4C63FF]" />
                 {isQuickTesterOpen ? 'Hide Fare Tester' : 'Live Fare Tester'}
@@ -1081,9 +1080,8 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
                       onDoubleClick={() => {
                         if (!isInline) handleStartInlineEdit(z);
                       }}
-                      className={`transition-colors group ${
-                        isInline ? 'bg-[#EEF2FF]/60' : !enabled ? 'opacity-50 hover:bg-[#F8FAFC]' : 'hover:bg-[#F8FAFC]'
-                      }`}
+                      className={`transition-colors group ${isInline ? 'bg-[#EEF2FF]/60' : !enabled ? 'opacity-50 hover:bg-[#F8FAFC]' : 'hover:bg-[#F8FAFC]'
+                        }`}
                     >
                       {/* Column 1: Province & District */}
                       <td className="py-3 px-3.5">
@@ -1177,23 +1175,21 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
                                 codAvailable: !inlineForm.codAvailable,
                               })
                             }
-                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-colors ${
-                              inlineForm.codAvailable
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-colors ${inlineForm.codAvailable
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : 'bg-rose-50 text-rose-700 border-rose-200'
-                            }`}
+                              }`}
                           >
                             {inlineForm.codAvailable ? 'COD Allowed' : 'Prepaid Only'}
                           </button>
                         ) : (
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                              z.codAvailable
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${z.codAvailable
                                 ? codRuleLabel === 'Free (0%)'
                                   ? 'bg-emerald-100 text-emerald-700'
                                   : 'bg-blue-100 text-blue-700'
                                 : 'bg-rose-100 text-rose-700'
-                            }`}
+                              }`}
                           >
                             {codRuleLabel}
                           </span>
@@ -1237,16 +1233,14 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
                           type="button"
                           onClick={() => toggleZone(z)}
                           title={`Click to ${enabled ? 'disable' : 'enable'} zone`}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
-                            enabled
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${enabled
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                               : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200'
-                          }`}
+                            }`}
                         >
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              enabled ? 'bg-emerald-500' : 'bg-gray-400'
-                            }`}
+                            className={`w-1.5 h-1.5 rounded-full ${enabled ? 'bg-emerald-500' : 'bg-gray-400'
+                              }`}
                           />
                           {enabled ? 'ACTIVE' : 'DISABLED'}
                         </button>
@@ -1349,11 +1343,10 @@ export const DeliveryModule: React.FC<DeliveryModuleProps> = ({
                                         toggleZone(z);
                                         setZoneActionMenuId(null);
                                       }}
-                                      className={`w-full px-3 py-2 text-xs font-bold flex items-center gap-2 ${
-                                        enabled
+                                      className={`w-full px-3 py-2 text-xs font-bold flex items-center gap-2 ${enabled
                                           ? 'text-rose-600 hover:bg-rose-50'
                                           : 'text-emerald-600 hover:bg-emerald-50'
-                                      }`}
+                                        }`}
                                     >
                                       <RotateCcw className="w-3.5 h-3.5" />
                                       {enabled ? 'Disable Zone' : 'Enable Zone'}
