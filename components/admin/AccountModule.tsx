@@ -39,6 +39,7 @@ import {
   Trash2,
   HelpCircle,
   Info,
+  LogOut,
 } from 'lucide-react';
 
 export interface UserProfile {
@@ -59,7 +60,12 @@ export interface AccountModuleProps {
 type TabKey = 'profile' | 'security' | 'permissions' | 'activity';
 
 export const AccountModule: React.FC<AccountModuleProps> = ({ auditLogs = [] }) => {
-  const { checkAuth } = useStore();
+  const { checkAuth, logoutAdmin, navigateTo } = useStore();
+
+  const handleLogout = () => {
+    logoutAdmin();
+    navigateTo('admin-login');
+  };
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -630,6 +636,25 @@ export const AccountModule: React.FC<AccountModuleProps> = ({ auditLogs = [] }) 
                   <span className="font-bold text-[#12151C]">NPR (रू)</span>
                 </div>
               </div>
+            </div>
+
+            {/* Session Management / Logout Card */}
+            <div className="bg-white rounded-3xl border border-red-100 p-6 shadow-2xs space-y-3">
+              <h3 className="text-sm font-bold text-red-600 flex items-center gap-2">
+                <LogOut className="w-4 h-4 text-red-600" />
+                <span>Admin Console Session</span>
+              </h3>
+              <p className="text-xs text-[#6B7280]">
+                Terminate your active staff administrative session and return to the login screen.
+              </p>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out of Admin Console</span>
+              </button>
             </div>
           </div>
 

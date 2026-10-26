@@ -81,6 +81,7 @@ import {
   AlertTriangle,
   Trash2,
   Loader2,
+  LogOut,
 } from 'lucide-react';
 
 export const AdminView: React.FC = () => {
@@ -106,7 +107,16 @@ export const AdminView: React.FC = () => {
     updateServiceStatus,
     navigateTo,
     currentUser,
+    adminUser,
+    logoutAdmin,
   } = useStore();
+
+  const activeAdmin = adminUser || currentUser;
+
+  const handleAdminLogout = () => {
+    logoutAdmin();
+    navigateTo('admin-login');
+  };
 
   const [activeModule, setActiveModule] = useState<AdminModule>('dashboard');
 
@@ -574,8 +584,17 @@ export const AdminView: React.FC = () => {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="mt-auto pt-4 border-t border-white/10">
-          <div className="flex items-center gap-2 font-mono text-[11px] text-[#8891A8] px-2.5 py-2">
+        <div className="mt-auto pt-4 border-t border-white/10 space-y-1.5">
+          <button
+            onClick={handleAdminLogout}
+            className="flex items-center gap-2.5 px-2.5 py-2 rounded-[9px] text-[13px] font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 w-full transition-all text-left group"
+            title="Sign Out of Admin Console"
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0 text-rose-400 group-hover:translate-x-0.5 transition-transform" />
+            <span className="flex-1">Sign Out</span>
+          </button>
+
+          <div className="flex items-center gap-2 font-mono text-[11px] text-[#8891A8] px-2.5 py-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
             <span>All systems nominal</span>
           </div>
@@ -616,7 +635,7 @@ export const AdminView: React.FC = () => {
           </div>
 
           {/* Top Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button 
               onClick={() => navigateTo('shop')}
               className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#E6E8EE] hover:bg-[#F4F5F8] text-[#12151C] transition-colors"
@@ -636,8 +655,32 @@ export const AdminView: React.FC = () => {
             </button>
 
             <button onClick={() => setActiveModule('account')} className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-[#F4F5F8]" title="Open admin profile">
-              {currentUser?.avatarUrl ? <img src={currentUser.avatarUrl} alt={currentUser.name} className="h-[34px] w-[34px] rounded-full object-cover" /> : <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-gradient-to-br from-[#4C63FF] to-[#7C5CFF] text-[13px] font-bold text-white shadow-xs">{currentUser?.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'A'}</div>}
-              <span className="hidden text-left sm:block"><span className="block text-xs font-bold text-[#12151C]">{currentUser?.name || 'Admin'}</span><span className="block text-[10px] capitalize text-[#6B7280]">{currentUser?.role?.replace('_', ' ') || 'Administrator'}</span></span>
+              {activeAdmin?.avatarUrl ? (
+                <img
+                  src={activeAdmin.avatarUrl}
+                  alt={activeAdmin.name}
+                  referrerPolicy="no-referrer"
+                  className="h-[34px] w-[34px] rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-gradient-to-br from-[#4C63FF] to-[#7C5CFF] text-[13px] font-bold text-white shadow-xs">
+                  {activeAdmin?.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'A'}
+                </div>
+              )}
+              <span className="hidden text-left sm:block">
+                <span className="block text-xs font-bold text-[#12151C]">{activeAdmin?.name || 'Admin'}</span>
+                <span className="block text-[10px] capitalize text-[#6B7280]">{activeAdmin?.role?.replace('_', ' ') || 'Administrator'}</span>
+              </span>
+            </button>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleAdminLogout}
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 transition-colors shadow-2xs cursor-pointer"
+              title="Logout from Admin Console"
+            >
+              <LogOut className="w-3.5 h-3.5 text-red-600" />
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </header>
