@@ -131,6 +131,26 @@ export const POST = withRole(['admin'], async (request: NextRequest) => {
     const payload = parsed.data;
 
     if (payload.type === 'profile') {
+      const config = payload.data.configuration as Record<string, unknown> | undefined;
+      if (config && typeof config === 'object' && config.footerSettings) {
+        const fs = config.footerSettings as Record<string, unknown>;
+        if (Array.isArray(fs.columns)) {
+          for (const col of fs.columns as Array<{ links?: Array<{ url?: unknown }> }>) {
+            if (Array.isArray(col?.links)) {
+              for (const link of col.links) {
+                const url = typeof link?.url === 'string' ? link.url.trim() : '';
+                if (url && !/^(https?:\/\/|\/|mailto:|tel:)/i.test(url)) {
+                  return NextResponse.json(
+                    { error: `Invalid footer URL scheme: "${url}". Only http(s), "/", mailto:, and tel: URLs are supported.` },
+                    { status: 400 }
+                  );
+                }
+              }
+            }
+          }
+        }
+      }
+
       const [existing] = await db.select({ id: storeProfile.id }).from(storeProfile).limit(1);
 
       if (existing) {

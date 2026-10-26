@@ -161,9 +161,9 @@ export const Footer: React.FC = () => {
     }
 
     if (typeof window !== 'undefined') {
-      if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+      if (/^https?:\/\//i.test(cleanUrl)) {
         window.open(cleanUrl, '_blank', 'noopener,noreferrer');
-      } else {
+      } else if (cleanUrl.startsWith('/') || /^mailto:/i.test(cleanUrl) || /^tel:/i.test(cleanUrl)) {
         window.location.href = cleanUrl;
       }
     }
