@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { users } from '@/db/schema';
+import { users, addresses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getUserFromRequest } from '@/lib/auth/utils';
 
@@ -37,7 +37,24 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      return NextResponse.json({ user });
+      let needsProfileSetup = false;
+      if (user.role === 'customer') {
+        const hasPhone = Boolean(user.phone && user.phone.trim().length >= 10);
+        const [addr] = await db
+          .select({ id: addresses.id })
+          .from(addresses)
+          .where(eq(addresses.userId, user.id))
+          .limit(1);
+        needsProfileSetup = !hasPhone || !addr;
+      }
+
+      return NextResponse.json({
+        user: {
+          ...user,
+          needsProfileSetup,
+        },
+        needsProfileSetup,
+      });
     }
 
     // Otherwise, check if it is a staff UUID from pos-enterprise

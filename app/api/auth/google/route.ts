@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { users } from '@/db/schema';
+import { users, addresses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { signToken } from '@/lib/auth/utils';
 import { AUTH_COOKIE, JWT_MAX_AGE_SECONDS } from '@/lib/auth/jwt';
@@ -10,7 +10,7 @@ import { z } from 'zod';
 const googleAuthSchema = z.object({
   name: z.string().min(1, 'Name is required').max(150),
   email: z.string().email('A valid email is required'),
-  avatarUrl: z.string().url().optional().nullable(),
+  avatarUrl: z.string().max(1000).optional().nullable().or(z.literal('')),
 });
 
 export async function POST(request: NextRequest) {
@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
     const parsed = await parseJson(request, googleAuthSchema);
     if (!parsed.ok) return parsed.response;
     const { name, email, avatarUrl } = parsed.data;
+
+    const cleanedAvatar = avatarUrl && avatarUrl.trim() ? avatarUrl.trim().slice(0, 500) : null;
 
     // Look for an existing user with this email
     const [existingUser] = await db
@@ -37,13 +39,13 @@ export async function POST(request: NextRequest) {
     let user: { id: string; name: string; email: string; phone: string | null; role: string; avatarUrl: string | null; isActive: boolean };
 
     if (existingUser) {
-      // Update avatar if Google provides one and the user doesn't have one yet
-      if (avatarUrl && !existingUser.avatarUrl) {
+      // Always update avatar if Google provides a new one or existing has none
+      if (cleanedAvatar && existingUser.avatarUrl !== cleanedAvatar) {
         await db
           .update(users)
-          .set({ avatarUrl, updatedAt: new Date() })
+          .set({ avatarUrl: cleanedAvatar, updatedAt: new Date() })
           .where(eq(users.id, existingUser.id));
-        existingUser.avatarUrl = avatarUrl;
+        existingUser.avatarUrl = cleanedAvatar;
       }
       user = existingUser;
     } else {
@@ -53,7 +55,7 @@ export async function POST(request: NextRequest) {
         .values({
           name,
           email,
-          avatarUrl: avatarUrl || null,
+          avatarUrl: cleanedAvatar,
           role: 'customer',
           emailVerifiedAt: new Date(),
         })
@@ -76,6 +78,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if customer already has a phone number and at least one delivery address
+    const hasPhone = Boolean(user.phone && user.phone.trim().length >= 10);
+    const [userAddress] = await db
+      .select({ id: addresses.id })
+      .from(addresses)
+      .where(eq(addresses.userId, user.id))
+      .limit(1);
+    const hasAddress = Boolean(userAddress);
+    const needsProfileSetup = !hasPhone || !hasAddress;
+
     const token = await signToken({
       userId: user.id,
       email: user.email,
@@ -92,6 +104,7 @@ export async function POST(request: NextRequest) {
         role: user.role,
         avatarUrl: user.avatarUrl,
       },
+      needsProfileSetup,
     });
 
     response.cookies.set(AUTH_COOKIE, token, {

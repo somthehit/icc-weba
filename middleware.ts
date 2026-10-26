@@ -51,6 +51,7 @@ const RULES: readonly Rule[] = [
   { path: '/api/auth/google', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/logout', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/api/auth/me', match: 'exact', read: PUBLIC, write: SIGNED_IN },
+  { path: '/api/auth/complete-profile', match: 'exact', read: SIGNED_IN, write: SIGNED_IN },
   // Public storefront contact form. Validation and rate limiting are enforced by
   // the route; this rule keeps the request from falling into the admin-only fallback.
   { path: '/api/v1/public/contact', match: 'exact', read: PUBLIC, write: PUBLIC },

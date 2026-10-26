@@ -61,6 +61,7 @@ export const AccountView: React.FC = () => {
     isUserLoggedIn,
     currentUser,
     setIsAuthModalOpen,
+    setIsProfileSetupOpen,
     logoutUser,
     addToCart,
     createServiceRequest,
@@ -531,7 +532,18 @@ export const AccountView: React.FC = () => {
       <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 overflow-hidden rounded-2xl bg-[#0056b3] text-white font-black text-xl flex items-center justify-center shadow">
-            {profileData?.avatarUrl ? <img src={profileData.avatarUrl} alt={profileData.name} className="h-full w-full rounded-2xl object-cover" /> : isUserLoggedIn && currentUser ? currentUser.name.split(' ').map(n => n[0]).join('') : 'G'}
+            {(profileData?.avatarUrl || currentUser?.avatarUrl) ? (
+              <img
+                src={profileData?.avatarUrl || currentUser?.avatarUrl}
+                alt={profileData?.name || currentUser?.name || 'Customer'}
+                referrerPolicy="no-referrer"
+                className="h-full w-full rounded-2xl object-cover"
+              />
+            ) : isUserLoggedIn && currentUser ? (
+              currentUser.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+            ) : (
+              'G'
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -550,6 +562,16 @@ export const AccountView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {isUserLoggedIn && (currentUser?.needsProfileSetup || !currentUser?.phone) && (
+            <button
+              onClick={() => setIsProfileSetupOpen(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-2.5 px-3.5 rounded-xl shadow flex items-center gap-1.5 transition-colors"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>Setup Phone & Address</span>
+            </button>
+          )}
+
           {!isUserLoggedIn ? (
             <button
               onClick={() => setIsAuthModalOpen(true)}

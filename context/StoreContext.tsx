@@ -131,13 +131,29 @@ interface StoreContextType {
    * a returning user to the login page before their session has been read.
    */
   authStatus: 'loading' | 'authenticated' | 'anonymous';
-  currentUser: { id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null;
+  currentUser: { id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string; needsProfileSetup?: boolean } | null;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (isOpen: boolean) => void;
+  isProfileSetupOpen: boolean;
+  setIsProfileSetupOpen: (isOpen: boolean) => void;
   logoutUser: () => void;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   registerWithEmail: (name: string, email: string, pass: string, phone: string, address?: { province: string; district: string; municipality: string; wardNo: string; tole?: string; houseNumber?: string }) => Promise<{ success: boolean; error?: string }>;
+  completeProfile: (profileData: {
+    phone: string;
+    address: {
+      label?: string;
+      province: string;
+      district: string;
+      municipality: string;
+      wardNo: string;
+      tole?: string;
+      streetAddress?: string;
+      houseNumber?: string;
+      landmark?: string;
+    };
+  }) => Promise<{ success: boolean; error?: string }>;
   checkAuth: () => Promise<void>;
 
   // Actions
@@ -552,12 +568,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // cache of who /api/auth/me says we are.
   const [isUserLoggedIn, setIsUserLoggedIn] = useState<boolean>(false);
   const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'anonymous'>('loading');
-  const [currentUser, setCurrentUser] = useState<{ id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string; needsProfileSetup?: boolean } | null>(null);
   const [adminUser, setAdminUser] = useState<{ id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string } | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isProfileSetupOpen, setIsProfileSetupOpen] = useState<boolean>(false);
 
   /** Applies a signed-in user based on whether their role is staff/admin or customer. */
-  const adoptSession = (user: { id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string }) => {
+  const adoptSession = (user: { id?: string | number; name: string; email: string; phone?: string; role?: string; avatarUrl?: string; needsProfileSetup?: boolean }) => {
     setAuthStatus('authenticated');
     const staffRole = user.role ? ADMIN_ROLE_BY_DB_ROLE[user.role] : undefined;
     if (staffRole) {
@@ -567,12 +584,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setAdminUser(user);
       setIsUserLoggedIn(false);
       setCurrentUser(null);
+      setIsProfileSetupOpen(false);
     } else {
       // Customer account — grants customer storefront profile
       setIsUserLoggedIn(true);
       setCurrentUser(user);
       setIsAdminLoggedIn(false);
       setAdminUser(null);
+      if (user.needsProfileSetup) {
+        setIsProfileSetupOpen(true);
+      }
     }
   };
 
@@ -582,6 +603,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCurrentUser(null);
     setIsAdminLoggedIn(false);
     setAdminUser(null);
+    setIsProfileSetupOpen(false);
   };
 
   const logoutUser = () => {
@@ -598,6 +620,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return { success: false, error: 'Google account has no email address.' };
       }
 
+      const photoURL = firebaseUser.photoURL || firebaseUser.providerData?.[0]?.photoURL || undefined;
+
       // Send the Firebase user info to our server to find-or-create the user
       // and get back a custom JWT cookie.
       const response = await fetch('/api/auth/google', {
@@ -606,7 +630,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         body: JSON.stringify({
           name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
           email: firebaseUser.email,
-          avatarUrl: firebaseUser.photoURL,
+          avatarUrl: photoURL,
         }),
       });
 
@@ -616,8 +640,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return { success: false, error: data.error || 'Google sign-in failed.' };
       }
 
-      adoptSession(data.user);
+      adoptSession({
+        ...data.user,
+        needsProfileSetup: data.needsProfileSetup,
+      });
       setIsAuthModalOpen(false);
+
+      if (data.needsProfileSetup) {
+        setIsProfileSetupOpen(true);
+      }
 
       return { success: true };
     } catch (error: unknown) {
@@ -719,6 +750,48 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     } catch {
       clearSession();
+    }
+  };
+
+  const completeProfile = async (profileData: {
+    phone: string;
+    address: {
+      label?: string;
+      province: string;
+      district: string;
+      municipality: string;
+      wardNo: string;
+      tole?: string;
+      streetAddress?: string;
+      houseNumber?: string;
+      landmark?: string;
+    };
+  }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch('/api/auth/complete-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const detail = Array.isArray(data.details) ? data.details.join(' · ') : null;
+        return { success: false, error: detail || data.error || 'Failed to complete profile.' };
+      }
+
+      if (data.user) {
+        setCurrentUser((prev) => (prev ? { ...prev, ...data.user, needsProfileSetup: false } : data.user));
+      }
+      setIsProfileSetupOpen(false);
+
+      return { success: true };
+    } catch (err: unknown) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Network error while completing profile.',
+      };
     }
   };
 
@@ -1726,6 +1799,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentUser,
         isAuthModalOpen,
         setIsAuthModalOpen,
+        isProfileSetupOpen,
+        setIsProfileSetupOpen,
+        completeProfile,
         logoutUser,
         navigateTo,
         setSearchQuery,

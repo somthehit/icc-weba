@@ -11,6 +11,7 @@ import { CartDrawer } from '@/components/CartDrawer';
 import { AiConsultantDrawer } from '@/components/AiConsultantDrawer';
 import { ServiceBookingModal } from '@/components/ServiceBookingModal';
 import { AuthModal } from '@/components/AuthModal';
+import CompleteProfileModal from '@/components/CompleteProfileModal';
 import { SeoManager } from '@/components/SeoManager';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
@@ -198,6 +199,7 @@ function AppContent() {
           <AiConsultantDrawer />
           <ServiceBookingModal />
           <AuthModal />
+          <CompleteProfileModal />
         </>
       )}
     </div>

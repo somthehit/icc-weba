@@ -213,7 +213,20 @@ export const Header: React.FC = () => {
             className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
             title={isUserLoggedIn ? 'Open profile' : 'Sign in'}
           >
-            {isUserLoggedIn && currentUser?.avatarUrl ? <img src={currentUser.avatarUrl} alt={currentUser.name} className="h-8 w-8 rounded-full object-cover" /> : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0056b3] text-xs font-black text-white">{isUserLoggedIn && currentUser ? currentUser.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() : <User className="w-5 h-5" />}</span>}
+            {isUserLoggedIn && currentUser?.avatarUrl ? (
+              <img
+                src={currentUser.avatarUrl}
+                alt={currentUser.name}
+                referrerPolicy="no-referrer"
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0056b3] text-xs font-black text-white">
+                {isUserLoggedIn && currentUser
+                  ? currentUser.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+                  : <User className="w-5 h-5" />}
+              </span>
+            )}
             {isUserLoggedIn && currentUser && <span className="hidden max-w-[70px] lg:max-w-[80px] xl:max-w-[100px] truncate text-xs font-bold sm:inline">{currentUser.name}</span>}
           </button>
         </div>
