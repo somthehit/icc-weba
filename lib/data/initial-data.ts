@@ -21,6 +21,53 @@ import {
 } from '@/types';
 import { SUDURPASHCHIM_CONFIG } from '@/config/regional';
 
+export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
+  aboutDescription:
+    'Sudurpashchim’s premier IT hardware store. Authorized laptops, custom PC builds, CCTV surveillance, and certified chip-level repair services.',
+  panNumber: '302910482',
+  viberNumber: '+977-9848424859',
+  secondaryPhone: '091-525287',
+  showLiveStatus: true,
+  customStatusText: '',
+  trustPillars: [
+    { title: '100% Genuine Tech', subtitle: 'Official Nepal Warranty', icon: 'shield' },
+    { title: 'Express Delivery', subtitle: 'Same-Day Kailali Hubs', icon: 'truck' },
+    { title: 'Service & Repair Lab', subtitle: 'Chip-Level Diagnostics', icon: 'wrench' },
+    { title: 'Verified Payments', subtitle: 'eSewa, Khalti, Fonepay & COD', icon: 'card' },
+  ],
+  columns: [
+    {
+      title: 'Explore Catalog',
+      links: [
+        { label: 'Laptops & Notebooks', url: '/shop' },
+        { label: 'Custom Desktop PCs', url: '/shop' },
+        { label: 'Components & GPUs', url: '/shop' },
+        { label: 'CCTV & Surveillance', url: '/shop' },
+        { label: 'Printers & Consumables', url: '/shop' },
+        { label: 'Authorized Brands', url: '/brands' },
+      ],
+    },
+    {
+      title: 'Care & Services',
+      links: [
+        { label: 'Book Repair Service', url: '/services' },
+        { label: 'Track My Order', url: '/track-order' },
+        { label: 'About Our Company', url: '/about' },
+        { label: 'FAQ & Warranty Rules', url: '/faq' },
+        { label: 'Contact & Store', url: '/contact' },
+      ],
+    },
+  ],
+  acceptedPayments: {
+    esewa: true,
+    khalti: true,
+    fonepay: true,
+    bankTransfer: true,
+    cod: true,
+  },
+  copyrightText: '© 2026 INTEL COMPUTER CENTER (INTEL COMPUTER CENTER & Electronics). All rights reserved.',
+};
+
 export const INITIAL_SITE_SETTINGS: SiteSettings = {
   storeName: 'Intel Computer Center',
   tagline: 'Your Premier Technology & Electronics Partner in Sudurpashchim',
@@ -33,13 +80,17 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
   announcementEnabled: true,
   facebookUrl: 'https://facebook.com/icecomputers.np',
   instagramUrl: 'https://instagram.com/icecomputers.np',
+  tiktokUrl: '',
+  youtubeUrl: '',
   whatsappNumber: '+977-9848424859',
+  viberNumber: '+977-9848424859',
   googleMapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3513.8!2d80.5741854!3d28.7042772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39a1ecc54e5d142f%3A0xb7bf1d9769481700!2sIntel+computer+center!5e0!3m2!1sen!2snp!4v1726830000000!5m2!1sen!2snp',
   googleMapLocationUrl: 'https://maps.app.goo.gl/vRUaFjDbk9s8YiAy6',
   googleMapLatitude: 28.7042726,
   googleMapLongitude: 80.576736,
   googlePlaceId: 'ChIJLxRdTsvsoTkRAHcIaZcdv7c',
-  footerNotice: '© 2026 Intel Computer Center. All Rights Reserved. Official Nepal Warranty Authorized Retailer.',
+  footerNotice: '© 2026 INTEL COMPUTER CENTER. All Rights Reserved. Official Nepal Warranty Authorized Retailer.',
+  footerSettings: DEFAULT_FOOTER_SETTINGS,
 };
 
 export const STORE_INFO = {

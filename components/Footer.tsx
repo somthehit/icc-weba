@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useStore } from '@/context/StoreContext';
+import { DEFAULT_FOOTER_SETTINGS } from '@/lib/data/initial-data';
+import type { FooterColumn, FooterTrustPillar } from '@/types';
 import {
   ShieldCheck,
   Truck,
@@ -16,7 +18,6 @@ import {
   ChevronRight,
   ExternalLink,
   MessageCircle,
-  Cpu,
   FileCheck2,
 } from 'lucide-react';
 
@@ -27,6 +28,8 @@ export const Footer: React.FC = () => {
     isOpen: true,
     text: 'Showroom Open • Ratopool, Dhangadhi',
   });
+
+  const fs = siteSettings.footerSettings || DEFAULT_FOOTER_SETTINGS;
 
   // Calculate live store status based on Nepal Time (UTC + 5:45)
   useEffect(() => {
@@ -73,20 +76,98 @@ export const Footer: React.FC = () => {
     }
   };
 
-  const whatsappLink = siteSettings.whatsappNumber
-    ? `https://wa.me/${siteSettings.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-      'Namaste! I would like to inquire about products and services at INTEL COMPUTER CENTER Dhangadhi.'
-    )}`
-    : 'https://wa.me/9779848424859';
+  const whatsappRaw = siteSettings.whatsappNumber || '+9779848424859';
+  const whatsappDigits = whatsappRaw.replace(/[^0-9]/g, '');
+  const whatsappLink = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
+    'Namaste! I would like to inquire about products and services at INTEL COMPUTER CENTER Dhangadhi.'
+  )}`;
 
-  const viberNumber = (siteSettings.whatsappNumber || '+9779848424859').replace(/[^0-9]/g, '');
-  const viberLink = `viber://chat?number=%2B${viberNumber}`;
+  const viberRaw = fs.viberNumber || siteSettings.viberNumber || whatsappRaw;
+  const viberDigits = viberRaw.replace(/[^0-9]/g, '');
+  const viberLink = viberRaw.startsWith('viber://')
+    ? viberRaw
+    : `viber://chat?number=%2B${viberDigits}`;
 
   const mapLink =
     siteSettings.googleMapLocationUrl ||
     'https://maps.app.goo.gl/vRUaFjDbk9s8YiAy6';
 
   const currentYear = new Date().getFullYear();
+
+  const trustPillars: FooterTrustPillar[] =
+    fs.trustPillars && fs.trustPillars.length > 0
+      ? fs.trustPillars
+      : DEFAULT_FOOTER_SETTINGS.trustPillars || [];
+
+  const footerColumns: FooterColumn[] =
+    fs.columns && fs.columns.length > 0
+      ? fs.columns
+      : DEFAULT_FOOTER_SETTINGS.columns || [];
+
+  const payments = fs.acceptedPayments || DEFAULT_FOOTER_SETTINGS.acceptedPayments || {
+    esewa: true,
+    khalti: true,
+    fonepay: true,
+    bankTransfer: true,
+    cod: true,
+  };
+
+  const renderPillarIcon = (icon?: string) => {
+    switch (icon) {
+      case 'truck':
+        return <Truck className="w-4 h-4" />;
+      case 'wrench':
+        return <Wrench className="w-4 h-4" />;
+      case 'card':
+        return <CreditCard className="w-4 h-4" />;
+      case 'shield':
+      default:
+        return <ShieldCheck className="w-4 h-4" />;
+    }
+  };
+
+  const handleLinkClick = (url: string) => {
+    if (!url) return;
+    const cleanUrl = url.trim();
+
+    if (cleanUrl === '/services' || cleanUrl === 'services') {
+      setIsServiceModalOpen(true);
+      return;
+    }
+
+    if (cleanUrl.startsWith('/') || !cleanUrl.includes('://')) {
+      const route = cleanUrl.replace(/^\//, '');
+      const knownViews = [
+        'home',
+        'shop',
+        'cart',
+        'checkout',
+        'track-order',
+        'services',
+        'brands',
+        'about',
+        'contact',
+        'account',
+        'wishlist',
+        'compare',
+        'faq',
+        'customer-login',
+        'customer-register',
+      ];
+      if (knownViews.includes(route)) {
+        navigateTo(route as any);
+        return;
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+        window.open(cleanUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        window.location.href = cleanUrl;
+      }
+    }
+  };
 
   return (
     <footer
@@ -100,67 +181,36 @@ export const Footer: React.FC = () => {
       <div className="border-b border-slate-200/70 bg-white/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            {trustPillars.map((pillar, idx) => {
+              const bgColors = [
+                'bg-blue-50 border-blue-100 text-blue-600',
+                'bg-indigo-50 border-indigo-100 text-indigo-600',
+                'bg-sky-50 border-sky-100 text-sky-600',
+                'bg-emerald-50 border-emerald-100 text-emerald-600',
+              ];
+              const colorClass = bgColors[idx % bgColors.length];
 
-            {/* Trust Item 1 */}
-            <div className="group flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200/70 hover:border-blue-400 hover:shadow-xs transition-all duration-200">
-              <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600 group-hover:scale-105 transition-transform">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-semibold text-slate-800 truncate">
-                  100% Genuine Tech
-                </h4>
-                <p className="text-[11px] text-slate-500 truncate">
-                  Official Nepal Warranty
-                </p>
-              </div>
-            </div>
-
-            {/* Trust Item 2 */}
-            <div className="group flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200/70 hover:border-blue-400 hover:shadow-xs transition-all duration-200">
-              <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 group-hover:scale-105 transition-transform">
-                <Truck className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-semibold text-slate-800 truncate">
-                  Express Delivery
-                </h4>
-                <p className="text-[11px] text-slate-500 truncate">
-                  Same-Day Kailali Hubs
-                </p>
-              </div>
-            </div>
-
-            {/* Trust Item 3 */}
-            <div className="group flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200/70 hover:border-blue-400 hover:shadow-xs transition-all duration-200">
-              <div className="w-9 h-9 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center flex-shrink-0 text-sky-600 group-hover:scale-105 transition-transform">
-                <Wrench className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-semibold text-slate-800 truncate">
-                  Service & Repair Lab
-                </h4>
-                <p className="text-[11px] text-slate-500 truncate">
-                  Chip-Level Diagnostics
-                </p>
-              </div>
-            </div>
-
-            {/* Trust Item 4 */}
-            <div className="group flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200/70 hover:border-blue-400 hover:shadow-xs transition-all duration-200">
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-600 group-hover:scale-105 transition-transform">
-                <CreditCard className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-semibold text-slate-800 truncate">
-                  Verified Payments
-                </h4>
-                <p className="text-[11px] text-slate-500 truncate">
-                  eSewa, Khalti, Fonepay & COD
-                </p>
-              </div>
-            </div>
-
+              return (
+                <div
+                  key={idx}
+                  className="group flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200/70 hover:border-blue-400 hover:shadow-xs transition-all duration-200"
+                >
+                  <div
+                    className={`w-9 h-9 rounded-lg border flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform ${colorClass}`}
+                  >
+                    {renderPillarIcon(pillar.icon)}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-800 truncate">
+                      {pillar.title}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 truncate">
+                      {pillar.subtitle}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -189,10 +239,10 @@ export const Footer: React.FC = () => {
               </div>
               <div>
                 <span className="text-base sm:text-lg font-black tracking-tight text-[#0056b3] group-hover:text-[#004494] transition-colors block">
-                  INTEL COMPUTER CENTER
+                  {siteSettings.storeName?.toUpperCase() || 'INTEL COMPUTER CENTER'}
                 </span>
                 <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase block flex items-center gap-1.5 mt-0.5">
-                  <span>IT Solutions & Electronics</span>
+                  <span>{siteSettings.tagline || 'IT Solutions & Electronics'}</span>
                   <span className="w-1 h-1 rounded-full bg-blue-500" />
                   <span className="text-blue-600 font-bold">Dhangadhi</span>
                 </span>
@@ -201,25 +251,30 @@ export const Footer: React.FC = () => {
 
             {/* Description */}
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-sm">
-              Sudurpashchim’s premier IT hardware store. Authorized laptops, custom PC builds, CCTV surveillance, and certified chip-level repair services.
+              {fs.aboutDescription ||
+                'Sudurpashchim’s premier IT hardware store. Authorized laptops, custom PC builds, CCTV surveillance, and certified chip-level repair services.'}
             </p>
 
             {/* Live Status Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs shadow-2xs">
-              <span className="relative flex h-2 w-2">
-                <span
-                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${storeStatus.isOpen ? 'bg-emerald-500' : 'bg-amber-500'
+            {fs.showLiveStatus !== false && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span
+                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                      storeStatus.isOpen ? 'bg-emerald-500' : 'bg-amber-500'
                     }`}
-                />
-                <span
-                  className={`relative inline-flex rounded-full h-2 w-2 ${storeStatus.isOpen ? 'bg-emerald-600' : 'bg-amber-600'
+                  />
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      storeStatus.isOpen ? 'bg-emerald-600' : 'bg-amber-600'
                     }`}
-                />
-              </span>
-              <span className="font-medium text-slate-700">
-                {storeStatus.text}
-              </span>
-            </div>
+                  />
+                </span>
+                <span className="font-medium text-slate-700">
+                  {fs.customStatusText || storeStatus.text}
+                </span>
+              </div>
+            )}
 
             {/* Fast Action Buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -237,7 +292,7 @@ export const Footer: React.FC = () => {
               <a
                 href={viberLink}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#7360f2]/10 hover:bg-[#7360f2]/20 border border-[#7360f2]/30 text-[#604dec] text-xs font-semibold transition-all group"
-                title="Chat on Viber (+977-9848424859)"
+                title={`Chat on Viber (${viberDigits})`}
               >
                 <Phone className="w-3.5 h-3.5 text-[#7360f2] group-hover:scale-110 transition-transform" />
                 <span>Viber</span>
@@ -265,137 +320,39 @@ export const Footer: React.FC = () => {
             {/* Tax Compliance */}
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
               <FileCheck2 className="w-3.5 h-3.5 text-slate-400" />
-              <span>Regd. PAN: 302910482 • Official Nepal Tax Invoiced</span>
+              <span>
+                {fs.panNumber
+                  ? `Regd. PAN: ${fs.panNumber} • Official Nepal Tax Invoiced`
+                  : 'Regd. PAN: 302910482 • Official Nepal Tax Invoiced'}
+              </span>
             </div>
           </div>
 
-          {/* Column 2: Products & Hardware (2 Columns) */}
-          <div className="lg:col-span-2 space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              Explore Catalog
-            </h3>
-            <ul className="space-y-2 text-xs sm:text-sm">
-              <li>
-                <button
-                  onClick={() => navigateTo('shop')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>Laptops & Notebooks</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('shop')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>Custom Desktop PCs</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('shop')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>Components & GPUs</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('shop')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>CCTV & Surveillance</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('shop')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>Printers & Consumables</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('brands')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>Authorized Brands</span>
-                </button>
-              </li>
-            </ul>
+          {/* Dynamic Link Columns (4 Columns Span) */}
+          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-8">
+            {footerColumns.map((col, cIdx) => (
+              <div key={cIdx} className="space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                  {col.title}
+                </h3>
+                <ul className="space-y-2 text-xs sm:text-sm">
+                  {col.links.map((link, lIdx) => (
+                    <li key={lIdx}>
+                      <button
+                        onClick={() => handleLinkClick(link.url)}
+                        className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer text-left"
+                      >
+                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                        <span>{link.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
-          {/* Column 3: Customer Care & Services (2 Columns) */}
-          <div className="lg:col-span-2 space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              Care & Services
-            </h3>
-            <ul className="space-y-2 text-xs sm:text-sm">
-              <li>
-                <button
-                  onClick={() => setIsServiceModalOpen(true)}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>Book Repair Service</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setIsAiAssistantOpen(true)}
-                  className="group flex items-center gap-1.5 text-blue-700 hover:text-blue-800 transition-colors cursor-pointer font-medium"
-                >
-                  <Sparkles className="w-3 h-3 text-amber-500" />
-                  <span>AI Tech Consultant</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('track-order')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>Track My Order</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('about')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>About Our Company</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('faq')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>FAQ & Warranty Rules</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigateTo('contact')}
-                  className="group flex items-center gap-1.5 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  <span>Contact & Store</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: Physical Location & Timing (3 Columns) */}
+          {/* Physical Location & Timing (3 Columns) */}
           <div className="lg:col-span-3 space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
               Physical Showroom
@@ -430,16 +387,24 @@ export const Footer: React.FC = () => {
                 Province 7 Express Coverage:
               </span>
               <div className="flex flex-wrap gap-1">
-                {['Kailali', 'Kanchanpur', 'Dadeldhura', 'Doti', 'Baitadi', 'Achham', 'Bajhang', 'Bajura', 'Darchula'].map(
-                  (district) => (
-                    <span
-                      key={district}
-                      className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] text-slate-600"
-                    >
-                      {district}
-                    </span>
-                  )
-                )}
+                {[
+                  'Kailali',
+                  'Kanchanpur',
+                  'Dadeldhura',
+                  'Doti',
+                  'Baitadi',
+                  'Achham',
+                  'Bajhang',
+                  'Bajura',
+                  'Darchula',
+                ].map((district) => (
+                  <span
+                    key={district}
+                    className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] text-slate-600"
+                  >
+                    {district}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -460,34 +425,44 @@ export const Footer: React.FC = () => {
 
           <div className="flex flex-wrap items-center justify-center gap-2">
             {/* eSewa */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-              <span>eSewa</span>
-            </div>
+            {payments.esewa !== false && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                <span>eSewa</span>
+              </div>
+            )}
 
             {/* Khalti */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-50 border border-purple-200 text-purple-800 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-600" />
-              <span>Khalti</span>
-            </div>
+            {payments.khalti !== false && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-50 border border-purple-200 text-purple-800 text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-600" />
+                <span>Khalti</span>
+              </div>
+            )}
 
             {/* Fonepay */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
-              <span>Fonepay</span>
-            </div>
+            {payments.fonepay !== false && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                <span>Fonepay</span>
+              </div>
+            )}
 
             {/* Bank Transfer */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-              <span>Bank Transfer</span>
-            </div>
+            {payments.bankTransfer !== false && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                <span>Bank Transfer</span>
+              </div>
+            )}
 
             {/* Cash on Delivery */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
-              <span>Cash on Delivery</span>
-            </div>
+            {payments.cod !== false && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                <span>Cash on Delivery</span>
+              </div>
+            )}
           </div>
 
           {/* Minimal Back to Top Trigger */}
@@ -509,13 +484,14 @@ export const Footer: React.FC = () => {
 
           <div className="text-center sm:text-left">
             <span>
-              {siteSettings.footerNotice ||
-                `© ${currentYear} Intel Computer Center (INTEL COMPUTER CENTER & Electronics). All rights reserved.`}
+              {fs.copyrightText ||
+                siteSettings.footerNotice ||
+                `© ${currentYear} INTEL COMPUTER CENTER (INTEL COMPUTER CENTER & Electronics). All rights reserved.`}
             </span>
           </div>
 
           {/* Social Links */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             {siteSettings.facebookUrl && (
               <a
                 href={siteSettings.facebookUrl}
@@ -536,6 +512,28 @@ export const Footer: React.FC = () => {
                 aria-label="Instagram"
               >
                 Instagram
+              </a>
+            )}
+            {siteSettings.tiktokUrl && (
+              <a
+                href={siteSettings.tiktokUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+                aria-label="TikTok"
+              >
+                TikTok
+              </a>
+            )}
+            {siteSettings.youtubeUrl && (
+              <a
+                href={siteSettings.youtubeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-600 hover:text-red-600 transition-colors"
+                aria-label="YouTube"
+              >
+                YouTube
               </a>
             )}
             <a

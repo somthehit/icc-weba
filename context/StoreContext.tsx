@@ -333,6 +333,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           googleMapLatitude: (profile.googleMapLatitude ?? config.googleMapLatitude ?? current.googleMapLatitude) as number | undefined,
           googleMapLongitude: (profile.googleMapLongitude ?? config.googleMapLongitude ?? current.googleMapLongitude) as number | undefined,
           googlePlaceId: (profile.googlePlaceId || config.googlePlaceId || current.googlePlaceId) as string,
+          facebookUrl: (config.facebookUrl || current.facebookUrl) as string,
+          instagramUrl: (config.instagramUrl || current.instagramUrl) as string,
+          tiktokUrl: (config.tiktokUrl || current.tiktokUrl) as string,
+          youtubeUrl: (config.youtubeUrl || current.youtubeUrl) as string,
+          whatsappNumber: (config.whatsappNumber || profile.contactPhone || current.whatsappNumber) as string,
+          viberNumber: (config.viberNumber || config.whatsappNumber || current.viberNumber) as string,
+          footerNotice: (config.footerNotice || profile.footerNotice || current.footerNotice) as string,
+          footerSettings: config.footerSettings
+            ? { ...(current.footerSettings || {}), ...(config.footerSettings as object) }
+            : current.footerSettings,
         }));
       })
       .catch(() => undefined);

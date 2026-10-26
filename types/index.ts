@@ -338,6 +338,43 @@ export interface Review {
   userUpvoted?: boolean;
 }
 
+export interface FooterLinkItem {
+  label: string;
+  url: string;
+}
+
+export interface FooterColumn {
+  title: string;
+  links: FooterLinkItem[];
+}
+
+export interface FooterTrustPillar {
+  title: string;
+  subtitle: string;
+  icon?: string; // 'shield' | 'truck' | 'wrench' | 'card'
+}
+
+export interface FooterPaymentBadges {
+  esewa?: boolean;
+  khalti?: boolean;
+  fonepay?: boolean;
+  bankTransfer?: boolean;
+  cod?: boolean;
+}
+
+export interface FooterSettings {
+  aboutDescription?: string;
+  panNumber?: string;
+  viberNumber?: string;
+  secondaryPhone?: string;
+  showLiveStatus?: boolean;
+  customStatusText?: string;
+  trustPillars?: FooterTrustPillar[];
+  columns?: FooterColumn[];
+  acceptedPayments?: FooterPaymentBadges;
+  copyrightText?: string;
+}
+
 export interface SiteSettings {
   storeName: string;
   tagline: string;
@@ -350,13 +387,17 @@ export interface SiteSettings {
   announcementEnabled: boolean;
   facebookUrl: string;
   instagramUrl: string;
+  tiktokUrl?: string;
+  youtubeUrl?: string;
   whatsappNumber: string;
+  viberNumber?: string;
   googleMapEmbedUrl: string;
   googleMapLocationUrl?: string;
   googleMapLatitude?: number;
   googleMapLongitude?: number;
   googlePlaceId: string;
   footerNotice: string;
+  footerSettings?: FooterSettings;
 }
 
 export interface PromoBanner {
