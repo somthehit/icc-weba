@@ -1,8 +1,0 @@
-{
-    "editor.formatOnPaste": true,
-    "editor.formatOnSave": true,
-    "files.autoGuessEncoding": true,
-    "files.autoSave": "afterDelay",
-    "files.autoSaveWhenNoErrors": true,
-    "explorer.autoReveal": false
-}
