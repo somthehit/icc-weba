@@ -42,7 +42,7 @@ interface AccountingStaff {
   isLocked: boolean;
 }
 
-export default function AccountingLoginPage() {
+function AccountingLoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get('redirect') || '/accounting';
@@ -671,5 +671,22 @@ export default function AccountingLoginPage() {
         Intel Computer Center ERP • Fiscal Management System v2.6 • Kathmandu, Nepal
       </footer>
     </div>
+  );
+}
+
+export default function AccountingLoginPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-slate-400">
+            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-mono">Loading Accounting Portal...</span>
+          </div>
+        </div>
+      }
+    >
+      <AccountingLoginFormContent />
+    </React.Suspense>
   );
 }
