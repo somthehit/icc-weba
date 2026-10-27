@@ -646,7 +646,7 @@ export const AccountingDashboardView: React.FC = () => {
   const CurrentTabIcon = tabMeta[activeTab]?.icon || TrendingUp;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="accounting-portal min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
       {/* Toast Notification */}
       {notice && (
         <div
@@ -684,7 +684,7 @@ export const AccountingDashboardView: React.FC = () => {
 
         {/* ================= LEFT SIDEBAR NAVIGATION ================= */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900/98 backdrop-blur-2xl border-r border-slate-800 flex flex-col justify-between flex-shrink-0 transition-transform duration-300 lg:transition-none ${
+          className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 shadow-sm flex flex-col justify-between flex-shrink-0 transition-transform duration-300 lg:transition-none ${
             isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
           } lg:translate-x-0 lg:sticky lg:top-0 lg:bottom-auto lg:self-start lg:h-screen lg:z-30`}
         >
@@ -969,7 +969,7 @@ export const AccountingDashboardView: React.FC = () => {
         </aside>
 
         {/* ================= MAIN CONTENT STAGE ================= */}
-        <main className="flex-1 min-w-0 bg-slate-950 p-4 md:p-6 lg:p-8 space-y-6">
+        <main className="flex-1 min-w-0 bg-slate-50 p-4 md:p-6 lg:p-8 space-y-6">
           {/* Top Stage Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
             <div className="flex items-center gap-3">

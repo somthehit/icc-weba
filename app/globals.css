@@ -434,4 +434,145 @@
   }
 }
 
+/* ========================================================================= */
+/* White Portal Theme: /accounting & /pos                                    */
+/* ========================================================================= */
+.accounting-portal,
+.pos-portal {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Page canvas and deep-dark section overrides */
+.accounting-portal .bg-slate-950,
+.accounting-portal .bg-slate-950\/90,
+.accounting-portal .bg-slate-950\/80,
+.accounting-portal .bg-slate-950\/70,
+.accounting-portal .bg-slate-950\/60,
+.accounting-portal .bg-\[\#070b14\],
+.accounting-portal .bg-\[\#0a0f1d\],
+.pos-portal .bg-slate-950,
+.pos-portal .bg-slate-950\/90,
+.pos-portal .bg-slate-950\/80,
+.pos-portal .bg-slate-950\/70,
+.pos-portal .bg-slate-950\/60,
+.pos-portal .bg-\[\#0a0f0d\],
+.pos-portal .bg-\[\#0d1210\] {
+  background-color: #f8fafc !important;
+}
+
+/* Cards, sidebars, headers & modal panels */
+.accounting-portal .bg-slate-900,
+.accounting-portal .bg-slate-900\/98,
+.accounting-portal .bg-slate-900\/95,
+.accounting-portal .bg-slate-900\/90,
+.accounting-portal .bg-slate-900\/80,
+.accounting-portal .bg-slate-900\/70,
+.accounting-portal .bg-slate-900\/60,
+.accounting-portal aside,
+.accounting-portal header,
+.pos-portal .bg-slate-900,
+.pos-portal .bg-slate-900\/98,
+.pos-portal .bg-slate-900\/95,
+.pos-portal .bg-slate-900\/90,
+.pos-portal .bg-slate-900\/80,
+.pos-portal .bg-slate-900\/70,
+.pos-portal .bg-slate-900\/60,
+.pos-portal header {
+  background-color: #ffffff !important;
+}
+
+/* Borders */
+.accounting-portal .border-slate-800,
+.accounting-portal .border-slate-800\/80,
+.accounting-portal .border-slate-800\/60,
+.accounting-portal .border-slate-700,
+.pos-portal .border-slate-800,
+.pos-portal .border-slate-800\/80,
+.pos-portal .border-slate-800\/60,
+.pos-portal .border-slate-700 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Typography on white canvas */
+.accounting-portal .text-white,
+.pos-portal .text-white {
+  color: #0f172a !important;
+}
+
+.accounting-portal .text-slate-200,
+.pos-portal .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.accounting-portal .text-slate-300,
+.pos-portal .text-slate-300 {
+  color: #334155 !important;
+}
+
+.accounting-portal .text-slate-400,
+.pos-portal .text-slate-400 {
+  color: #64748b !important;
+}
+
+/* Form Inputs, Selects & Textareas */
+.accounting-portal input,
+.accounting-portal select,
+.accounting-portal textarea,
+.pos-portal input,
+.pos-portal select,
+.pos-portal textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.accounting-portal input::placeholder,
+.pos-portal input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Table headers */
+.accounting-portal thead,
+.accounting-portal thead.bg-slate-950\/80,
+.accounting-portal thead.bg-slate-950 {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+.accounting-portal thead th {
+  color: #475569 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.accounting-portal tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Inactive sidebar buttons */
+.accounting-portal aside button:not(.bg-blue-600) {
+  color: #475569 !important;
+}
+
+.accounting-portal aside button:not(.bg-blue-600):hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Preserve bright contrast for colored action buttons & badges */
+.accounting-portal button.bg-blue-600,
+.accounting-portal button.bg-blue-600 *,
+.accounting-portal button.bg-emerald-600,
+.accounting-portal button.bg-emerald-600 *,
+.accounting-portal button.bg-purple-600,
+.accounting-portal button.bg-purple-600 *,
+.accounting-portal button.bg-rose-600,
+.accounting-portal button.bg-rose-600 *,
+.pos-portal button.bg-emerald-500,
+.pos-portal button.bg-emerald-500 *,
+.pos-portal button.bg-blue-600,
+.pos-portal button.bg-blue-600 * {
+  color: #ffffff !important;
+}
+
 

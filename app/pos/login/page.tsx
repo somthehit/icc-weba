@@ -213,9 +213,9 @@ export default function PosLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white">
+    <div className="pos-portal flex min-h-screen flex-col bg-slate-50 text-slate-900 selection:bg-emerald-500 selection:text-white">
       {/* Top Header */}
-      <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900/80 px-6 py-3.5 backdrop-blur-md">
+      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3.5 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 font-black text-slate-950 shadow-lg shadow-emerald-500/20">
             ICC

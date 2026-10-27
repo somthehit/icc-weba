@@ -13,7 +13,9 @@ export default function PosPage() {
   return (
     <StoreProvider>
       <SeoProvider>
-        <CounterPosTerminal />
+        <div className="pos-portal min-h-screen bg-white">
+          <CounterPosTerminal />
+        </div>
       </SeoProvider>
     </StoreProvider>
   );

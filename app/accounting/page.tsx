@@ -13,7 +13,9 @@ export default function AccountingPage() {
   return (
     <StoreProvider>
       <SeoProvider>
-        <AccountingDashboardView />
+        <div className="accounting-portal min-h-screen bg-slate-50">
+          <AccountingDashboardView />
+        </div>
       </SeoProvider>
     </StoreProvider>
   );

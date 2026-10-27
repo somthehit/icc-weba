@@ -249,8 +249,8 @@ export default function TerminalDualAuthGate({
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 font-sans text-slate-100">
-      <div className="w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900/95 p-7 shadow-2xl backdrop-blur-md">
+    <div className="pos-portal flex min-h-screen items-center justify-center bg-slate-50 p-4 font-sans text-slate-800">
+      <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-7 shadow-xl">
         
         {/* Terminal Header */}
         <div className="mb-5 border-b border-slate-800 pb-4 text-center">

@@ -299,7 +299,7 @@ export default function CounterPosTerminal() {
   const [showCustomerDisplay, setShowCustomerDisplay] = useState(false);
 
   // Theme
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
 
   // Barcode input ref
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -857,7 +857,7 @@ export default function CounterPosTerminal() {
   // -------------------------------------------------------------
   if (terminalState === 'BOD_FLOAT_INPUT') {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+      <div className="pos-portal min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <BodFloatInputModal
           isOpen={true}
           terminalCode={terminalCode}
@@ -875,8 +875,8 @@ export default function CounterPosTerminal() {
   // -------------------------------------------------------------
   return (
     <div
-      className={`flex h-full min-h-screen w-full flex-col overflow-hidden font-sans select-none ${
-        theme === 'dark' ? 'bg-[#0a0f0d] text-slate-100' : 'bg-slate-100 text-slate-900'
+      className={`pos-portal flex h-full min-h-screen w-full flex-col overflow-hidden font-sans select-none ${
+        theme === 'dark' ? 'bg-[#0a0f0d] text-slate-100' : 'bg-white text-slate-900'
       }`}
     >
       {/* 1. Counter POS Top Header */}
