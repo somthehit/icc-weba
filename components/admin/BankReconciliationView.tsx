@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Wallet,
   Building2,
@@ -27,6 +27,7 @@ import {
   ExternalLink,
   X,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   CheckCircle2,
   AlertCircle,
@@ -66,6 +67,17 @@ export const BankReconciliationView: React.FC<BankReconciliationViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNRECONCILED' | 'MATCHED'>('ALL');
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // Tabs scroll navigation
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (tabsContainerRef.current) {
+      tabsContainerRef.current.scrollBy({
+        left: direction === 'left' ? -200 : 200,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   // Reconcile Drawer State
   const [activeReconcileLine, setActiveReconcileLine] = useState<any | null>(null);
@@ -946,48 +958,71 @@ export const BankReconciliationView: React.FC<BankReconciliationViewProps> = ({
       {/* ========================================================================= */}
       <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-2 shadow-xl backdrop-blur-md space-y-2">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-          {/* Scrollable Sub-Tabs without native OS scrollbar */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none py-0.5 px-0.5 min-w-0 flex-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {[
-              { id: 'feed', label: 'Statement Feed', count: filteredStatements.length, icon: FileSpreadsheet },
-              { id: 'suggested', label: 'Suggested Matches', count: suggestedMatches.length, icon: Sparkles },
-              { id: 'unreconciled', label: 'Unreconciled Aging', count: summary.unmatchedCount || 0, icon: Clock },
-              { id: 'reconciled', label: 'Reconciled History', count: summary.matchedCount || 0, icon: CheckCircle2 },
-              { id: 'statements', label: 'BRS Statements & Closes', count: periodReconciliations.length, icon: FileCheck },
-              { id: 'cheques', label: 'Cheque Lifecycle', count: chequesList.length, icon: CreditCard },
-              { id: 'imports', label: 'Import Batches', count: recentImports.length, icon: Download },
-              { id: 'anomalies', label: 'Anomaly Alerts', count: anomalies.length, alert: anomalies.length > 0, icon: AlertTriangle },
-            ].map((tab) => {
-              const TabIcon = tab.icon;
-              const isActive = activeSubTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveSubTab(tab.id as ReconTab)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 ring-1 ring-blue-400/40'
-                      : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/60'
-                  }`}
-                >
-                  <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                  <span>{tab.label}</span>
-                  {typeof tab.count === 'number' && (
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono leading-none ${
-                        tab.alert
-                          ? 'bg-rose-500 text-white font-bold animate-pulse'
-                          : isActive
-                          ? 'bg-blue-900/90 text-blue-100 border border-blue-400/30'
-                          : 'bg-slate-800 text-slate-400'
-                      }`}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+          {/* Scrollable Sub-Tabs with Previous/Next Controls */}
+          <div className="flex items-center min-w-0 flex-1 relative gap-1">
+            <button
+              type="button"
+              onClick={() => scrollTabs('left')}
+              aria-label="Scroll tabs left"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors flex-shrink-0"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+
+            <div
+              ref={tabsContainerRef}
+              className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none py-0.5 px-0.5 min-w-0 flex-1 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {[
+                { id: 'feed', label: 'Statement Feed', count: filteredStatements.length, icon: FileSpreadsheet },
+                { id: 'suggested', label: 'Suggested Matches', count: suggestedMatches.length, icon: Sparkles },
+                { id: 'unreconciled', label: 'Unreconciled Aging', count: summary.unmatchedCount || 0, icon: Clock },
+                { id: 'reconciled', label: 'Reconciled History', count: summary.matchedCount || 0, icon: CheckCircle2 },
+                { id: 'statements', label: 'BRS Statements & Closes', count: periodReconciliations.length, icon: FileCheck },
+                { id: 'cheques', label: 'Cheque Lifecycle', count: chequesList.length, icon: CreditCard },
+                { id: 'imports', label: 'Import Batches', count: recentImports.length, icon: Download },
+                { id: 'anomalies', label: 'Anomaly Alerts', count: anomalies.length, alert: anomalies.length > 0, icon: AlertTriangle },
+              ].map((tab) => {
+                const TabIcon = tab.icon;
+                const isActive = activeSubTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveSubTab(tab.id as ReconTab)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                      isActive
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 ring-1 ring-blue-400/40'
+                        : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/60'
+                    }`}
+                  >
+                    <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <span>{tab.label}</span>
+                    {typeof tab.count === 'number' && (
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono leading-none ${
+                          tab.alert
+                            ? 'bg-rose-500 text-white font-bold animate-pulse'
+                            : isActive
+                            ? 'bg-blue-900/90 text-blue-100 border border-blue-400/30'
+                            : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scrollTabs('right')}
+              aria-label="Scroll tabs right"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors flex-shrink-0"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           {/* Global Search & Filters Toolbar */}
@@ -1003,7 +1038,9 @@ export const BankReconciliationView: React.FC<BankReconciliationViewProps> = ({
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
                   className="absolute right-2.5 top-2.5 text-slate-500 hover:text-slate-300"
                 >
                   <X className="w-3 h-3" />
