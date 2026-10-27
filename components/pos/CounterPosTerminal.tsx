@@ -1007,8 +1007,8 @@ export default function CounterPosTerminal() {
   <title>Receipt-${completedReceipt.orderNumber}</title>
   <style>
     @page {
-      margin: 0;
-      size: 80mm auto;
+      size: auto;
+      margin: 8mm auto;
     }
     * {
       box-sizing: border-box;
@@ -1016,19 +1016,34 @@ export default function CounterPosTerminal() {
       print-color-adjust: exact !important;
     }
     html, body {
-      margin: 0;
+      margin: 0 auto;
       padding: 0;
       background: #ffffff;
       color: #000000;
-      width: 78mm;
+      width: 100%;
+      min-height: 100%;
       font-family: 'Courier New', Courier, monospace, system-ui, sans-serif;
       font-size: 11px;
       line-height: 1.25;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
     .receipt-print-wrapper {
-      width: 76mm;
-      margin: 0 auto;
-      padding: 4mm 2mm 10mm 2mm;
+      width: 80mm;
+      max-width: 80mm;
+      margin: 8mm auto;
+      padding: 6mm 6mm 12mm 6mm;
+      background: #ffffff;
+      border: 1px dashed #555555;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .slip {
+      width: 100%;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .cut-divider {
       margin: 16px 0;
@@ -1036,6 +1051,7 @@ export default function CounterPosTerminal() {
       border-top: 1px dashed #444;
       position: relative;
       page-break-inside: avoid;
+      break-inside: avoid;
     }
     .cut-badge {
       position: relative;
@@ -1100,6 +1116,31 @@ export default function CounterPosTerminal() {
     .text-slate-600 { color: #444444; }
     .text-slate-500 { color: #666666; }
     .text-slate-400 { color: #888888; }
+    @media print {
+      @page {
+        size: auto;
+        margin: 8mm auto;
+      }
+      html, body {
+        width: 100% !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        background: #ffffff !important;
+      }
+      .receipt-print-wrapper {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 6mm auto !important;
+        padding: 6mm 6mm 10mm 6mm !important;
+        border: 1px dashed #555555 !important;
+        border-radius: 4px !important;
+        box-sizing: border-box !important;
+      }
+    }
   </style>
 </head>
 <body>
