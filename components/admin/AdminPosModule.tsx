@@ -18,9 +18,11 @@ import {
   Radio,
   Receipt,
   ArrowUpRight,
+  QrCode,
 } from 'lucide-react';
 import { formatNpr } from '@/lib/nepal/money';
 import { formatDualDate } from '@/lib/nepal/date';
+import { PosBankQrManager } from '@/components/admin/PosBankQrManager';
 
 interface TerminalRecord {
   id: string;
@@ -57,7 +59,7 @@ interface ShiftRecord {
 }
 
 export const AdminPosModule: React.FC = () => {
-  const [tab, setTab] = useState<'terminals' | 'shifts' | 'transactions'>('terminals');
+  const [tab, setTab] = useState<'terminals' | 'shifts' | 'transactions' | 'qr_codes'>('terminals');
   const [terminals, setTerminals] = useState<TerminalRecord[]>([]);
   const [shifts, setShifts] = useState<ShiftRecord[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
@@ -275,6 +277,17 @@ export const AdminPosModule: React.FC = () => {
             }`}
           >
             Recent In-Store Receipts ({recentTransactions.length})
+          </button>
+          <button
+            onClick={() => setTab('qr_codes')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              tab === 'qr_codes'
+                ? 'bg-[#12151C] text-white shadow-xs'
+                : 'text-[#6B7280] hover:text-[#12151C] hover:bg-[#F4F5F8]'
+            }`}
+          >
+            <QrCode className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Bank & Wallet QRs</span>
           </button>
         </div>
 
@@ -504,6 +517,9 @@ export const AdminPosModule: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Tab 4: Bank & Wallet Dynamic QRs Manager */}
+      {tab === 'qr_codes' && <PosBankQrManager />}
     </div>
   );
 };

@@ -184,3 +184,27 @@ export const posShiftApprovals = pgTable(
   })
 );
 
+export const posBankQrs = pgTable(
+  'pos_bank_qrs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    bankName: varchar('bank_name', { length: 100 }).notNull(),
+    accountName: varchar('account_name', { length: 150 }).notNull(),
+    accountNumber: varchar('account_number', { length: 60 }).notNull(),
+    qrType: varchar('qr_type', { length: 50 }).notNull().default('fonepay'),
+    merchantCode: varchar('merchant_code', { length: 100 }),
+    qrImageUrl: text('qr_image_url'),
+    qrPayloadTemplate: text('qr_payload_template'),
+    chartAccountId: uuid('chart_account_id'),
+    isActive: boolean('is_active').notNull().default(true),
+    isDefault: boolean('is_default').notNull().default(false),
+    displayOrder: integer('display_order').notNull().default(0),
+    instructions: text('instructions'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    activeOrderIdx: index('pos_bank_qrs_active_order_idx').on(t.isActive, t.displayOrder),
+  })
+);
+

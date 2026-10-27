@@ -44,6 +44,9 @@ interface PosCheckoutRequest {
   registerCode?: string;
   shiftId?: string | null;
   idempotencyKey?: string;
+  qrProvider?: string;
+  qrReference?: string;
+  bankAccountId?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -85,6 +88,9 @@ export async function POST(request: NextRequest) {
       cashierId = null,
       registerCode = 'REG-01',
       shiftId = null,
+      qrProvider,
+      qrReference,
+      bankAccountId,
     } = body;
 
     if (!items || items.length === 0) {
@@ -279,6 +285,9 @@ export async function POST(request: NextRequest) {
             vatPortion,
             taxableAmount,
             customerPan,
+            qrProvider,
+            qrReference,
+            bankAccountId,
           },
           items,
           customerName,
