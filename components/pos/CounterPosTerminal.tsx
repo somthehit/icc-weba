@@ -905,7 +905,7 @@ export default function CounterPosTerminal() {
   // -------------------------------------------------------------
   return (
     <div
-      className={`pos-portal flex h-full min-h-screen w-full flex-col overflow-hidden font-sans select-none ${
+      className={`pos-portal flex h-screen max-h-screen w-full flex-col overflow-hidden font-sans select-none ${
         theme === 'dark' ? 'bg-[#0a0f0d] text-slate-100' : 'bg-white text-slate-900'
       }`}
     >
@@ -1105,10 +1105,10 @@ export default function CounterPosTerminal() {
       </header>
 
       {/* 2. Main Retail Billing Layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left Column: Product Catalog & Barcode Trap (60% width) */}
         <section
-          className={`relative flex flex-col flex-1 border-r overflow-hidden ${
+          className={`relative flex flex-col flex-1 min-h-0 border-r overflow-hidden ${
             theme === 'dark' ? 'border-slate-800 bg-[#0d1210]' : 'border-slate-200 bg-white'
           }`}
         >
@@ -1155,7 +1155,7 @@ export default function CounterPosTerminal() {
           </div>
 
           {/* Product Items Grid (Virtualized / Windowed) */}
-          <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
             {isLoadingProducts && products.length === 0 ? (
               <div className="col-span-full py-12 text-center text-xs text-slate-500">
                 <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-400" />
@@ -1290,13 +1290,13 @@ export default function CounterPosTerminal() {
 
         {/* Right Column: Checkout Cart & Tenders (40% width) */}
         <section
-          className={`w-96 lg:w-[420px] flex flex-col justify-between shrink-0 ${
-            theme === 'dark' ? 'bg-[#0f1412]' : 'bg-slate-50'
+          className={`w-96 lg:w-[420px] flex flex-col h-full min-h-0 overflow-hidden shrink-0 border-l ${
+            theme === 'dark' ? 'bg-[#0f1412] border-slate-800' : 'bg-slate-50 border-slate-200'
           }`}
         >
           {/* Cart / Return Mode Tabs */}
           <div
-            className={`px-3 pt-3 border-b ${
+            className={`px-3 pt-3 border-b shrink-0 z-10 ${
               theme === 'dark' ? 'border-slate-800 bg-[#121815]' : 'border-slate-200 bg-white'
             }`}
           >
@@ -1396,7 +1396,7 @@ export default function CounterPosTerminal() {
           </div>
 
           {/* Cart Items List OR Return Panel */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
             {cartMode === 'return' ? (
               /* ---- RETURN / REFUND PANEL ---- */
               <div className="space-y-3">
@@ -1607,7 +1607,7 @@ export default function CounterPosTerminal() {
 
           {/* Cart Summary & Checkout Action */}
           <div
-            className={`p-4 border-t space-y-3 ${
+            className={`p-4 border-t shrink-0 z-10 space-y-3 mt-auto ${
               theme === 'dark' ? 'border-slate-800 bg-[#121815]' : 'border-slate-200 bg-white'
             }`}
           >
@@ -1615,7 +1615,7 @@ export default function CounterPosTerminal() {
               <>
                 <div className="flex justify-between items-center text-xs">
                   <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600 font-semibold'}>Total Net Amount:</span>
-                  <span className={`font-black text-lg font-mono ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                  <span className={`font-black text-lg font-mono ${theme === 'dark' ? 'text-white' : 'text-slate-950'}`}>
                     NPR {formatNepaliNumber(String(cartTotal))}
                   </span>
                 </div>
@@ -1627,7 +1627,11 @@ export default function CounterPosTerminal() {
                     }
                   }}
                   disabled={cart.length === 0}
-                  className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-2 transition disabled:opacity-40 shadow-sm"
+                  className={`w-full py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition shadow-xs ${
+                    cart.length === 0
+                      ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer active:scale-[0.99] shadow-md'
+                  }`}
                 >
                   <span>Accept Tender / Pay (Space / Enter / F12)</span>
                   <ArrowRight className="h-4 w-4" />
