@@ -3364,64 +3364,142 @@ export default function CounterPosTerminal() {
       {/* 11. Keyboard Shortcuts Cheat-Sheet Modal */}
       {showShortcutsModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in"
           onClick={() => setShowShortcutsModal(false)}
         >
           <div
-            className="w-full max-w-md rounded-3xl border border-slate-800 bg-[#121815] text-slate-100 p-6 shadow-2xl space-y-4"
+            className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-4 ${
+              theme === 'dark'
+                ? 'bg-[#121815] border-slate-700 text-white'
+                : 'bg-white border-slate-200 text-slate-900'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <HelpCircle className="h-5 w-5 text-emerald-400" />
-                <h3 className="font-black text-sm uppercase text-emerald-400">POS Keyboard Shortcuts</h3>
+            {/* Header */}
+            <div
+              className={`flex items-center justify-between border-b pb-3.5 ${
+                theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-[#00c569] shadow-2xs">
+                  <HelpCircle className="h-5 w-5 stroke-[2.5]" />
+                </div>
+                <div>
+                  <h3
+                    className={`font-black text-sm uppercase tracking-wide ${
+                      theme === 'dark' ? 'text-white' : 'text-slate-900'
+                    }`}
+                  >
+                    POS Keyboard Shortcuts
+                  </h3>
+                  <p className="text-[11px] font-semibold text-slate-500">
+                    Quick hardware keys &amp; register operations
+                  </p>
+                </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowShortcutsModal(false)}
-                className="p-1 rounded-lg hover:bg-slate-800"
+                className={`p-1.5 rounded-xl transition ${
+                  theme === 'dark'
+                    ? 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                    : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+                }`}
+                title="Close Shortcuts Modal"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
-                <span>Focus Barcode / Search</span>
-                <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">F2</kbd>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
-                <span>Apply Discount %</span>
-                <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">F4</kbd>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
-                <span>Park / Hold Current Cart</span>
-                <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">F5</kbd>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
-                <span>Recall Held Cart</span>
-                <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">F6</kbd>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
-                <span>Return / Refund Mode</span>
-                <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">F7</kbd>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
-                <span>Lock POS Terminal</span>
-                <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">F10</kbd>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center col-span-2">
-                <span>Open Payment / Accept Tender</span>
-                <div className="flex gap-1">
-                  <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">F12</kbd>
-                  <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">Space</kbd>
-                  <kbd className="px-2 py-1 rounded bg-slate-800 font-mono font-bold text-emerald-400">Enter</kbd>
+            {/* Shortcut Grid with High-Contrast Dark Text & Crisp Key Badges */}
+            <div className="grid grid-cols-2 gap-2.5 text-xs">
+              {[
+                { label: 'Focus Barcode / Search', keys: ['F2'] },
+                { label: 'Apply Discount & Margin', keys: ['F4'] },
+                { label: 'Park / Hold Current Cart', keys: ['F5'] },
+                { label: 'Recall Held Cart', keys: ['F6'] },
+                { label: 'Return / Refund Mode', keys: ['F7'] },
+                { label: 'Lock POS Terminal', keys: ['F10'] },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className={`p-3 rounded-2xl border flex items-center justify-between transition shadow-2xs ${
+                    theme === 'dark'
+                      ? 'bg-slate-900/90 border-slate-800 hover:border-slate-700'
+                      : 'bg-slate-50/80 border-slate-200/90 hover:bg-slate-100/80 hover:border-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`font-bold text-xs ${
+                      theme === 'dark' ? 'text-slate-100' : 'text-slate-900'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                  <div className="flex gap-1 shrink-0 ml-2">
+                    {item.keys.map((k) => (
+                      <kbd
+                        key={k}
+                        className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs shadow-2xs border ${
+                          theme === 'dark'
+                            ? 'bg-slate-800 border-slate-700 text-[#00c569]'
+                            : 'bg-white border-slate-250 text-[#00c569]'
+                        }`}
+                      >
+                        {k}
+                      </kbd>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Col-span-2 for Payment / Checkout Tender */}
+              <div
+                className={`col-span-2 p-3.5 rounded-2xl border flex items-center justify-between transition shadow-2xs ${
+                  theme === 'dark'
+                    ? 'bg-slate-900/90 border-slate-800 hover:border-slate-700'
+                    : 'bg-slate-50/80 border-slate-200/90 hover:bg-slate-100/80 hover:border-slate-300'
+                }`}
+              >
+                <span
+                  className={`font-black text-xs ${
+                    theme === 'dark' ? 'text-slate-100' : 'text-slate-900'
+                  }`}
+                >
+                  Open Payment / Accept Tender
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {['F12', 'Space', 'Enter'].map((k) => (
+                    <kbd
+                      key={k}
+                      className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs shadow-2xs border ${
+                        theme === 'dark'
+                          ? 'bg-slate-800 border-slate-700 text-[#00c569]'
+                          : 'bg-white border-slate-250 text-[#00c569]'
+                      }`}
+                    >
+                      {k}
+                    </kbd>
+                  ))}
                 </div>
               </div>
             </div>
 
-            <p className="text-[11px] text-slate-500 text-center">
-              USB Barcode scanner captures keystrokes globally without needing to click the search box.
-            </p>
+            {/* Footer */}
+            <div
+              className={`pt-2.5 border-t text-center ${
+                theme === 'dark' ? 'border-slate-800/80' : 'border-slate-200/80'
+              }`}
+            >
+              <p
+                className={`text-[11px] font-semibold leading-relaxed ${
+                  theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                USB Barcode scanner captures keystrokes globally without needing to click the search box.
+              </p>
+            </div>
           </div>
         </div>
       )}
