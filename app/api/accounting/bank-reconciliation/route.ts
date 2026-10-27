@@ -13,7 +13,7 @@ import {
 import { accounts, journalEntries, journalLines, suppliers, purchaseBills } from '@/db/schema/accounting';
 import { staff } from '@/db/schema/pos-enterprise';
 import { eq, desc, and, sql, or, inArray } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import crypto from 'crypto';
 import { toPaisa, fromPaisa, sanitizeNumericAmount } from '@/lib/nepal/money';
 import { adToBs } from '@/lib/nepal/date';
@@ -61,7 +61,7 @@ async function verifySupervisorPin(pin: string): Promise<{ valid: boolean; name:
  * Bank & Digital Wallet Reconciliation API (Nepal Enterprise ERP)
  * Single Source of Truth for Bank/Wallet Accounts, Statement Feeds, GL Linking, and Import Protection.
  */
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const selectedAccountId = searchParams.get('accountId');
@@ -438,7 +438,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
   }
 });
 
-export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { user }: any) => {
+export const POST = withAccounting(async (request: NextRequest, { user }: any) => {
   try {
     const body = await request.json();
     const { action } = body;

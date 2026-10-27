@@ -2,7 +2,7 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { accounts, journalEntries, journalLines } from '@/db/schema';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { parseJson, parseQuery } from '@/lib/validation/parse';
 import { z } from 'zod';
 
@@ -52,7 +52,7 @@ const journalSchema = z
     }
   });
 
-export const GET = withRole(['admin'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const parsed = parseQuery(request.url, querySchema);
     if (!parsed.ok) return parsed.response;
@@ -102,7 +102,7 @@ export const GET = withRole(['admin'], async (request: NextRequest) => {
   }
 });
 
-export const POST = withRole(['admin'], async (request: NextRequest, { user }) => {
+export const POST = withAccounting(async (request: NextRequest, { user }) => {
   try {
     const parsed = await parseJson(request, journalSchema);
     if (!parsed.ok) return parsed.response;

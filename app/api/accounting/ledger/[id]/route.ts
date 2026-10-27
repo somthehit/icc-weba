@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { db } from '@/db';
 import { accounts, journalEntries, journalLines } from '@/db/schema';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { parseQuery } from '@/lib/validation/parse';
 
 const querySchema = z.object({
@@ -16,7 +16,7 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export const GET = withRole<RouteContext>(['admin', 'sales'], async (request: NextRequest, _auth, context) => {
+export const GET = withAccounting<RouteContext>(async (request: NextRequest, _auth, context) => {
   try {
     const { id: accountId } = await context.params;
 

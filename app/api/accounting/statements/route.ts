@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { accounts, journalEntries, journalLines } from '@/db/schema/accounting';
 import { eq, desc, asc, sql, and } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { adToBs, formatDualDate } from '@/lib/nepal/date';
 import { ACCOUNT_CODES } from '@/lib/accounting/chart-of-accounts';
 
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'balance_sheet'; // 'balance_sheet' | 'income_statement' | 'cash_flow' | 'day_book'

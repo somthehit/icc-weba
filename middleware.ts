@@ -15,7 +15,20 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { AUTH_COOKIE, verifyToken } from '@/lib/auth/jwt';
 
-type Role = 'customer' | 'admin' | 'sales' | 'inventory_manager' | 'service_technician';
+type Role =
+  | 'customer'
+  | 'admin'
+  | 'super_admin'
+  | 'sales'
+  | 'inventory_manager'
+  | 'service_technician'
+  | 'delivery_driver'
+  | 'accountant'
+  | 'supervisor'
+  | 'store_manager'
+  | 'manager'
+  | 'auditor'
+  | 'cashier';
 
 /** Anyone, signed in or not. */
 const PUBLIC = 'public' as const;

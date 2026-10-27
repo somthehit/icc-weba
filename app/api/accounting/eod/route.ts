@@ -6,7 +6,7 @@ import { users } from '@/db/schema/users';
 import { auditLogs } from '@/db/schema/audit';
 import { zReports } from '@/db/schema/accounting-enterprise';
 import { eq, desc, sql } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { adToBs } from '@/lib/nepal/date';
 import crypto from 'crypto';
 
@@ -26,7 +26,7 @@ import crypto from 'crypto';
  * auditLogs columns (from audit.ts):
  *   userId, action, entityType, entityId (integer), metadata
  */
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get('date') || new Date().toISOString().slice(0, 10);
@@ -129,7 +129,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
   }
 });
 
-export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { user }: any) => {
+export const POST = withAccounting(async (request: NextRequest, { user }: any) => {
   try {
     const body = await request.json();
     const { action, businessDate, supervisorPin, reopenReason } = body;

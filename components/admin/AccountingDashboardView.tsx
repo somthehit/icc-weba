@@ -1868,7 +1868,14 @@ export const AccountingDashboardView: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60 text-slate-300 font-mono">
-                      {matchesList.map((m) => (
+                      {matchesList.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-slate-500 font-sans">
+                            No purchase orders recorded yet. Real purchase orders created in procurement will appear here for 3-way matching against GRNs and supplier bills.
+                          </td>
+                        </tr>
+                      ) : (
+                        matchesList.map((m) => (
                         <tr key={m.poId} className="hover:bg-slate-800/40">
                           <td className="p-3.5 font-bold text-white">{m.poNumber}</td>
                           <td className="p-3.5 font-sans">{m.supplierName}</td>
@@ -1902,7 +1909,7 @@ export const AccountingDashboardView: React.FC = () => {
                             </span>
                           </td>
                         </tr>
-                      ))}
+                      )))}
                     </tbody>
                   </table>
                 </div>
@@ -1972,21 +1979,29 @@ export const AccountingDashboardView: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                      {(supplierPaymentsData?.payments || []).map((p: any) => (
-                        <tr key={p.id} className="hover:bg-slate-800/40">
-                          <td className="p-3.5 font-bold text-white">{p.paymentNumber}</td>
-                          <td className="p-3.5 font-sans">{p.supplierName}</td>
-                          <td className="p-3.5">{p.paymentDate}</td>
-                          <td className="p-3.5">NPR {Number(p.grossSettledAmount).toLocaleString('en-IN')}</td>
-                          <td className="p-3.5 text-purple-400 font-bold">
-                            NPR {Number(p.tdsAmountWithheld).toLocaleString('en-IN')}
+                      {(supplierPaymentsData?.payments || []).length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-slate-500 font-sans">
+                            No supplier settlements or TDS deductions recorded yet. Click &quot;Record Supplier Payment&quot; above to disburse funds.
                           </td>
-                          <td className="p-3.5 text-emerald-400 font-bold">
-                            NPR {Number(p.netPaidAmount).toLocaleString('en-IN')}
-                          </td>
-                          <td className="p-3.5 font-sans">{p.paymentMethod}</td>
                         </tr>
-                      ))}
+                      ) : (
+                        (supplierPaymentsData?.payments || []).map((p: any) => (
+                          <tr key={p.id} className="hover:bg-slate-800/40">
+                            <td className="p-3.5 font-bold text-white">{p.paymentNumber}</td>
+                            <td className="p-3.5 font-sans">{p.supplierName}</td>
+                            <td className="p-3.5">{p.paymentDate}</td>
+                            <td className="p-3.5">NPR {Number(p.grossSettledAmount).toLocaleString('en-IN')}</td>
+                            <td className="p-3.5 text-purple-400 font-bold">
+                              NPR {Number(p.tdsAmountWithheld).toLocaleString('en-IN')}
+                            </td>
+                            <td className="p-3.5 text-emerald-400 font-bold">
+                              NPR {Number(p.netPaidAmount).toLocaleString('en-IN')}
+                            </td>
+                            <td className="p-3.5 font-sans">{p.paymentMethod}</td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -2069,19 +2084,74 @@ export const AccountingDashboardView: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                      {(vatData?.irdAnnex13Sales?.rows || []).slice(0, 15).map((r: any, i: number) => (
-                        <tr key={i} className="hover:bg-slate-800/40">
-                          <td className="p-3 font-bold text-white">{r.invoiceNo}</td>
-                          <td className="p-3">{useBsDate ? r.invoiceDateBs : r.invoiceDateAd}</td>
-                          <td className="p-3 font-sans">{r.buyerName}</td>
-                          <td className="p-3">NPR {r.totalAmount?.toLocaleString('en-IN')}</td>
-                          <td className="p-3">NPR {r.taxableAmount?.toLocaleString('en-IN')}</td>
-                          <td className="p-3 text-purple-400 font-bold">NPR {r.vatAmount?.toLocaleString('en-IN')}</td>
-                          <td className="p-3">
-                            <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[10px]">SYNCED</span>
+                      {(vatData?.irdAnnex13Sales?.rows || []).length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-slate-500 font-sans">
+                            No sales invoices recorded yet. Customer orders and retail POS sales will automatically populate the Annex 13 VAT Register.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        (vatData?.irdAnnex13Sales?.rows || []).slice(0, 15).map((r: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-800/40">
+                            <td className="p-3 font-bold text-white">{r.invoiceNo}</td>
+                            <td className="p-3">{useBsDate ? r.invoiceDateBs : r.invoiceDateAd}</td>
+                            <td className="p-3 font-sans">{r.buyerName}</td>
+                            <td className="p-3">NPR {r.totalAmount?.toLocaleString('en-IN')}</td>
+                            <td className="p-3">NPR {r.taxableAmount?.toLocaleString('en-IN')}</td>
+                            <td className="p-3 text-purple-400 font-bold">NPR {r.vatAmount?.toLocaleString('en-IN')}</td>
+                            <td className="p-3">
+                              <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[10px]">SYNCED</span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Purchase Register (Annex 8) */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl space-y-2">
+                <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="w-4 h-4 text-blue-400" />
+                    <h3 className="text-sm font-bold text-white">खरिद खाता (Purchase Register - Annex 8)</h3>
+                  </div>
+                  <span className="text-xs text-slate-400 font-mono">
+                    {vatData?.irdAnnex8Purchase?.recordsCount || 0} Bills
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-slate-950/80 text-slate-400 uppercase text-[11px] border-b border-slate-800">
+                      <tr>
+                        <th className="p-3">Bill #</th>
+                        <th className="p-3">Date (BS/AD)</th>
+                        <th className="p-3">Supplier Name</th>
+                        <th className="p-3">Gross Total</th>
+                        <th className="p-3">Taxable Amt</th>
+                        <th className="p-3">13% Input VAT</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      {(vatData?.irdAnnex8Purchase?.rows || []).length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-slate-500 font-sans">
+                            No purchase bills recorded yet. Valid supplier invoices entered into the system will be tracked here for input tax credit.
+                          </td>
+                        </tr>
+                      ) : (
+                        (vatData?.irdAnnex8Purchase?.rows || []).slice(0, 15).map((r: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-800/40">
+                            <td className="p-3 font-bold text-white">{r.billNo}</td>
+                            <td className="p-3">{useBsDate ? r.billDateBs : r.billDateAd}</td>
+                            <td className="p-3 font-sans">{r.supplierName}</td>
+                            <td className="p-3">NPR {r.totalAmount?.toLocaleString('en-IN')}</td>
+                            <td className="p-3">NPR {r.taxableAmount?.toLocaleString('en-IN')}</td>
+                            <td className="p-3 text-blue-400 font-bold">NPR {r.vatAmount?.toLocaleString('en-IN')}</td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

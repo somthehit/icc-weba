@@ -7,7 +7,7 @@ import {
   staffAuditLog,
 } from '@/db/schema/pos-enterprise';
 import { eq, desc, and, or, sql, lte, gt } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -177,7 +177,7 @@ const MATRIX_CAPABILITIES = [
  * 3. Active time-bound elevations and recent elevation history
  * 4. Visual matrix capabilities
  */
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const now = new Date();
 
@@ -326,7 +326,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
  * - REVOKE_ELEVATION: Early revocation of an active elevation
  * - RESET_ROLE_DEFAULT: Reverts a staff member's limits to their role defaults
  */
-export const POST = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const POST = withAccounting(async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { action } = body;

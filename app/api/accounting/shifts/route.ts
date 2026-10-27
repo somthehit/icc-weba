@@ -12,10 +12,10 @@ import { posTransactions } from '@/db/schema/pos-enterprise';
 import { auditLogs } from '@/db/schema/audit';
 import { users } from '@/db/schema/users';
 import { eq, desc, and, or, gte, lte, sql } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { postCashVarianceJournal } from '@/lib/accounting/ledger-engine';
 
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest, { user }: any) => {
+export const GET = withAccounting(async (request: NextRequest, { user }: any) => {
   try {
     const { searchParams } = new URL(request.url);
     const cashierId = searchParams.get('cashierId');
@@ -431,7 +431,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest, { u
 });
 
 
-export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { user }: any) => {
+export const POST = withAccounting(async (request: NextRequest, { user }: any) => {
   try {
     const body = await request.json();
     const {

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { accounts } from '@/db/schema';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { parseJson } from '@/lib/validation/parse';
 import { z } from 'zod';
 
@@ -23,7 +23,7 @@ const createAccountSchema = z.object({
   parentId: z.string().trim().uuid().optional().nullable(),
 });
 
-export const POST = withRole(['admin'], async (request: NextRequest) => {
+export const POST = withAccounting(async (request: NextRequest) => {
   try {
     const parsed = await parseJson(request, createAccountSchema);
     if (!parsed.ok) return parsed.response;

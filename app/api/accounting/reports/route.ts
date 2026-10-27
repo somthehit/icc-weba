@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { db } from '@/db';
 import { accounts, journalEntries, journalLines } from '@/db/schema';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { parseQuery } from '@/lib/validation/parse';
 
 const querySchema = z.object({
@@ -12,7 +12,7 @@ const querySchema = z.object({
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const parsed = parseQuery(request.url, querySchema);
     if (!parsed.ok) return parsed.response;

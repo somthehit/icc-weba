@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { staffAuditLog } from '@/db/schema/pos-enterprise';
 import { desc, eq } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/accounting/audit
  * Returns tamper-evident staff security and access audit logs
  */
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const actionFilter = searchParams.get('action');

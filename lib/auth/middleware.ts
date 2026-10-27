@@ -9,15 +9,46 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getUserFromRequest, JWTPayload } from '@/lib/auth/utils';
 
-export type UserRole = 'customer' | 'admin' | 'sales' | 'inventory_manager' | 'service_technician' | 'delivery_driver';
+export type UserRole =
+  | 'customer'
+  | 'admin'
+  | 'super_admin'
+  | 'sales'
+  | 'inventory_manager'
+  | 'service_technician'
+  | 'delivery_driver'
+  | 'accountant'
+  | 'supervisor'
+  | 'store_manager'
+  | 'manager'
+  | 'auditor'
+  | 'cashier';
 
 /** Every role that may reach the admin console. */
 export const STAFF_ROLES: UserRole[] = [
   'admin',
+  'super_admin',
+  'accountant',
+  'supervisor',
+  'store_manager',
+  'manager',
+  'auditor',
   'sales',
   'inventory_manager',
   'service_technician',
   'delivery_driver',
+];
+
+/** Roles permitted to access Back-Office Central Accounting Hub & Financial APIs */
+export const ACCOUNTING_ROLES: UserRole[] = [
+  'admin',
+  'super_admin',
+  'accountant',
+  'supervisor',
+  'store_manager',
+  'manager',
+  'auditor',
+  'sales',
 ];
 
 export interface AuthContext {
@@ -108,3 +139,8 @@ export function withInventory<Ctx = unknown>(handler: Guarded<Ctx>) {
 export function withService<Ctx = unknown>(handler: Guarded<Ctx>) {
   return withRole<Ctx>(['admin', 'service_technician'], handler);
 }
+
+export function withAccounting<Ctx = unknown>(handler: Guarded<Ctx>) {
+  return withRole<Ctx>(ACCOUNTING_ROLES, handler);
+}
+

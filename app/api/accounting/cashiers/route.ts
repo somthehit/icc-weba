@@ -12,7 +12,7 @@ import {
 } from '@/db/schema/pos-enterprise';
 import { posShifts } from '@/db/schema/pos';
 import { eq, desc, sql, and, or, inArray } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { hashCredential, verifyCredential } from '@/lib/security/crypto';
 import { validatePinStrength, generateSecureTempPin } from '@/lib/security/pin-policy';
 
@@ -38,7 +38,7 @@ const ROLE_METADATA: Record<
  * GET /api/accounting/cashiers
  * Returns the enterprise staff roster, assigned terminals, and computed shift performance metrics
  */
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search')?.toLowerCase().trim() || '';
@@ -263,7 +263,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
  * POST /api/accounting/cashiers
  * Enterprise mutations: Create Staff, Update Staff, Secure PIN Reset (Maker-Checker), Unlock PIN, Soft-Delete
  */
-export const POST = withRole(['admin', 'sales'], async (request: NextRequest, authContext: any) => {
+export const POST = withAccounting(async (request: NextRequest, authContext: any) => {
   try {
     const body = await request.json();
     const { action } = body;

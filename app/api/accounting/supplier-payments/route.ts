@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { supplierPayments } from '@/db/schema/accounting-enterprise';
 import { purchaseBills, suppliers } from '@/db/schema/accounting';
 import { eq, desc, sql } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { postSupplierPaymentJournal } from '@/lib/accounting/ledger-engine';
 
 // Schema column mapping (accounting-enterprise.ts supplierPayments):
@@ -15,7 +15,7 @@ import { postSupplierPaymentJournal } from '@/lib/accounting/ledger-engine';
 //   chequeOrRefNo     = bank ref / cheque number
 //   (no `status` column — derive from billId linkage)
 
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     // 1. Fetch all supplier payments with joined supplier name
     const payments = await db
@@ -105,7 +105,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
   }
 });
 
-export const POST = withRole(['admin', 'sales'], async (request: NextRequest, { user }: any) => {
+export const POST = withAccounting(async (request: NextRequest, { user }: any) => {
   try {
     const body = await request.json();
     const { supplierId, billId, grossAmount, tdsRate = 1.5, paymentMethod = 'Nabil Bank', paymentDate, chequeOrRefNo, notes } = body;

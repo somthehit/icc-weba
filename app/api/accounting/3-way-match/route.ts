@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { purchaseOrders, purchaseOrderItems, goodsReceiptNotes, goodsReceiptNoteItems, purchaseBills, purchaseBillItems, suppliers } from '@/db/schema/accounting';
 import { eq, desc, and } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 
 /**
  * 3-Way Match API (PO -> GRN -> Supplier Bill)
  * Compares ordered vs received vs billed quantities, prices, and tax.
  */
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     // 1. Fetch Purchase Orders with their GRNs and Bills
     const pos = await db

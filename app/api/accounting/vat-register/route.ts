@@ -3,13 +3,13 @@ import { db } from '@/db';
 import { orders } from '@/db/schema/orders';
 import { purchaseBills, suppliers, expenses } from '@/db/schema/accounting';
 import { eq, desc, sql, and } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 import { adToBs, formatDualDate } from '@/lib/nepal/date';
 
 /**
  * Nepal IRD VAT Registers API (Annex 13 Sales Register & Annex 8 Purchase Register)
  */
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const fromParam = searchParams.get('from');

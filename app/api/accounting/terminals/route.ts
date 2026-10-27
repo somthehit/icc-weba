@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { terminals, staffTerminals, staff, staffSessions, staffAuditLog } from '@/db/schema/pos-enterprise';
 import { eq, desc, sql, inArray } from 'drizzle-orm';
-import { withRole } from '@/lib/auth/middleware';
+import { withAccounting } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/accounting/terminals
  * Returns registered POS devices with status, network telemetry, and assigned staff
  */
-export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => {
+export const GET = withAccounting(async (request: NextRequest) => {
   try {
     const allTerminals = await db
       .select({
@@ -84,7 +84,7 @@ export const GET = withRole(['admin', 'sales'], async (request: NextRequest) => 
  * POST /api/accounting/terminals
  * Actions: APPROVE_DEVICE, REVOKE_DEVICE, RENAME_DEVICE, REGISTER_DEVICE, ASSIGN_STAFF
  */
-export const POST = withRole(['admin', 'sales'], async (request: NextRequest, authContext: any) => {
+export const POST = withAccounting(async (request: NextRequest, authContext: any) => {
   try {
     const body = await request.json();
     const { action } = body;
