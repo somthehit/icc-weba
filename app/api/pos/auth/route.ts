@@ -93,10 +93,10 @@ export async function GET(request: NextRequest) {
           s.role === 'admin'
             ? 'General Manager / Admin'
             : s.role === 'manager'
-            ? 'Store Manager'
-            : s.role === 'supervisor'
-            ? 'Floor Supervisor'
-            : 'Cashier / Till Operator',
+              ? 'Store Manager'
+              : s.role === 'supervisor'
+                ? 'Floor Supervisor'
+                : 'Cashier / Till Operator',
       };
     });
 
@@ -264,7 +264,7 @@ export async function POST(request: NextRequest) {
         .where(
           codeOrIdentifier.includes('@')
             ? eq(users.email, codeOrIdentifier.toLowerCase())
-            : eq(users.email, `${codeOrIdentifier.toLowerCase()}@icecomputers.com.np`)
+            : eq(users.email, `${codeOrIdentifier.toLowerCase()}@icc.com.np`)
         )
         .limit(1);
 

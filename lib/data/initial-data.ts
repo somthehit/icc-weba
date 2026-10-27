@@ -1952,10 +1952,10 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
 ];
 
 export const INITIAL_ADMIN_USERS: AdminUser[] = [
-  { id: 'adm-1', name: 'Admin (System Owner)', email: 'admin@icecomputers.com.np', phone: '9800000001', role: 'Super Admin', staffRole: 'SUPER_ADMIN', department: 'Management', status: 'active', lastLogin: '2026-08-13 02:45 AM' },
-  { id: 'adm-2', name: 'Sales Manager', email: 'sales@icecomputers.com.np', phone: '9800000002', role: 'Sales Staff', staffRole: 'SALES_AGENT', department: 'Sales & Support', assignedCount: 12, status: 'active', lastLogin: '2026-08-12 04:20 PM' },
-  { id: 'adm-3', name: 'Service Lead Technician', email: 'service@icecomputers.com.np', phone: '9800000003', role: 'Service Staff', staffRole: 'SERVICE_TECHNICIAN', department: 'Hardware Repair', skills: ['BGA Rework', 'Chip-level Repair'], specialization: 'Laptop Motherboard & BGA', assignedCount: 5, status: 'active', lastLogin: '2026-08-11 11:10 AM' },
-  { id: 'adm-4', name: 'Ram Bahadur', email: 'driver@icecomputers.com.np', phone: '9851000000', role: 'Delivery Driver', staffRole: 'DELIVERY_DRIVER', department: 'Logistics', vehicleNumber: 'Ba 2 Pa 4589', drivingLicenseNo: '01-08-00987654', shiftStatus: 'ON_TRANSIT', status: 'active', lastLogin: '2026-08-13 09:15 AM' },
+  { id: 'adm-1', name: 'Admin (System Owner)', email: 'admin@icc.com.np', phone: '9800000001', role: 'Super Admin', staffRole: 'SUPER_ADMIN', department: 'Management', status: 'active', lastLogin: '2026-08-13 02:45 AM' },
+  { id: 'adm-2', name: 'Sales Manager', email: 'sales@icc.com.np', phone: '9800000002', role: 'Sales Staff', staffRole: 'SALES_AGENT', department: 'Sales & Support', assignedCount: 12, status: 'active', lastLogin: '2026-08-12 04:20 PM' },
+  { id: 'adm-3', name: 'Service Lead Technician', email: 'service@icc.com.np', phone: '9800000003', role: 'Service Staff', staffRole: 'SERVICE_TECHNICIAN', department: 'Hardware Repair', skills: ['BGA Rework', 'Chip-level Repair'], specialization: 'Laptop Motherboard & BGA', assignedCount: 5, status: 'active', lastLogin: '2026-08-11 11:10 AM' },
+  { id: 'adm-4', name: 'Ram Bahadur', email: 'driver@icc.com.np', phone: '9851000000', role: 'Delivery Driver', staffRole: 'DELIVERY_DRIVER', department: 'Logistics', vehicleNumber: 'Ba 2 Pa 4589', drivingLicenseNo: '01-08-00987654', shiftStatus: 'ON_TRANSIT', status: 'active', lastLogin: '2026-08-13 09:15 AM' },
 ];
 
 export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [

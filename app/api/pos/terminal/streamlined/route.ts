@@ -17,7 +17,7 @@ async function verifySupervisorCredentials(supervisorId: string | number, pin: s
     const check = await verifyStaffPin(supervisorId, cleanPin, {
       requiredRoles: ['admin', 'manager', 'supervisor'],
     });
-    return check;
+    if (check.success) return check;
   }
 
   // 2. Legacy / Admin fallback
@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Terminal locked. Supervisor authorization required to resume.',
       });
+      response.cookies.delete('pos_token');
       response.cookies.delete('pos_session');
       return response;
     }
@@ -365,6 +366,7 @@ export async function POST(request: NextRequest) {
         message: `Sign-off approved by ${supervisorName}. Terminal is now locked.`,
         reason,
       });
+      response.cookies.delete('pos_token');
       response.cookies.delete('pos_session');
       return response;
     }
@@ -443,6 +445,7 @@ export async function POST(request: NextRequest) {
         handoverSlip,
       });
 
+      response.cookies.delete('pos_token');
       response.cookies.delete('pos_session');
       return response;
     }

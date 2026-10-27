@@ -58,7 +58,9 @@ import {
   KeyRound,
   Eye,
   EyeOff,
+  LogOut,
 } from 'lucide-react';
+import Link from 'next/link';
 import { AccountingModule } from '@/components/admin/AccountingModule';
 import { BankReconciliationView } from '@/components/admin/BankReconciliationView';
 import { CashierShiftDetailsModal } from '@/components/admin/CashierShiftDetailsModal';
@@ -83,6 +85,32 @@ export const AccountingDashboardView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AccountingTab>('overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [useBsDate, setUseBsDate] = useState(true);
+
+  // Accounting Officer Identity from session cookie
+  const [accountingOfficer, setAccountingOfficer] = useState<{
+    id: string;
+    name: string;
+    staffCode: string;
+    role: string;
+    email: string;
+  } | null>(null);
+
+  useEffect(() => {
+    try {
+      const match = document.cookie.match(/(?:^|;\s*)accounting_session=([^;]+)/);
+      if (match) {
+        setAccountingOfficer(JSON.parse(decodeURIComponent(match[1])));
+      }
+    } catch {}
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    document.cookie = 'accounting_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    window.location.href = '/accounting/login';
+  };
 
   // Client-only date/time state (prevents SSR hydration mismatch)
   const [clientDate, setClientDate] = useState('');
@@ -912,22 +940,30 @@ export const AccountingDashboardView: React.FC = () => {
           <div className="p-3 border-t border-slate-800/80 bg-slate-950/60">
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-bold text-xs text-slate-950 shrink-0 shadow-sm">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-semibold text-white truncate">
-                    {currentUser?.name || 'Chief Accountant'}
+                    {accountingOfficer?.name || currentUser?.name || 'Chief Accountant'}
                   </div>
-                  <div className="text-[10px] text-blue-400 font-medium truncate">
-                    Role: {currentUser?.role || 'Admin / Finance'}
+                  <div className="text-[10px] text-emerald-400 font-mono font-medium truncate flex items-center gap-1">
+                    <span>{accountingOfficer?.staffCode || 'ACC01'}</span>
+                    <span>•</span>
+                    <span className="uppercase">{accountingOfficer?.role || currentUser?.role || 'Finance'}</span>
                   </div>
                 </div>
               </div>
-              <div
-                className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"
-                title="Live Ledger Synced"
-              />
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  title="Switch Officer / Sign Out"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 transition"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </aside>

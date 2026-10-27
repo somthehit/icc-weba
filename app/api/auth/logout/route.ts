@@ -15,5 +15,8 @@ export async function POST() {
     path: '/',
   });
 
+  response.cookies.delete('pos_token');
+  response.cookies.delete('pos_session');
+
   return response;
 }

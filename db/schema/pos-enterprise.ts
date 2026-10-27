@@ -13,6 +13,7 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import { type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
+import { posBusinessDays } from './pos';
 
 // Enums with isolated postgres names to prevent naming collisions
 export const staffRole = pgEnum('pos_staff_role', [
@@ -105,14 +106,7 @@ export const terminals = pgTable('terminals', {
 
 export type Terminal = InferSelectModel<typeof terminals>;
 
-export const businessDays = pgTable('business_days', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  businessDate: date('business_date').notNull().unique(),
-  status: dayStatus('status').notNull().default('open'),
-  closedBy: uuid('closed_by').references(() => staff.id),
-  closedAt: timestamp('closed_at', { withTimezone: true }),
-  zReport: jsonb('z_report'), // immutable snapshot at EOD
-});
+export const businessDays = posBusinessDays;
 
 export type BusinessDay = InferSelectModel<typeof businessDays>;
 

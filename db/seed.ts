@@ -263,11 +263,11 @@ async function seed() {
 
     // ---- users (staff + demo customer + order customers + reviewers) ------
     const staff = [
-      { name: 'Admin (System Owner)', email: 'admin@icecomputers.com.np', role: 'admin' as const },
-      { name: 'Sales Manager', email: 'sales@icecomputers.com.np', role: 'sales' as const },
-      { name: 'Inventory Manager', email: 'inventory@icecomputers.com.np', role: 'inventory_manager' as const },
-      { name: 'Service Lead Technician', email: 'service@icecomputers.com.np', role: 'service_technician' as const },
-      { name: 'Demo Customer', email: 'customer@icecomputers.com.np', role: 'customer' as const, phone: '9800000000' },
+      { name: 'Admin (System Owner)', email: 'admin@icc.com.np', role: 'admin' as const },
+      { name: 'Sales Manager', email: 'sales@icc.com.np', role: 'sales' as const },
+      { name: 'Inventory Manager', email: 'inventory@icc.com.np', role: 'inventory_manager' as const },
+      { name: 'Service Lead Technician', email: 'service@icc.com.np', role: 'service_technician' as const },
+      { name: 'Demo Customer', email: 'customer@icc.com.np', role: 'customer' as const, phone: '9800000000' },
     ];
 
     // Unique order customers keyed by email.
@@ -720,7 +720,7 @@ async function seed() {
     // report reconciles the same way whether the order came from here or from a
     // real checkout.
     const historyCustomers = [...userIdByEmail.entries()].filter(
-      ([email]) => email.endsWith('@example.com') || email === 'customer@icecomputers.com.np',
+      ([email]) => email.endsWith('@example.com') || email === 'customer@icc.com.np',
     );
 
     // Deterministic LCG rather than Math.random, so re-seeding produces the same
@@ -871,7 +871,7 @@ async function seed() {
       const productId = dbProductId(r.productId);
       const userId =
         userIdByEmail.get(reviewerEmail(r.userName)) ??
-        userIdByEmail.get('customer@icecomputers.com.np')!;
+        userIdByEmail.get('customer@icc.com.np')!;
       if (!productId) return null;
       return {
         productId,
@@ -917,7 +917,7 @@ async function seed() {
     // and the payables ageing all read from these rows, so they need real dates
     // spanning the same months as the seeded orders (2026-01 .. 2026-08) rather
     // than a single lump that makes every month but one look profitless.
-    const adminUserId = userIdByEmail.get('admin@icecomputers.com.np') ?? null;
+    const adminUserId = userIdByEmail.get('admin@icc.com.np') ?? null;
 
     const insertedSuppliers = await tx
       .insert(suppliers)
@@ -1204,7 +1204,7 @@ async function seed() {
     // tickets still open. A report that only ever sees billed-and-closed work
     // never exercises the "resolved but unbilled" caption, which is the number the
     // service lead actually needs to chase.
-    const technicianId = userIdByEmail.get('service@icecomputers.com.np') ?? null;
+    const technicianId = userIdByEmail.get('service@icc.com.np') ?? null;
 
     const jobs = [
       { type: 'repair' as const, subject: 'Laptop will not power on after load-shedding surge', lo: 2500, hi: 6500 },

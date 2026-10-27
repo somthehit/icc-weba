@@ -350,11 +350,10 @@ export const PosStaffTab: React.FC = () => {
       {/* Feedback banner */}
       {feedbackMsg && (
         <div
-          className={`flex items-center justify-between rounded-xl p-4 text-xs font-bold ${
-            feedbackMsg.type === 'success'
+          className={`flex items-center justify-between rounded-xl p-4 text-xs font-bold ${feedbackMsg.type === 'success'
               ? 'border border-emerald-300 bg-emerald-50 text-emerald-800'
               : 'border border-red-300 bg-red-50 text-red-800'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             {feedbackMsg.type === 'success' ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <AlertCircle className="h-4 w-4 text-red-600" />}
@@ -387,11 +386,10 @@ export const PosStaffTab: React.FC = () => {
               <button
                 key={r}
                 onClick={() => setRoleFilter(r)}
-                className={`rounded-lg px-3 py-1.5 capitalize transition ${
-                  roleFilter === r
+                className={`rounded-lg px-3 py-1.5 capitalize transition ${roleFilter === r
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 {r === 'ALL' ? 'All Roles' : r}
               </button>
@@ -443,11 +441,10 @@ export const PosStaffTab: React.FC = () => {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold ${
-                            isSupervisor
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold ${isSupervisor
                               ? 'bg-purple-100 text-purple-800 border border-purple-200'
                               : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                          }`}
+                            }`}
                         >
                           {member.staffCode.slice(0, 3)}
                         </div>
@@ -469,15 +466,14 @@ export const PosStaffTab: React.FC = () => {
                     {/* Role */}
                     <td className="p-4">
                       <span
-                        className={`inline-block rounded-lg px-2.5 py-1 text-[10px] font-extrabold uppercase ${
-                          member.role === 'admin'
+                        className={`inline-block rounded-lg px-2.5 py-1 text-[10px] font-extrabold uppercase ${member.role === 'admin'
                             ? 'bg-purple-100 text-purple-800 border border-purple-200'
                             : member.role === 'manager'
-                            ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                            : member.role === 'supervisor'
-                            ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                            : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        }`}
+                              ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                              : member.role === 'supervisor'
+                                ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          }`}
                       >
                         {member.role}
                       </span>
@@ -547,11 +543,10 @@ export const PosStaffTab: React.FC = () => {
                     <td className="p-4">
                       <button
                         onClick={() => handleToggleActive(member)}
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
-                          member.active
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold transition ${member.active
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                             : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'
-                        }`}
+                          }`}
                       >
                         <span className={`h-1.5 w-1.5 rounded-full ${member.active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                         {member.active ? 'ACTIVE' : 'DEACTIVATED'}
@@ -667,7 +662,7 @@ export const PosStaffTab: React.FC = () => {
                     type="email"
                     value={createForm.email}
                     onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                    placeholder="ramesh@icecomputers.com.np"
+                    placeholder="ramesh@icc.com.np"
                     className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-xs outline-none focus:border-slate-900"
                   />
                 </label>

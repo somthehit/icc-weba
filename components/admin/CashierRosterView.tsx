@@ -1194,11 +1194,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
       <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveModule('staff')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeModule === 'staff'
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeModule === 'staff'
               ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30'
               : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
+            }`}
         >
           <Users className="w-4 h-4" />
           <span>Staff Directory ({staffList.length})</span>
@@ -1206,11 +1205,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
 
         <button
           onClick={() => setActiveModule('terminals')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeModule === 'terminals'
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeModule === 'terminals'
               ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30'
               : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
+            }`}
         >
           <Radio className="w-4 h-4" />
           <span>Device Registry ({terminalsList.length})</span>
@@ -1221,11 +1219,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
 
         <button
           onClick={() => setActiveModule('sessions')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeModule === 'sessions'
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeModule === 'sessions'
               ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30'
               : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
+            }`}
         >
           <Power className="w-4 h-4" />
           <span>Active Sessions ({sessionsList.filter((s) => !s.isRevoked).length})</span>
@@ -1233,11 +1230,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
 
         <button
           onClick={() => setActiveModule('audit')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeModule === 'audit'
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeModule === 'audit'
               ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30'
               : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
+            }`}
         >
           <History className="w-4 h-4" />
           <span>Audit Trail ({auditLogs.length})</span>
@@ -1245,11 +1241,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
 
         <button
           onClick={() => setActiveModule('limits')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeModule === 'limits'
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeModule === 'limits'
               ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30'
               : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
+            }`}
         >
           <SlidersHorizontal className="w-4 h-4" />
           <span>Permissions & Limits</span>
@@ -1298,13 +1293,12 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
               <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-1">
                 <span className="text-[11px] font-medium text-slate-400">Net Cash Variance</span>
                 <div
-                  className={`text-lg font-bold font-mono ${
-                    Number(summary.netPosVariance || 0) < 0
+                  className={`text-lg font-bold font-mono ${Number(summary.netPosVariance || 0) < 0
                       ? 'text-rose-400'
                       : Number(summary.netPosVariance || 0) > 0
-                      ? 'text-amber-400'
-                      : 'text-emerald-400'
-                  }`}
+                        ? 'text-amber-400'
+                        : 'text-emerald-400'
+                    }`}
                 >
                   NPR {Number(summary.netPosVariance || 0).toLocaleString('en-IN')}
                 </div>
@@ -1341,25 +1335,22 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
               <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-stretch md:self-auto">
                 <button
                   onClick={() => setCategoryFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    categoryFilter === 'all' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${categoryFilter === 'all' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
                 >
                   All Staff ({staffList.length})
                 </button>
                 <button
                   onClick={() => setCategoryFilter('pos_staff')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    categoryFilter === 'pos_staff' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${categoryFilter === 'pos_staff' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
                 >
                   POS Counters ({staffList.filter((s) => s.category === 'pos_staff').length})
                 </button>
                 <button
                   onClick={() => setCategoryFilter('back_office')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    categoryFilter === 'back_office' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${categoryFilter === 'back_office' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
                 >
                   Back-Office ({staffList.filter((s) => s.category === 'back_office').length})
                 </button>
@@ -1395,18 +1386,16 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                 <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      viewMode === 'grid' ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
-                    }`}
+                    className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
+                      }`}
                     title="Card Grid View"
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('table')}
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      viewMode === 'table' ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
-                    }`}
+                    className={`p-1.5 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-slate-800 text-purple-400' : 'text-slate-500 hover:text-slate-300'
+                      }`}
                     title="Table View"
                   >
                     <List className="w-4 h-4" />
@@ -1426,15 +1415,14 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                 return (
                   <div
                     key={staffMember.id}
-                    className={`bg-slate-900 border rounded-2xl p-5 shadow-xl space-y-4 transition-all hover:border-slate-700 flex flex-col justify-between ${
-                      staffMember.status === 'suspended'
+                    className={`bg-slate-900 border rounded-2xl p-5 shadow-xl space-y-4 transition-all hover:border-slate-700 flex flex-col justify-between ${staffMember.status === 'suspended'
                         ? 'border-amber-500/40 bg-amber-950/10 opacity-75'
                         : staffMember.status === 'terminated'
-                        ? 'border-rose-500/40 bg-rose-950/10 opacity-60'
-                        : m.anomalyFlag
-                        ? 'border-rose-500/50 bg-slate-900'
-                        : 'border-slate-800'
-                    }`}
+                          ? 'border-rose-500/40 bg-rose-950/10 opacity-60'
+                          : m.anomalyFlag
+                            ? 'border-rose-500/50 bg-slate-900'
+                            : 'border-slate-800'
+                      }`}
                   >
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-3">
@@ -1454,13 +1442,12 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                                 {staffMember.roleLabel}
                               </span>
                               <span
-                                className={`px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-bold ${
-                                  staffMember.status === 'active'
+                                className={`px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-bold ${staffMember.status === 'active'
                                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                                     : staffMember.status === 'suspended'
-                                    ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                                    : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                                }`}
+                                      ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                      : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                  }`}
                               >
                                 {staffMember.status}
                               </span>
@@ -1520,13 +1507,12 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                             <div className="bg-slate-900/60 p-1.5 rounded-lg border border-slate-800">
                               <div className="text-[9px] text-slate-400">Net Variance</div>
                               <div
-                                className={`font-bold text-xs ${
-                                  m.totalNetVariance < 0
+                                className={`font-bold text-xs ${m.totalNetVariance < 0
                                     ? 'text-rose-400'
                                     : m.totalNetVariance > 0
-                                    ? 'text-amber-400'
-                                    : 'text-emerald-400'
-                                }`}
+                                      ? 'text-amber-400'
+                                      : 'text-emerald-400'
+                                  }`}
                               >
                                 {m.totalNetVariance > 0 ? `+${m.totalNetVariance}` : m.totalNetVariance}
                               </div>
@@ -1691,13 +1677,12 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${
-                              s.status === 'active'
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${s.status === 'active'
                                 ? 'bg-emerald-500/15 text-emerald-400'
                                 : s.status === 'suspended'
-                                ? 'bg-amber-500/15 text-amber-400'
-                                : 'bg-rose-500/15 text-rose-400'
-                            }`}
+                                  ? 'bg-amber-500/15 text-amber-400'
+                                  : 'bg-rose-500/15 text-rose-400'
+                              }`}
                           >
                             {s.status}
                           </span>
@@ -1712,8 +1697,8 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                               s.metrics.totalNetVariance < 0
                                 ? 'text-rose-400'
                                 : s.metrics.totalNetVariance > 0
-                                ? 'text-amber-400'
-                                : 'text-emerald-400'
+                                  ? 'text-amber-400'
+                                  : 'text-emerald-400'
                             }
                           >
                             {s.metrics.totalNetVariance > 0 ? `+${s.metrics.totalNetVariance}` : s.metrics.totalNetVariance}
@@ -1794,13 +1779,12 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
             {terminalsList.map((term) => (
               <div
                 key={term.id}
-                className={`bg-slate-900 border rounded-2xl p-5 shadow-xl space-y-4 flex flex-col justify-between ${
-                  term.status === 'pending_approval'
+                className={`bg-slate-900 border rounded-2xl p-5 shadow-xl space-y-4 flex flex-col justify-between ${term.status === 'pending_approval'
                     ? 'border-amber-500/50 bg-amber-950/15'
                     : term.status === 'revoked'
-                    ? 'border-rose-500/40 bg-rose-950/10 opacity-75'
-                    : 'border-slate-800'
-                }`}
+                      ? 'border-rose-500/40 bg-rose-950/10 opacity-75'
+                      : 'border-slate-800'
+                  }`}
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
@@ -1808,13 +1792,12 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-sm text-purple-400">{term.code}</span>
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase ${
-                            term.status === 'approved'
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase ${term.status === 'approved'
                               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                               : term.status === 'pending_approval'
-                              ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse'
-                              : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                          }`}
+                                ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse'
+                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                            }`}
                         >
                           {term.status.replace('_', ' ')}
                         </span>
@@ -2036,15 +2019,14 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                       </td>
                       <td className="py-3 px-4">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                            log.action.includes('RESET')
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${log.action.includes('RESET')
                               ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                               : log.action.includes('LOGOUT') || log.action.includes('REVOKE')
-                              ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                              : log.action.includes('APPROVE')
-                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
-                          }`}
+                                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                : log.action.includes('APPROVE')
+                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                  : 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+                            }`}
                         >
                           {log.action}
                         </span>
@@ -2142,14 +2124,14 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                       <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Elevated Permission</div>
                       <div className="font-mono font-bold text-emerald-400 text-xs">
                         {elev.permissionKey === 'maxRefundAmount' ? `Max Refund: NPR ${Number(elev.overrideValue).toLocaleString('en-IN')}` :
-                         elev.permissionKey === 'maxInvoiceDiscountAmount' ? `Max Inv Discount: NPR ${Number(elev.overrideValue).toLocaleString('en-IN')}` :
-                         elev.permissionKey === 'maxLineDiscountPct' ? `Max Line Discount: ${elev.overrideValue}%` :
-                         elev.permissionKey === 'maxVoidAmount' ? `Max Void: NPR ${Number(elev.overrideValue).toLocaleString('en-IN')}` :
-                         elev.permissionKey === 'canOverridePrice' ? 'Manual Price Override: ENABLED' :
-                         elev.permissionKey === 'canNoSaleOpen' ? 'No-Sale Drawer Kick: ENABLED' :
-                         elev.permissionKey === 'maxCashPayout' ? `Cash Payout Limit: NPR ${Number(elev.overrideValue).toLocaleString('en-IN')}` :
-                         elev.permissionKey === 'canCreditSale' ? 'Credit Sale (Khata): ENABLED' :
-                         `${elev.permissionKey} -> ${elev.overrideValue}`}
+                          elev.permissionKey === 'maxInvoiceDiscountAmount' ? `Max Inv Discount: NPR ${Number(elev.overrideValue).toLocaleString('en-IN')}` :
+                            elev.permissionKey === 'maxLineDiscountPct' ? `Max Line Discount: ${elev.overrideValue}%` :
+                              elev.permissionKey === 'maxVoidAmount' ? `Max Void: NPR ${Number(elev.overrideValue).toLocaleString('en-IN')}` :
+                                elev.permissionKey === 'canOverridePrice' ? 'Manual Price Override: ENABLED' :
+                                  elev.permissionKey === 'canNoSaleOpen' ? 'No-Sale Drawer Kick: ENABLED' :
+                                    elev.permissionKey === 'maxCashPayout' ? `Cash Payout Limit: NPR ${Number(elev.overrideValue).toLocaleString('en-IN')}` :
+                                      elev.permissionKey === 'canCreditSale' ? 'Credit Sale (Khata): ENABLED' :
+                                        `${elev.permissionKey} -> ${elev.overrideValue}`}
                       </div>
                     </div>
 
@@ -2178,11 +2160,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
             <div className="flex items-center gap-2 w-full md:w-auto">
               <button
                 onClick={() => setLimitsViewMode('staff_limits')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  limitsViewMode === 'staff_limits'
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${limitsViewMode === 'staff_limits'
                     ? 'bg-purple-600 text-white shadow-md'
                     : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                }`}
+                  }`}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Staff Operational Limits ({staffLimitsList.length})</span>
@@ -2190,11 +2171,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
 
               <button
                 onClick={() => setLimitsViewMode('matrix')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  limitsViewMode === 'matrix'
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${limitsViewMode === 'matrix'
                     ? 'bg-purple-600 text-white shadow-md'
                     : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                }`}
+                  }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
                 <span>Role Permissions Matrix (9 Roles)</span>
@@ -2306,33 +2286,30 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                             <div className="flex items-center gap-1">
                               <span
                                 title={st.limits.canOverridePrice ? 'Price Override: Yes' : 'Price Override: No'}
-                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                  st.limits.canOverridePrice
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${st.limits.canOverridePrice
                                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                                     : 'bg-slate-950 text-slate-600 border border-slate-800'
-                                }`}
+                                  }`}
                               >
                                 P-Ovr
                               </span>
 
                               <span
                                 title={st.limits.canNoSaleOpen ? 'No-Sale Open: Yes' : 'No-Sale Open: No'}
-                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                  st.limits.canNoSaleOpen
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${st.limits.canNoSaleOpen
                                     ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                     : 'bg-slate-950 text-slate-600 border border-slate-800'
-                                }`}
+                                  }`}
                               >
                                 NoSale
                               </span>
 
                               <span
                                 title={st.limits.canCreditSale ? 'Credit Sale: Yes' : 'Credit Sale: No'}
-                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                  st.limits.canCreditSale
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${st.limits.canCreditSale
                                     ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                                     : 'bg-slate-950 text-slate-600 border border-slate-800'
-                                }`}
+                                  }`}
                               >
                                 Khata
                               </span>
@@ -2532,7 +2509,7 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                   <label className="block font-semibold text-slate-300 mb-1">Email Address</label>
                   <input
                     type="email"
-                    placeholder="staff@icecomputers.com.np"
+                    placeholder="staff@icc.com.np"
                     value={addForm.email}
                     onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-purple-500"
@@ -2586,11 +2563,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                   placeholder="Leave empty or enter strong PIN (e.g. 8492)"
                   value={addForm.initialPin}
                   onChange={(e) => handleInitialPinChange(e.target.value)}
-                  className={`w-full bg-slate-900 border rounded-xl p-2.5 text-white font-mono text-center tracking-widest focus:outline-none ${
-                    addForm.initialPin && !addPinValidation.valid
+                  className={`w-full bg-slate-900 border rounded-xl p-2.5 text-white font-mono text-center tracking-widest focus:outline-none ${addForm.initialPin && !addPinValidation.valid
                       ? 'border-rose-500'
                       : 'border-slate-800 focus:border-purple-500'
-                  }`}
+                    }`}
                 />
 
                 {addForm.initialPin && (
@@ -2994,11 +2970,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                             setAllowedDays([...allowedDays, day]);
                           }
                         }}
-                        className={`py-1.5 rounded-lg font-mono uppercase font-bold text-[10px] transition-all ${
-                          isSelected
+                        className={`py-1.5 rounded-lg font-mono uppercase font-bold text-[10px] transition-all ${isSelected
                             ? 'bg-purple-600 text-white shadow-md'
                             : 'bg-slate-950 text-slate-500 border border-slate-800 hover:text-white'
-                        }`}
+                          }`}
                       >
                         {day}
                       </button>
@@ -3360,11 +3335,10 @@ export const CashierRosterView: React.FC<CashierRosterViewProps> = ({ useBsDate 
                       key={d.mins}
                       type="button"
                       onClick={() => setElevationForm({ ...elevationForm, durationMinutes: d.mins })}
-                      className={`py-1.5 rounded-lg font-mono text-[11px] font-bold transition-all ${
-                        elevationForm.durationMinutes === d.mins
+                      className={`py-1.5 rounded-lg font-mono text-[11px] font-bold transition-all ${elevationForm.durationMinutes === d.mins
                           ? 'bg-purple-600 text-white shadow-md'
                           : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-white'
-                      }`}
+                        }`}
                     >
                       {d.label}
                     </button>

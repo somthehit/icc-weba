@@ -117,6 +117,11 @@ export const AdminAccountingModule: React.FC<{ orders?: any[]; products?: any[] 
             href="/accounting"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              try {
+                document.cookie = 'pos_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+              } catch {}
+            }}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
           >
             <span>Open Dedicated Accounting Hub</span>

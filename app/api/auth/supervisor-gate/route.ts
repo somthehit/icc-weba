@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       .where(
         or(
           eq(users.email, cleanCode.toLowerCase()),
-          eq(users.email, `${cleanCode.toLowerCase()}@icecomputers.com.np`)
+          eq(users.email, `${cleanCode.toLowerCase()}@icc.com.np`)
         )
       )
       .limit(1);

@@ -279,7 +279,7 @@ export default function PosLoginPage() {
       {/* Main Split Interface */}
       <main className="flex flex-1 flex-col items-center justify-center p-4 lg:p-8">
         <div className="grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/90 shadow-2xl backdrop-blur-xl lg:grid-cols-12">
-          
+
           {/* Left Column: Staff Cards & Fast Selector (7 cols) */}
           <div className="border-b border-slate-800 p-6 lg:col-span-7 lg:border-b-0 lg:border-r lg:p-8">
             <div className="flex items-center justify-between">
@@ -320,19 +320,17 @@ export default function PosLoginPage() {
                       setPin('');
                       setPassword('');
                     }}
-                    className={`relative flex items-start gap-3.5 rounded-2xl border p-4 text-left transition-all ${
-                      isSelected
+                    className={`relative flex items-start gap-3.5 rounded-2xl border p-4 text-left transition-all ${isSelected
                         ? 'border-emerald-500/80 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
                         : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-950/90'
-                    }`}
+                      }`}
                   >
                     {/* Avatar Icon */}
                     <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-bold ${
-                        isSupervisor
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-bold ${isSupervisor
                           ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                           : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      }`}
+                        }`}
                     >
                       {isSupervisor ? (
                         <ShieldCheck className="h-6 w-6" />
@@ -347,13 +345,12 @@ export default function PosLoginPage() {
                           {s.staffCode}
                         </span>
                         <span
-                          className={`rounded px-1.5 py-0.5 text-[9px] font-black uppercase ${
-                            s.role === 'admin'
+                          className={`rounded px-1.5 py-0.5 text-[9px] font-black uppercase ${s.role === 'admin'
                               ? 'bg-purple-500/20 text-purple-300'
                               : s.role === 'manager'
-                              ? 'bg-blue-500/20 text-blue-300'
-                              : 'bg-emerald-500/20 text-emerald-300'
-                          }`}
+                                ? 'bg-blue-500/20 text-blue-300'
+                                : 'bg-emerald-500/20 text-emerald-300'
+                            }`}
                         >
                           {s.role}
                         </span>
@@ -395,11 +392,10 @@ export default function PosLoginPage() {
                   setPin('');
                   setPassword('');
                 }}
-                className={`flex items-start gap-3.5 rounded-2xl border border-dashed p-4 text-left transition-all ${
-                  selectedStaff === null
+                className={`flex items-start gap-3.5 rounded-2xl border border-dashed p-4 text-left transition-all ${selectedStaff === null
                     ? 'border-emerald-500/80 bg-emerald-500/10'
                     : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
-                }`}
+                  }`}
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold">
                   <Users className="h-5 w-5" />
@@ -454,13 +450,12 @@ export default function PosLoginPage() {
                       </p>
                     </div>
                     <span
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
-                        selectedStaff.role === 'admin'
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${selectedStaff.role === 'admin'
                           ? 'bg-purple-500/20 text-purple-300'
                           : selectedStaff.role === 'manager'
-                          ? 'bg-blue-500/20 text-blue-300'
-                          : 'bg-emerald-500/20 text-emerald-300'
-                      }`}
+                            ? 'bg-blue-500/20 text-blue-300'
+                            : 'bg-emerald-500/20 text-emerald-300'
+                        }`}
                     >
                       {selectedStaff.role}
                     </span>
@@ -475,7 +470,7 @@ export default function PosLoginPage() {
                     type="text"
                     value={manualCode}
                     onChange={(e) => setManualCode(e.target.value)}
-                    placeholder="e.g. CSH01 or admin@icecomputers.com.np"
+                    placeholder="e.g. CSH01 or admin@icc.com.np"
                     className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm font-bold text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
@@ -489,11 +484,10 @@ export default function PosLoginPage() {
                     setAuthMode('pin');
                     setErrorMessage('');
                   }}
-                  className={`flex-1 rounded-lg py-2 transition ${
-                    authMode === 'pin'
+                  className={`flex-1 rounded-lg py-2 transition ${authMode === 'pin'
                       ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
                       : 'text-slate-400 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <KeyRound className="mr-1.5 inline h-3.5 w-3.5" />
                   Quick PIN
@@ -504,11 +498,10 @@ export default function PosLoginPage() {
                     setAuthMode('password');
                     setErrorMessage('');
                   }}
-                  className={`flex-1 rounded-lg py-2 transition ${
-                    authMode === 'password'
+                  className={`flex-1 rounded-lg py-2 transition ${authMode === 'password'
                       ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
                       : 'text-slate-400 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <Lock className="mr-1.5 inline h-3.5 w-3.5" />
                   Password
@@ -589,11 +582,10 @@ export default function PosLoginPage() {
                         key={val}
                         type="button"
                         onClick={() => handleNumpad(val)}
-                        className={`flex h-12 items-center justify-center rounded-xl text-lg font-bold transition active:scale-95 ${
-                          isSpecial
+                        className={`flex h-12 items-center justify-center rounded-xl text-lg font-bold transition active:scale-95 ${isSpecial
                             ? 'border border-slate-800 bg-slate-900 text-xs font-black text-slate-400 hover:bg-slate-800 hover:text-white'
                             : 'border border-slate-800 bg-slate-900 text-white shadow hover:border-slate-700 hover:bg-slate-800/80 active:bg-emerald-500 active:text-slate-950'
-                        }`}
+                          }`}
                       >
                         {val === 'BACK' ? <Delete className="h-5 w-5" /> : val}
                       </button>

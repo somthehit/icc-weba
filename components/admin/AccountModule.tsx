@@ -276,10 +276,10 @@ export const AccountModule: React.FC<AccountModuleProps> = ({ auditLogs = [] }) 
 
   const memberSinceFormatted = profile?.createdAt
     ? new Date(profile.createdAt).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
     : 'Oct 2026';
 
   return (
@@ -351,7 +351,7 @@ export const AccountModule: React.FC<AccountModuleProps> = ({ auditLogs = [] }) 
                   title="Click to copy email address"
                 >
                   <Mail className="w-3.5 h-3.5" />
-                  <span>{profile?.email || 'admin@icecomputers.com.np'}</span>
+                  <span>{profile?.email || 'admin@icc.com.np'}</span>
                   {copiedEmail ? (
                     <span className="text-emerald-300 font-bold text-[10px]">Copied!</span>
                   ) : (
@@ -432,11 +432,10 @@ export const AccountModule: React.FC<AccountModuleProps> = ({ auditLogs = [] }) 
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'profile'
+          className={`px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'profile'
               ? 'bg-[#0056b3] text-white border-[#0056b3] shadow-xs'
               : 'bg-white text-[#6B7280] border-[#E6E8EE] hover:bg-[#F4F5F8] hover:text-[#12151C]'
-          }`}
+            }`}
         >
           <User className="w-3.5 h-3.5" />
           <span>Profile Details</span>
@@ -448,11 +447,10 @@ export const AccountModule: React.FC<AccountModuleProps> = ({ auditLogs = [] }) 
         <button
           type="button"
           onClick={() => setActiveTab('security')}
-          className={`px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'security'
+          className={`px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'security'
               ? 'bg-[#0056b3] text-white border-[#0056b3] shadow-xs'
               : 'bg-white text-[#6B7280] border-[#E6E8EE] hover:bg-[#F4F5F8] hover:text-[#12151C]'
-          }`}
+            }`}
         >
           <Key className="w-3.5 h-3.5" />
           <span>Security & Password</span>
@@ -461,11 +459,10 @@ export const AccountModule: React.FC<AccountModuleProps> = ({ auditLogs = [] }) 
         <button
           type="button"
           onClick={() => setActiveTab('permissions')}
-          className={`px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'permissions'
+          className={`px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'permissions'
               ? 'bg-[#0056b3] text-white border-[#0056b3] shadow-xs'
               : 'bg-white text-[#6B7280] border-[#E6E8EE] hover:bg-[#F4F5F8] hover:text-[#12151C]'
-          }`}
+            }`}
         >
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Roles & Authority</span>
@@ -474,11 +471,10 @@ export const AccountModule: React.FC<AccountModuleProps> = ({ auditLogs = [] }) 
         <button
           type="button"
           onClick={() => setActiveTab('activity')}
-          className={`px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'activity'
+          className={`px-4 py-2.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'activity'
               ? 'bg-[#0056b3] text-white border-[#0056b3] shadow-xs'
               : 'bg-white text-[#6B7280] border-[#E6E8EE] hover:bg-[#F4F5F8] hover:text-[#12151C]'
-          }`}
+            }`}
         >
           <Activity className="w-3.5 h-3.5" />
           <span>Audit Activity</span>

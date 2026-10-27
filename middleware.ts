@@ -141,6 +141,8 @@ const RULES: readonly Rule[] = [
   { path: '/api/accounting', match: 'prefix', read: PUBLIC, write: PUBLIC },
   // Web application page routes for back-office accounting hub and store manager.
   // Cashiers with a 'pos' scope session token are already blocked earlier in middleware (lines 248-283).
+  { path: '/accounting/login', match: 'exact', read: PUBLIC, write: PUBLIC },
+  { path: '/api/auth/accounting-login', match: 'exact', read: PUBLIC, write: PUBLIC },
   { path: '/accounting', match: 'prefix', read: PUBLIC, write: PUBLIC },
   { path: '/store-manage', match: 'prefix', read: PUBLIC, write: PUBLIC },
 
@@ -251,31 +253,69 @@ export async function middleware(request: NextRequest) {
   // Cashiers with a 'pos' scoped session token must NEVER access back-office modules
   // (accounting, ledger, storekeeper inventory management). Returns 403 Forbidden.
   const isBackOfficePath =
-    pathname.startsWith('/api/accounting') ||
-    pathname.startsWith('/api/admin/accounting') ||
-    pathname.startsWith('/api/admin/inventory') ||
-    pathname.startsWith('/api/inventory') ||
-    pathname.startsWith('/api/store-manage') ||
-    pathname === '/accounting' ||
-    pathname.startsWith('/accounting/') ||
-    pathname === '/store-manage' ||
-    pathname.startsWith('/store-manage/');
+    pathname !== '/accounting/login' &&
+    pathname !== '/api/auth/accounting-login' &&
+    (pathname.startsWith('/api/accounting') ||
+      pathname.startsWith('/api/admin/accounting') ||
+      pathname.startsWith('/api/admin/inventory') ||
+      pathname.startsWith('/api/inventory') ||
+      pathname.startsWith('/api/store-manage') ||
+      pathname === '/accounting' ||
+      pathname.startsWith('/accounting/') ||
+      pathname === '/store-manage' ||
+      pathname.startsWith('/store-manage/'));
 
   if (isBackOfficePath) {
     // If the user has a back-office admin session in AUTH_COOKIE, prioritize it
     const authCookieVal = request.cookies.get(AUTH_COOKIE)?.value;
     const authPayload = authCookieVal ? await verifyToken(authCookieVal) : null;
-    const isAuthAdmin = authPayload && ['admin', 'super_admin', 'manager', 'accountant'].includes(String(authPayload.role || '').toLowerCase());
+
+    // Also inspect accounting_session cookie minted by /api/auth/accounting-login
+    const accountingSessionRaw = request.cookies.get('accounting_session')?.value;
+    let accountingSessionRole: string | null = null;
+    if (accountingSessionRaw) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(accountingSessionRaw));
+        accountingSessionRole = parsed.role ? String(parsed.role).toLowerCase() : null;
+      } catch {}
+    }
+
+    const effectiveRole = String(authPayload?.role || accountingSessionRole || '').toLowerCase();
+    const isAuthAdmin = [
+      'admin',
+      'super_admin',
+      'owner',
+      'administrator',
+      'manager',
+      'store_manager',
+      'sales_manager',
+      'accountant',
+      'auditor',
+      'supervisor',
+    ].includes(effectiveRole);
 
     if (!isAuthAdmin) {
       const rawPosToken =
         request.cookies.get('pos_token')?.value ??
-        authCookieVal ??
+        (authPayload?.scope === 'pos' ? authCookieVal : undefined) ??
         request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '').trim();
 
       if (rawPosToken) {
         const posPayload = await verifyToken(rawPosToken);
-        const isPrivileged = posPayload && ['admin', 'super_admin', 'manager', 'accountant'].includes(String(posPayload.role || '').toLowerCase());
+        const isPrivileged =
+          posPayload &&
+          [
+            'admin',
+            'super_admin',
+            'owner',
+            'administrator',
+            'manager',
+            'store_manager',
+            'sales_manager',
+            'accountant',
+            'auditor',
+            'supervisor',
+          ].includes(String(posPayload.role || '').toLowerCase());
 
         // Only block cashier sessions that lack back-office privileges
         if (posPayload && posPayload.scope === 'pos' && !isPrivileged) {
@@ -287,9 +327,18 @@ export async function middleware(request: NextRequest) {
               },
               { status: 403 }
             );
+          } else if (pathname === '/accounting' || pathname.startsWith('/accounting/')) {
+            // NEVER redirect accounting hub requests to POS counter gate!
+            // Redirect to the dedicated accounting login portal and clear cashier tokens.
+            const redirectUrl = new URL('/accounting/login', request.url);
+            redirectUrl.searchParams.set('redirect', pathname);
+            const redirectResponse = NextResponse.redirect(redirectUrl);
+            redirectResponse.cookies.delete('pos_token');
+            redirectResponse.cookies.delete('pos_session');
+            return redirectResponse;
           } else {
-            const redirectUrl = new URL('/pos', request.url);
-            redirectUrl.searchParams.set('error', 'pos_scope_forbidden');
+            const redirectUrl = new URL('/accounting/login', request.url);
+            redirectUrl.searchParams.set('redirect', pathname);
             return NextResponse.redirect(redirectUrl);
           }
         }

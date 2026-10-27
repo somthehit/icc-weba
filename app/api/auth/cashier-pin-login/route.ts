@@ -98,7 +98,9 @@ export async function POST(request: NextRequest) {
       };
 
       response.cookies.set('pos_token', posJwt, cookieOpts);
-      response.cookies.set(AUTH_COOKIE, posJwt, cookieOpts);
+      if (['admin', 'super_admin', 'manager', 'store_manager', 'sales_manager', 'accountant'].includes(String(cashierStaff.role).toLowerCase())) {
+        response.cookies.set(AUTH_COOKIE, posJwt, cookieOpts);
+      }
 
       // Client-readable POS state for header/terminal display
       response.cookies.set(
@@ -216,7 +218,7 @@ export async function POST(request: NextRequest) {
       .where(
         or(
           eq(users.email, cleanCode.toLowerCase()),
-          eq(users.email, `${cleanCode.toLowerCase()}@icecomputers.com.np`)
+          eq(users.email, `${cleanCode.toLowerCase()}@icc.com.np`)
         )
       )
       .limit(1);
@@ -297,7 +299,9 @@ export async function POST(request: NextRequest) {
         };
 
         response.cookies.set('pos_token', posJwt, cookieOpts);
-        response.cookies.set(AUTH_COOKIE, posJwt, cookieOpts);
+        if (userRow.role === 'admin') {
+          response.cookies.set(AUTH_COOKIE, posJwt, cookieOpts);
+        }
 
         response.cookies.set(
           'pos_session',
