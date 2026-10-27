@@ -200,7 +200,7 @@ const ProductTile = React.memo(function ProductTile({
         >
           <span
             className={`text-xs font-black font-mono tracking-tight ${
-              theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+              theme === 'dark' ? 'text-white' : 'text-slate-950'
             }`}
           >
             {formattedPrice}
@@ -211,14 +211,14 @@ const ProductTile = React.memo(function ProductTile({
               isOutOfStock
                 ? theme === 'dark'
                   ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                  : 'bg-rose-50 text-rose-800 border-rose-200'
                 : isLowStock
                 ? theme === 'dark'
                   ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-amber-50 text-amber-800 border-amber-200'
                 : theme === 'dark'
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                ? 'bg-slate-800 text-slate-200 border-slate-700'
+                : 'bg-slate-100 text-slate-900 border-slate-200 font-bold'
             }`}
           >
             {isOutOfStock ? 'OUT' : `Qty: ${product.stockQuantity}`}
@@ -922,14 +922,14 @@ export default function CounterPosTerminal() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className={`font-black text-sm tracking-tight uppercase ${
-                theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+                theme === 'dark' ? 'text-white' : 'text-slate-900'
               }`}>
                 Intel Computer Center
               </span>
               <span className={`rounded px-1.5 py-0.2 text-[9px] font-bold border ${
                 theme === 'dark'
-                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  ? 'bg-slate-800 border-slate-700 text-slate-200'
+                  : 'bg-slate-100 border-slate-200 text-slate-900'
               }`}>
                 Counter POS
               </span>
@@ -947,8 +947,8 @@ export default function CounterPosTerminal() {
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${
               isOnline
                 ? theme === 'dark'
-                  ? 'border-emerald-500/30 bg-emerald-950/30 text-emerald-400'
-                  : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  ? 'border-slate-800 bg-slate-900 text-slate-200'
+                  : 'border-slate-200 bg-slate-50 text-slate-900 shadow-xs'
                 : 'border-rose-500/40 bg-rose-950/40 text-rose-300'
             }`}
             title={isOnline ? 'Online (LAN & Cloud Connected)' : 'Offline (Local Buffered Mode)'}
@@ -956,7 +956,7 @@ export default function CounterPosTerminal() {
             {isOnline ? (
               <>
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] font-bold">Online</span>
+                <span className="text-[11px] font-bold text-slate-900">Online</span>
               </>
             ) : (
               <>
@@ -975,7 +975,7 @@ export default function CounterPosTerminal() {
             }`}
             title="Thermal POS Receipt Printer (80mm ESC/POS) Ready"
           >
-            <Printer className="h-3.5 w-3.5 text-emerald-600" />
+            <Printer className="h-3.5 w-3.5 text-slate-700" />
             <span className="text-[11px] font-bold">Printer: Ready</span>
           </div>
 
@@ -988,7 +988,7 @@ export default function CounterPosTerminal() {
             }`}
             title="Local unposted invoices queue"
           >
-            <Cloud className="h-3.5 w-3.5 text-blue-600" />
+            <Cloud className="h-3.5 w-3.5 text-slate-700" />
             <span className="text-[11px] font-bold">{unsyncedCount} Unsynced</span>
           </div>
 
@@ -997,7 +997,7 @@ export default function CounterPosTerminal() {
             onClick={() => setShowCustomerDisplay((prev) => !prev)}
             className={`p-2 rounded-xl border transition ${
               showCustomerDisplay
-                ? 'border-emerald-500 bg-emerald-500/20 text-emerald-700'
+                ? 'border-slate-800 bg-slate-100 text-slate-900'
                 : theme === 'dark'
                 ? 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
                 : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-xs'
@@ -1037,13 +1037,13 @@ export default function CounterPosTerminal() {
           <div
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
               theme === 'dark'
-                ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
-                : 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-xs'
+                ? 'bg-slate-900 border-slate-800 text-slate-200'
+                : 'bg-slate-50 border-slate-200 text-slate-900 shadow-xs'
             }`}
           >
-            <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
-            <span>
-              Cashier: <strong>{activeCashier?.name || 'Cashier'}</strong>
+            <UserCheck className="h-3.5 w-3.5 text-slate-700" />
+            <span className="text-slate-900">
+              Cashier: <strong className="text-slate-950">{activeCashier?.name || 'Cashier'}</strong>
             </span>
           </div>
 

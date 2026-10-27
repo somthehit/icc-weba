@@ -697,14 +697,14 @@ export const AccountingDashboardView: React.FC = () => {
                   <Calculator className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="font-bold text-sm text-white tracking-tight flex items-center gap-1.5">
+                  <div className="font-bold text-sm text-slate-900 tracking-tight flex items-center gap-1.5">
                     <span>Accounting Hub</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold border border-blue-200">
                       ERP
                     </span>
                   </div>
-                  <div className="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <div className="text-[11px] font-mono text-slate-600 flex items-center gap-1.5 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-pulse" />
                     <span>Single Source of Truth</span>
                   </div>
                 </div>
@@ -947,7 +947,7 @@ export const AccountingDashboardView: React.FC = () => {
                   <div className="text-xs font-semibold text-slate-900 truncate">
                     {accountingOfficer?.name || currentUser?.name || 'Chief Accountant'}
                   </div>
-                  <div className="text-[10px] text-emerald-700 font-mono font-semibold truncate flex items-center gap-1">
+                  <div className="text-[10px] text-slate-600 font-mono font-semibold truncate flex items-center gap-1">
                     <span>{accountingOfficer?.staffCode || 'ACC01'}</span>
                     <span>•</span>
                     <span className="uppercase">{accountingOfficer?.role || currentUser?.role || 'Finance'}</span>
@@ -1057,7 +1057,7 @@ export const AccountingDashboardView: React.FC = () => {
                   <div>
                     <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
                       <span>General Ledger Source of Truth</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-mono text-[10px] border border-emerald-200 font-bold">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-900 font-mono text-[10px] border border-slate-200 font-bold">
                         LIVE GL FEED
                       </span>
                     </div>
@@ -1070,7 +1070,7 @@ export const AccountingDashboardView: React.FC = () => {
                 <div className="flex items-center gap-3 self-end md:self-auto">
                   <div className="text-right text-[11px] font-mono text-slate-500">
                     <div>Refreshed: <span className="text-slate-800 font-semibold">{clientTime || '—'}</span></div>
-                    <div className="text-emerald-700 font-bold">Balanced (Dr = Cr)</div>
+                    <div className="text-slate-900 font-bold">Balanced (Dr = Cr)</div>
                   </div>
                 </div>
               </div>
@@ -1089,7 +1089,7 @@ export const AccountingDashboardView: React.FC = () => {
                       NPR {(kpis?.todayGrossSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
                     <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
-                      <span className="text-emerald-700 font-bold flex items-center gap-0.5">
+                      <span className="text-slate-900 font-bold flex items-center gap-0.5">
                         <ArrowUpRight className="w-3.5 h-3.5" /> +{kpis?.marginPercent || '25.0'}%
                       </span>
                       <span>Realized Margin</span>
@@ -1117,12 +1117,12 @@ export const AccountingDashboardView: React.FC = () => {
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs relative overflow-hidden">
                   <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
                     <span>Total Liquid Cash & Bank</span>
-                    <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <div className="p-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
                       <Wallet className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl font-bold font-mono text-emerald-800 tracking-tight">
+                    <div className="text-2xl font-bold font-mono text-slate-900 tracking-tight">
                       NPR {(kpis?.totalLiquidAssets || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
                     <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
@@ -1182,7 +1182,7 @@ export const AccountingDashboardView: React.FC = () => {
                     </div>
                     <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                       <div className="text-[10px] text-slate-500 uppercase font-mono font-semibold">eSewa Wallet (1040)</div>
-                      <div className="text-base font-bold font-mono text-emerald-700 mt-1">
+                      <div className="text-base font-bold font-mono text-slate-900 mt-1">
                         NPR {(overviewData?.liquidityBreakdown?.esewaWallet || 0).toLocaleString('en-IN')}
                       </div>
                     </div>
@@ -1204,8 +1204,8 @@ export const AccountingDashboardView: React.FC = () => {
                           NPR {(overviewData?.channelSplit?.ecomSales || 0).toLocaleString('en-IN')}
                         </div>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
-                        <div className="text-[10px] text-emerald-800 font-bold">Services & Repairs</div>
+                      <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-200">
+                        <div className="text-[10px] text-slate-800 font-bold">Services & Repairs</div>
                         <div className="text-sm font-bold font-mono text-slate-900 mt-0.5">
                           NPR {(overviewData?.channelSplit?.services || 0).toLocaleString('en-IN')}
                         </div>
@@ -1248,7 +1248,7 @@ export const AccountingDashboardView: React.FC = () => {
                         <div className="font-semibold text-slate-800">Maker-Checker Policy</div>
                         <div className="text-[10px] text-slate-500">Supervisor PIN required for variances</div>
                       </div>
-                      <span className="text-[10px] font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
+                      <span className="text-[10px] font-mono text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold">
                         Active
                       </span>
                     </div>

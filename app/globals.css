@@ -525,12 +525,49 @@
   color: #64748b !important;
 }
 
-/* Saturated, High-Contrast Text Colors for Light Canvas */
+/* All green, emerald, teal, and cyan text in portals turned to crisp black */
+.accounting-portal [class*="text-emerald-"],
+.accounting-portal [class*="text-green-"],
+.accounting-portal [class*="text-teal-"],
+.accounting-portal [class*="text-cyan-"],
+.pos-portal [class*="text-emerald-"],
+.pos-portal [class*="text-green-"],
+.pos-portal [class*="text-teal-"],
+.pos-portal [class*="text-cyan-"],
 .accounting-portal .text-emerald-400,
 .accounting-portal .text-emerald-300,
+.accounting-portal .text-emerald-500,
+.accounting-portal .text-emerald-600,
+.accounting-portal .text-emerald-700,
+.accounting-portal .text-emerald-800,
+.accounting-portal .text-green-400,
+.accounting-portal .text-green-500,
+.accounting-portal .text-green-600,
+.accounting-portal .text-green-700,
+.accounting-portal .text-teal-400,
+.accounting-portal .text-teal-500,
+.accounting-portal .text-teal-600,
+.accounting-portal .text-cyan-400,
+.accounting-portal .text-cyan-300,
+.accounting-portal .text-cyan-600,
 .pos-portal .text-emerald-400,
-.pos-portal .text-emerald-300 {
-  color: #047857 !important;
+.pos-portal .text-emerald-300,
+.pos-portal .text-emerald-500,
+.pos-portal .text-emerald-600,
+.pos-portal .text-emerald-700,
+.pos-portal .text-emerald-800,
+.pos-portal .text-green-400,
+.pos-portal .text-green-500,
+.pos-portal .text-green-600,
+.pos-portal .text-green-700,
+.pos-portal .text-teal-400,
+.pos-portal .text-teal-500,
+.pos-portal .text-teal-600,
+.pos-portal .text-cyan-400,
+.pos-portal .text-cyan-300,
+.pos-portal .text-cyan-600,
+.pos-portal .text-cyan-700 {
+  color: #0f172a !important;
 }
 
 .accounting-portal .text-purple-400,
@@ -559,13 +596,6 @@
 .pos-portal .text-rose-400,
 .pos-portal .text-rose-300 {
   color: #be123c !important;
-}
-
-.accounting-portal .text-cyan-400,
-.accounting-portal .text-cyan-300,
-.pos-portal .text-cyan-400,
-.pos-portal .text-cyan-300 {
-  color: #0e7490 !important;
 }
 
 /* Soft Tinted Badges and Metric Pills */
@@ -603,9 +633,9 @@
 .pos-portal .bg-emerald-950\/20,
 .pos-portal .bg-emerald-500\/10,
 .pos-portal .bg-emerald-500\/20 {
-  background-color: #f0fdf4 !important;
-  border-color: #bbf7d0 !important;
-  color: #047857 !important;
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
 }
 
 .accounting-portal .bg-amber-950\/20,
