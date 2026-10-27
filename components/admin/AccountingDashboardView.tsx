@@ -937,17 +937,17 @@ export const AccountingDashboardView: React.FC = () => {
           </div>
 
           {/* Sidebar Footer */}
-          <div className="p-3 border-t border-slate-800/80 bg-slate-950/60">
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50">
+          <div className="p-3 border-t border-slate-200 bg-slate-50">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-bold text-xs text-slate-950 shrink-0 shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold text-white truncate">
+                  <div className="text-xs font-semibold text-slate-900 truncate">
                     {accountingOfficer?.name || currentUser?.name || 'Chief Accountant'}
                   </div>
-                  <div className="text-[10px] text-emerald-400 font-mono font-medium truncate flex items-center gap-1">
+                  <div className="text-[10px] text-emerald-700 font-mono font-semibold truncate flex items-center gap-1">
                     <span>{accountingOfficer?.staffCode || 'ACC01'}</span>
                     <span>•</span>
                     <span className="uppercase">{accountingOfficer?.role || currentUser?.role || 'Finance'}</span>
@@ -959,7 +959,7 @@ export const AccountingDashboardView: React.FC = () => {
                   type="button"
                   onClick={handleLogout}
                   title="Switch Officer / Sign Out"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 transition"
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
@@ -971,29 +971,29 @@ export const AccountingDashboardView: React.FC = () => {
         {/* ================= MAIN CONTENT STAGE ================= */}
         <main className="flex-1 min-w-0 bg-slate-50 p-4 md:p-6 lg:p-8 space-y-6">
           {/* Top Stage Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
+                className="lg:hidden p-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900"
               >
                 <Menu className="w-5 h-5" />
               </button>
 
-              <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-sm hidden sm:block">
+              <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 shadow-xs hidden sm:block">
                 <CurrentTabIcon className="w-6 h-6" />
               </div>
 
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white">
+                  <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">
                     {tabMeta[activeTab]?.title}
                   </h1>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30 hidden md:inline-block">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-200 hidden md:inline-block">
                     FY 2082/83 (Nepal)
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {tabMeta[activeTab]?.subtitle}
                 </p>
               </div>
@@ -1004,19 +1004,19 @@ export const AccountingDashboardView: React.FC = () => {
               {/* BS/AD Date Switcher */}
               <button
                 onClick={() => setUseBsDate(!useBsDate)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-xs"
                 title="Toggle Nepali BS & Gregorian AD Dates"
               >
-                <Calendar className="w-3.5 h-3.5 text-purple-400" />
+                <Calendar className="w-3.5 h-3.5 text-purple-600" />
                 <span>{useBsDate ? 'Bikram Sambat (BS)' : 'Gregorian (AD)'}</span>
               </button>
 
               <button
                 onClick={fetchAllData}
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-all shadow-xs"
                 title="Sync from General Ledger"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
+                <RefreshCw className="w-3.5 h-3.5 text-blue-600" />
                 <span>Sync GL</span>
               </button>
 
@@ -1049,47 +1049,47 @@ export const AccountingDashboardView: React.FC = () => {
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Data Freshness & Fiscal Period Banner */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-blue-950/40 border border-blue-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
                     <Activity className="w-5 h-5 animate-pulse" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-2">
+                    <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
                       <span>General Ledger Source of Truth</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] border border-emerald-500/30 font-semibold">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-mono text-[10px] border border-emerald-200 font-bold">
                         LIVE GL FEED
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
-                      Current Date: <b className="text-slate-200">{useBsDate ? nepaliDate?.bsLong || '16 Ashwin 2082' : clientDate}</b> | Fiscal Year: <b className="text-blue-300">{nepaliDate?.fiscalYear || '2082/83'}</b>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Current Date: <b className="text-slate-800">{useBsDate ? nepaliDate?.bsLong || '16 Ashwin 2082' : clientDate}</b> | Fiscal Year: <b className="text-blue-700 font-bold">{nepaliDate?.fiscalYear || '2082/83'}</b>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 self-end md:self-auto">
-                  <div className="text-right text-[11px] font-mono text-slate-400">
-                    <div>Refreshed: <span className="text-slate-200">{clientTime || '—'}</span></div>
-                    <div className="text-emerald-400 font-semibold">Balanced (Dr = Cr)</div>
+                  <div className="text-right text-[11px] font-mono text-slate-500">
+                    <div>Refreshed: <span className="text-slate-800 font-semibold">{clientTime || '—'}</span></div>
+                    <div className="text-emerald-700 font-bold">Balanced (Dr = Cr)</div>
                   </div>
                 </div>
               </div>
 
               {/* Primary 4 Core KPIs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                  <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs relative overflow-hidden">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
                     <span>Gross Sales Turnover</span>
-                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
                       <TrendingUp className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl font-bold font-mono text-white tracking-tight">
+                    <div className="text-2xl font-bold font-mono text-slate-900 tracking-tight">
                       NPR {(kpis?.todayGrossSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-400">
-                      <span className="text-emerald-400 font-semibold flex items-center gap-0.5">
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
+                      <span className="text-emerald-700 font-bold flex items-center gap-0.5">
                         <ArrowUpRight className="w-3.5 h-3.5" /> +{kpis?.marginPercent || '25.0'}%
                       </span>
                       <span>Realized Margin</span>
@@ -1097,52 +1097,52 @@ export const AccountingDashboardView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                  <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs relative overflow-hidden">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
                     <span>13% VAT Output Liability</span>
-                    <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-200">
                       <Receipt className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl font-bold font-mono text-purple-300 tracking-tight">
+                    <div className="text-2xl font-bold font-mono text-purple-800 tracking-tight">
                       NPR {(kpis?.totalVatLiability || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-400">
-                      <span className="text-purple-400 font-medium">IRD Annex 13 Output</span>
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
+                      <span className="text-purple-700 font-semibold">IRD Annex 13 Output</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                  <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs relative overflow-hidden">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
                     <span>Total Liquid Cash & Bank</span>
-                    <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
                       <Wallet className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl font-bold font-mono text-emerald-400 tracking-tight">
+                    <div className="text-2xl font-bold font-mono text-emerald-800 tracking-tight">
                       NPR {(kpis?.totalLiquidAssets || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-400">
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
                       <span>Vault + Till + Nabil + eSewa</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                  <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs relative overflow-hidden">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
                     <span>Inventory Asset (GL 1060)</span>
-                    <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
                       <Boxes className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl font-bold font-mono text-amber-300 tracking-tight">
+                    <div className="text-2xl font-bold font-mono text-amber-800 tracking-tight">
                       NPR {(kpis?.totalInventoryValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-400">
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
                       <span>{kpis?.totalSkuCount || 0} Stock Items Valued</span>
                     </div>
                   </div>
@@ -1152,37 +1152,37 @@ export const AccountingDashboardView: React.FC = () => {
               {/* Secondary Metrics: Liquidity Breakdown & Channel Split */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Liquidity Accounts */}
-                <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                     <div className="flex items-center gap-2">
-                      <Landmark className="w-4 h-4 text-blue-400" />
-                      <h3 className="text-sm font-bold text-white">Liquid Asset Position (GL Sub-Ledgers)</h3>
+                      <Landmark className="w-4 h-4 text-blue-600" />
+                      <h3 className="text-sm font-bold text-slate-900">Liquid Asset Position (GL Sub-Ledgers)</h3>
                     </div>
-                    <span className="text-[11px] font-mono text-slate-400">Multi-Bank / Wallet</span>
+                    <span className="text-[11px] font-mono text-slate-500">Multi-Bank / Wallet</span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                      <div className="text-[10px] text-slate-400 uppercase font-mono">Till Drawer (1010)</div>
-                      <div className="text-base font-bold font-mono text-white mt-1">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="text-[10px] text-slate-500 uppercase font-mono font-semibold">Till Drawer (1010)</div>
+                      <div className="text-base font-bold font-mono text-slate-900 mt-1">
                         NPR {(overviewData?.liquidityBreakdown?.posTillCash || 0).toLocaleString('en-IN')}
                       </div>
                     </div>
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                      <div className="text-[10px] text-slate-400 uppercase font-mono">Main Vault (1020)</div>
-                      <div className="text-base font-bold font-mono text-white mt-1">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="text-[10px] text-slate-500 uppercase font-mono font-semibold">Main Vault (1020)</div>
+                      <div className="text-base font-bold font-mono text-slate-900 mt-1">
                         NPR {(overviewData?.liquidityBreakdown?.vaultCash || 0).toLocaleString('en-IN')}
                       </div>
                     </div>
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                      <div className="text-[10px] text-slate-400 uppercase font-mono">Nabil Bank (1030)</div>
-                      <div className="text-base font-bold font-mono text-white mt-1">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="text-[10px] text-slate-500 uppercase font-mono font-semibold">Nabil Bank (1030)</div>
+                      <div className="text-base font-bold font-mono text-slate-900 mt-1">
                         NPR {(overviewData?.liquidityBreakdown?.nabilBank || 0).toLocaleString('en-IN')}
                       </div>
                     </div>
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                      <div className="text-[10px] text-slate-400 uppercase font-mono">eSewa Wallet (1040)</div>
-                      <div className="text-base font-bold font-mono text-emerald-400 mt-1">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="text-[10px] text-slate-500 uppercase font-mono font-semibold">eSewa Wallet (1040)</div>
+                      <div className="text-base font-bold font-mono text-emerald-700 mt-1">
                         NPR {(overviewData?.liquidityBreakdown?.esewaWallet || 0).toLocaleString('en-IN')}
                       </div>
                     </div>
@@ -1190,23 +1190,23 @@ export const AccountingDashboardView: React.FC = () => {
 
                   {/* Channel Breakdown */}
                   <div className="pt-2">
-                    <div className="text-xs font-semibold text-slate-300 mb-2">Sales Revenue by Channel</div>
+                    <div className="text-xs font-semibold text-slate-700 mb-2">Sales Revenue by Channel</div>
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="p-2.5 rounded-xl bg-blue-950/20 border border-blue-500/20">
-                        <div className="text-[10px] text-blue-300 font-medium">Physical POS Counter</div>
-                        <div className="text-sm font-bold font-mono text-white mt-0.5">
+                      <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200">
+                        <div className="text-[10px] text-blue-800 font-bold">Physical POS Counter</div>
+                        <div className="text-sm font-bold font-mono text-slate-900 mt-0.5">
                           NPR {(overviewData?.channelSplit?.posSales || 0).toLocaleString('en-IN')}
                         </div>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-purple-950/20 border border-purple-500/20">
-                        <div className="text-[10px] text-purple-300 font-medium">E-Commerce Store</div>
-                        <div className="text-sm font-bold font-mono text-white mt-0.5">
+                      <div className="p-2.5 rounded-xl bg-purple-50 border border-purple-200">
+                        <div className="text-[10px] text-purple-800 font-bold">E-Commerce Store</div>
+                        <div className="text-sm font-bold font-mono text-slate-900 mt-0.5">
                           NPR {(overviewData?.channelSplit?.ecomSales || 0).toLocaleString('en-IN')}
                         </div>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-emerald-950/20 border border-emerald-500/20">
-                        <div className="text-[10px] text-emerald-300 font-medium">Services & Repairs</div>
-                        <div className="text-sm font-bold font-mono text-white mt-0.5">
+                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                        <div className="text-[10px] text-emerald-800 font-bold">Services & Repairs</div>
+                        <div className="text-sm font-bold font-mono text-slate-900 mt-0.5">
                           NPR {(overviewData?.channelSplit?.services || 0).toLocaleString('en-IN')}
                         </div>
                       </div>
@@ -1215,40 +1215,40 @@ export const AccountingDashboardView: React.FC = () => {
                 </div>
 
                 {/* Action Center & Anomaly Alerts */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400" />
-                      <h3 className="text-sm font-bold text-white">Action Center & Alerts</h3>
+                      <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      <h3 className="text-sm font-bold text-slate-900">Action Center & Alerts</h3>
                     </div>
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
                   </div>
 
                   <div className="space-y-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                       <div>
-                        <div className="font-semibold text-slate-200">Open Shifts Remaining</div>
-                        <div className="text-[10px] text-slate-400">Must be blind closed before EOD</div>
+                        <div className="font-semibold text-slate-800">Open Shifts Remaining</div>
+                        <div className="text-[10px] text-slate-500">Must be blind closed before EOD</div>
                       </div>
-                      <span className="font-mono font-bold text-amber-400">{kpis?.openShifts || 0}</span>
+                      <span className="font-mono font-bold text-amber-700">{kpis?.openShifts || 0}</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                       <div>
-                        <div className="font-semibold text-slate-200">VAT Return Deadline</div>
-                        <div className="text-[10px] text-slate-400">Monthly IRD Annex 13 Filing</div>
+                        <div className="font-semibold text-slate-800">VAT Return Deadline</div>
+                        <div className="text-[10px] text-slate-500">Monthly IRD Annex 13 Filing</div>
                       </div>
-                      <span className="text-[10px] font-mono text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded border border-purple-500/30">
+                      <span className="text-[10px] font-mono text-purple-800 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-bold">
                         25th Ashwin
                       </span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                       <div>
-                        <div className="font-semibold text-slate-200">Maker-Checker Policy</div>
-                        <div className="text-[10px] text-slate-400">Supervisor PIN required for variances</div>
+                        <div className="font-semibold text-slate-800">Maker-Checker Policy</div>
+                        <div className="text-[10px] text-slate-500">Supervisor PIN required for variances</div>
                       </div>
-                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                      <span className="text-[10px] font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
                         Active
                       </span>
                     </div>

@@ -144,18 +144,26 @@ const ProductTile = React.memo(function ProductTile({
         } ${
           theme === 'dark'
             ? 'bg-[#141a17] border-slate-800 hover:border-emerald-500/50 hover:bg-[#1a231f]'
-            : 'bg-slate-50 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30'
+            : 'bg-white border-slate-200 hover:border-emerald-500 hover:shadow-md'
         }`}
       >
         <div>
           <div className="flex items-center justify-between gap-1 mb-1">
-            <span className="text-[10px] font-mono font-bold text-emerald-400 truncate max-w-[110px]">
+            <span
+              className={`text-[10px] font-mono font-bold truncate max-w-[110px] ${
+                theme === 'dark' ? 'text-emerald-400' : 'text-slate-500'
+              }`}
+            >
               {product.sku}
             </span>
             <div className="flex items-center gap-1 shrink-0">
               {product.isSerialized && (
                 <span
-                  className="px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                  className={`px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight border ${
+                    theme === 'dark'
+                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                  }`}
                   title="Serial/IMEI Tracked Product"
                 >
                   SN
@@ -163,7 +171,11 @@ const ProductTile = React.memo(function ProductTile({
               )}
               {Boolean(product.warrantyMonths && product.warrantyMonths > 0) && (
                 <span
-                  className="px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                  className={`px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight border ${
+                    theme === 'dark'
+                      ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                      : 'bg-purple-50 text-purple-700 border-purple-200'
+                  }`}
                   title={`${product.warrantyMonths}M Warranty`}
                 >
                   {product.warrantyMonths}M
@@ -172,23 +184,41 @@ const ProductTile = React.memo(function ProductTile({
             </div>
           </div>
 
-          <h4 className="text-xs font-bold line-clamp-2 mt-0.5 leading-snug">
+          <h4
+            className={`text-xs font-bold line-clamp-2 mt-0.5 leading-snug ${
+              theme === 'dark' ? 'text-white' : 'text-slate-900'
+            }`}
+          >
             {product.name}
           </h4>
         </div>
 
-        <div className="mt-3 pt-2 border-t border-dashed border-slate-700/50 flex items-center justify-between">
-          <span className="text-xs font-black font-mono tracking-tight text-emerald-400">
+        <div
+          className={`mt-3 pt-2 border-t border-dashed flex items-center justify-between ${
+            theme === 'dark' ? 'border-slate-700/50' : 'border-slate-200'
+          }`}
+        >
+          <span
+            className={`text-xs font-black font-mono tracking-tight ${
+              theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+            }`}
+          >
             {formattedPrice}
           </span>
 
           <span
             className={`px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide border ${
               isOutOfStock
-                ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                ? theme === 'dark'
+                  ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                  : 'bg-rose-50 text-rose-700 border-rose-200'
                 : isLowStock
-                ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                ? theme === 'dark'
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                : theme === 'dark'
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
             }`}
           >
             {isOutOfStock ? 'OUT' : `Qty: ${product.stockQuantity}`}
@@ -205,7 +235,7 @@ const ProductTile = React.memo(function ProductTile({
         className={`absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition p-1 rounded-lg ${
           theme === 'dark'
             ? 'bg-slate-800 text-slate-400 hover:text-white'
-            : 'bg-slate-200 text-slate-500 hover:text-slate-900'
+            : 'bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200'
         }`}
         title="Product details"
       >
@@ -219,7 +249,7 @@ const ProductTile = React.memo(function ProductTile({
             e.stopPropagation();
             onAdd(product);
           }}
-          className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition p-1.5 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-md font-bold text-[10px] flex items-center gap-1"
+          className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition p-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shadow-md font-bold text-[10px] flex items-center gap-1"
           title="Quick add to cart"
         >
           <Plus className="h-3 w-3 stroke-[3]" />
@@ -886,15 +916,21 @@ export default function CounterPosTerminal() {
         }`}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
             <Laptop className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-black text-sm tracking-tight text-emerald-400 uppercase">
+              <span className={`font-black text-sm tracking-tight uppercase ${
+                theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+              }`}>
                 Intel Computer Center
               </span>
-              <span className="rounded bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.2 text-[9px] font-bold text-emerald-400">
+              <span className={`rounded px-1.5 py-0.2 text-[9px] font-bold border ${
+                theme === 'dark'
+                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                  : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              }`}>
                 Counter POS
               </span>
             </div>
@@ -910,19 +946,21 @@ export default function CounterPosTerminal() {
           <div
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${
               isOnline
-                ? 'border-emerald-500/30 bg-emerald-950/30 text-emerald-400'
+                ? theme === 'dark'
+                  ? 'border-emerald-500/30 bg-emerald-950/30 text-emerald-400'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-800'
                 : 'border-rose-500/40 bg-rose-950/40 text-rose-300'
             }`}
             title={isOnline ? 'Online (LAN & Cloud Connected)' : 'Offline (Local Buffered Mode)'}
           >
             {isOnline ? (
               <>
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[11px] font-bold">Online</span>
               </>
             ) : (
               <>
-                <WifiOff className="h-3.5 w-3.5 text-rose-400" />
+                <WifiOff className="h-3.5 w-3.5 text-rose-500" />
                 <span className="text-[11px] font-bold">Offline</span>
               </>
             )}
@@ -930,19 +968,27 @@ export default function CounterPosTerminal() {
 
           {/* Thermal Receipt Printer Status */}
           <div
-            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-xs font-semibold text-slate-300"
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${
+              theme === 'dark'
+                ? 'border-slate-700 bg-slate-800/80 text-slate-300'
+                : 'border-slate-200 bg-white text-slate-700 shadow-xs'
+            }`}
             title="Thermal POS Receipt Printer (80mm ESC/POS) Ready"
           >
-            <Printer className="h-3.5 w-3.5 text-emerald-400" />
+            <Printer className="h-3.5 w-3.5 text-emerald-600" />
             <span className="text-[11px] font-bold">Printer: Ready</span>
           </div>
 
           {/* Unsynced Invoices Count Badge */}
           <div
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-xs font-semibold text-slate-300"
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${
+              theme === 'dark'
+                ? 'border-slate-700 bg-slate-800/80 text-slate-300'
+                : 'border-slate-200 bg-white text-slate-700 shadow-xs'
+            }`}
             title="Local unposted invoices queue"
           >
-            <Cloud className="h-3.5 w-3.5 text-emerald-400" />
+            <Cloud className="h-3.5 w-3.5 text-blue-600" />
             <span className="text-[11px] font-bold">{unsyncedCount} Unsynced</span>
           </div>
 
@@ -951,8 +997,10 @@ export default function CounterPosTerminal() {
             onClick={() => setShowCustomerDisplay((prev) => !prev)}
             className={`p-2 rounded-xl border transition ${
               showCustomerDisplay
-                ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
-                : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
+                ? 'border-emerald-500 bg-emerald-500/20 text-emerald-700'
+                : theme === 'dark'
+                ? 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
+                : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-xs'
             }`}
             title="Toggle Customer-Facing Second Display Window"
           >
@@ -962,7 +1010,11 @@ export default function CounterPosTerminal() {
           {/* Shortcuts Overlay Toggle */}
           <button
             onClick={() => setShowShortcutsModal(true)}
-            className="p-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white transition"
+            className={`p-2 rounded-xl border transition ${
+              theme === 'dark'
+                ? 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
+                : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-xs'
+            }`}
             title="POS Keyboard Shortcuts [?]"
           >
             <HelpCircle className="h-4 w-4" />
@@ -973,11 +1025,11 @@ export default function CounterPosTerminal() {
             className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
               theme === 'dark'
                 ? 'bg-amber-950/20 border-amber-500/30 text-amber-300'
-                : 'bg-amber-50 border-amber-300 text-amber-800'
+                : 'bg-amber-50 border-amber-300 text-amber-900 shadow-xs'
             }`}
             title={dutySupervisor?.name ? `Supervisor: ${dutySupervisor.name}` : 'Supervisor On Duty'}
           >
-            <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
+            <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
             <span className="font-bold">Supervisor On Duty</span>
           </div>
 
@@ -986,10 +1038,10 @@ export default function CounterPosTerminal() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
               theme === 'dark'
                 ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
-                : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                : 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-xs'
             }`}
           >
-            <UserCheck className="h-3.5 w-3.5 text-emerald-400" />
+            <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
             <span>
               Cashier: <strong>{activeCashier?.name || 'Cashier'}</strong>
             </span>
@@ -1001,7 +1053,7 @@ export default function CounterPosTerminal() {
             className={`p-2 rounded-xl border transition ${
               theme === 'dark'
                 ? 'border-slate-800 bg-slate-900 text-amber-400 hover:bg-slate-800'
-                : 'border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200'
+                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 shadow-xs'
             }`}
             title="Toggle Dark/Light Mode"
           >
@@ -1011,30 +1063,42 @@ export default function CounterPosTerminal() {
           {/* F10 Fast Lock */}
           <button
             onClick={handleLockTerminal}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition"
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
+              theme === 'dark'
+                ? 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200'
+                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-xs'
+            }`}
             title="Emergency Lock Terminal [F10]"
           >
-            <Lock className="h-3.5 w-3.5 text-amber-400" />
+            <Lock className="h-3.5 w-3.5 text-amber-500" />
             <span>F10 Lock</span>
           </button>
 
           {/* Supervisor Sign-Off */}
           <button
             onClick={() => setIsSignOffOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-xs font-bold text-amber-300 transition"
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
+              theme === 'dark'
+                ? 'border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300'
+                : 'border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 shadow-xs'
+            }`}
             title="Supervisor Authorization Required"
           >
-            <ShieldAlert className="h-3.5 w-3.5 text-amber-400" />
+            <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />
             <span>Sign-Off / Switch</span>
           </button>
 
           {/* End of Day Register Close */}
           <button
             onClick={() => setIsEodCloseOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-xs font-bold text-rose-300 transition"
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
+              theme === 'dark'
+                ? 'border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300'
+                : 'border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-900 shadow-xs'
+            }`}
             title="Supervisor Authorization Required"
           >
-            <Banknote className="h-3.5 w-3.5 text-rose-400" />
+            <Banknote className="h-3.5 w-3.5 text-rose-600" />
             <span>Close Register (EOD)</span>
           </button>
         </div>
@@ -1064,10 +1128,10 @@ export default function CounterPosTerminal() {
                 className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-xs font-mono outline-none transition ${
                   theme === 'dark'
                     ? 'bg-slate-900 border-slate-800 focus:border-emerald-500 text-white placeholder-slate-500'
-                    : 'bg-white border-slate-300 focus:border-emerald-500 text-slate-900 placeholder-slate-400'
+                    : 'bg-white border-slate-300 focus:border-emerald-600 text-slate-900 placeholder-slate-400 font-semibold'
                 }`}
               />
-              <Barcode className="absolute left-3 top-3 h-4 w-4 text-emerald-400" />
+              <Barcode className={`absolute left-3 top-3 h-4 w-4 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`} />
             </form>
 
             {/* Category Quick Filter Pills */}
@@ -1078,10 +1142,10 @@ export default function CounterPosTerminal() {
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
                     selectedCategory === cat
-                      ? 'bg-emerald-500 text-slate-950'
+                      ? 'bg-emerald-600 text-white shadow-xs'
                       : theme === 'dark'
                       ? 'bg-slate-900 text-slate-400 hover:text-white'
-                      : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-xs'
                   }`}
                 >
                   {cat}
@@ -1245,16 +1309,16 @@ export default function CounterPosTerminal() {
                 }}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-black transition ${
                   cartMode === 'sale'
-                    ? 'bg-emerald-500 text-slate-950'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : theme === 'dark'
                     ? 'bg-slate-800 text-slate-400 hover:text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-xs'
                 }`}
               >
                 <ShoppingCart className="h-3.5 w-3.5" />
                 NEW SALE
                 {cart.length > 0 && cartMode === 'sale' && (
-                  <span className="bg-slate-950/30 rounded-full px-1.5 py-0.5 text-[10px]">
+                  <span className="bg-black/20 rounded-full px-1.5 py-0.5 text-[10px]">
                     {cart.reduce((s, i) => s + i.quantity, 0)}
                   </span>
                 )}
@@ -1263,10 +1327,10 @@ export default function CounterPosTerminal() {
                 onClick={() => setCartMode('return')}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-black transition ${
                   cartMode === 'return'
-                    ? 'bg-amber-500 text-slate-950'
+                    ? 'bg-amber-600 text-white shadow-xs'
                     : theme === 'dark'
                     ? 'bg-slate-800 text-slate-400 hover:text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-xs'
                 }`}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -1277,8 +1341,8 @@ export default function CounterPosTerminal() {
             {cartMode === 'sale' && (
               <div className="pb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs">
-                  <ShoppingCart className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="font-black uppercase tracking-wider">
+                  <ShoppingCart className={`h-3.5 w-3.5 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`} />
+                  <span className={`font-black uppercase tracking-wider ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                     Current Cart ({cart.reduce((s, i) => s + i.quantity, 0)} Items)
                   </span>
                 </div>
@@ -1550,8 +1614,8 @@ export default function CounterPosTerminal() {
             {cartMode === 'sale' ? (
               <>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400">Total Net Amount:</span>
-                  <span className="font-black text-lg font-mono text-emerald-400">
+                  <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600 font-semibold'}>Total Net Amount:</span>
+                  <span className={`font-black text-lg font-mono ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>
                     NPR {formatNepaliNumber(String(cartTotal))}
                   </span>
                 </div>
@@ -1563,7 +1627,7 @@ export default function CounterPosTerminal() {
                     }
                   }}
                   disabled={cart.length === 0}
-                  className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center justify-center gap-2 transition disabled:opacity-40"
+                  className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-2 transition disabled:opacity-40 shadow-sm"
                 >
                   <span>Accept Tender / Pay (Space / Enter / F12)</span>
                   <ArrowRight className="h-4 w-4" />

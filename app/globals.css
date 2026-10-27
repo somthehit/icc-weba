@@ -469,6 +469,10 @@
 .accounting-portal .bg-slate-900\/80,
 .accounting-portal .bg-slate-900\/70,
 .accounting-portal .bg-slate-900\/60,
+.accounting-portal .bg-slate-800,
+.accounting-portal .bg-slate-800\/80,
+.accounting-portal .bg-slate-800\/60,
+.accounting-portal .bg-slate-800\/50,
 .accounting-portal aside,
 .accounting-portal header,
 .pos-portal .bg-slate-900,
@@ -478,6 +482,10 @@
 .pos-portal .bg-slate-900\/80,
 .pos-portal .bg-slate-900\/70,
 .pos-portal .bg-slate-900\/60,
+.pos-portal .bg-slate-800,
+.pos-portal .bg-slate-800\/80,
+.pos-portal .bg-slate-800\/60,
+.pos-portal .bg-slate-800\/50,
 .pos-portal header {
   background-color: #ffffff !important;
 }
@@ -487,10 +495,12 @@
 .accounting-portal .border-slate-800\/80,
 .accounting-portal .border-slate-800\/60,
 .accounting-portal .border-slate-700,
+.accounting-portal .border-slate-700\/50,
 .pos-portal .border-slate-800,
 .pos-portal .border-slate-800\/80,
 .pos-portal .border-slate-800\/60,
-.pos-portal .border-slate-700 {
+.pos-portal .border-slate-700,
+.pos-portal .border-slate-700\/50 {
   border-color: #e2e8f0 !important;
 }
 
@@ -513,6 +523,115 @@
 .accounting-portal .text-slate-400,
 .pos-portal .text-slate-400 {
   color: #64748b !important;
+}
+
+/* Saturated, High-Contrast Text Colors for Light Canvas */
+.accounting-portal .text-emerald-400,
+.accounting-portal .text-emerald-300,
+.pos-portal .text-emerald-400,
+.pos-portal .text-emerald-300 {
+  color: #047857 !important;
+}
+
+.accounting-portal .text-purple-400,
+.accounting-portal .text-purple-300,
+.pos-portal .text-purple-400,
+.pos-portal .text-purple-300 {
+  color: #6b21a8 !important;
+}
+
+.accounting-portal .text-amber-400,
+.accounting-portal .text-amber-300,
+.pos-portal .text-amber-400,
+.pos-portal .text-amber-300 {
+  color: #b45309 !important;
+}
+
+.accounting-portal .text-blue-400,
+.accounting-portal .text-blue-300,
+.pos-portal .text-blue-400,
+.pos-portal .text-blue-300 {
+  color: #1d4ed8 !important;
+}
+
+.accounting-portal .text-rose-400,
+.accounting-portal .text-rose-300,
+.pos-portal .text-rose-400,
+.pos-portal .text-rose-300 {
+  color: #be123c !important;
+}
+
+.accounting-portal .text-cyan-400,
+.accounting-portal .text-cyan-300,
+.pos-portal .text-cyan-400,
+.pos-portal .text-cyan-300 {
+  color: #0e7490 !important;
+}
+
+/* Soft Tinted Badges and Metric Pills */
+.accounting-portal .bg-blue-950\/20,
+.accounting-portal .bg-blue-950\/40,
+.accounting-portal .bg-blue-950\/60,
+.accounting-portal .bg-blue-500\/10,
+.accounting-portal .bg-blue-500\/20,
+.pos-portal .bg-blue-950\/20,
+.pos-portal .bg-blue-500\/10,
+.pos-portal .bg-blue-500\/20 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+.accounting-portal .bg-purple-950\/20,
+.accounting-portal .bg-purple-950\/40,
+.accounting-portal .bg-purple-950\/60,
+.accounting-portal .bg-purple-500\/10,
+.accounting-portal .bg-purple-500\/20,
+.pos-portal .bg-purple-950\/20,
+.pos-portal .bg-purple-500\/10,
+.pos-portal .bg-purple-500\/20 {
+  background-color: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #6b21a8 !important;
+}
+
+.accounting-portal .bg-emerald-950\/20,
+.accounting-portal .bg-emerald-950\/40,
+.accounting-portal .bg-emerald-950\/60,
+.accounting-portal .bg-emerald-500\/10,
+.accounting-portal .bg-emerald-500\/20,
+.pos-portal .bg-emerald-950\/20,
+.pos-portal .bg-emerald-500\/10,
+.pos-portal .bg-emerald-500\/20 {
+  background-color: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+  color: #047857 !important;
+}
+
+.accounting-portal .bg-amber-950\/20,
+.accounting-portal .bg-amber-950\/40,
+.accounting-portal .bg-amber-950\/60,
+.accounting-portal .bg-amber-500\/10,
+.accounting-portal .bg-amber-500\/20,
+.pos-portal .bg-amber-950\/20,
+.pos-portal .bg-amber-500\/10,
+.pos-portal .bg-amber-500\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+.accounting-portal .bg-rose-950\/20,
+.accounting-portal .bg-rose-950\/40,
+.accounting-portal .bg-rose-950\/60,
+.accounting-portal .bg-rose-500\/10,
+.accounting-portal .bg-rose-500\/20,
+.pos-portal .bg-rose-950\/20,
+.pos-portal .bg-rose-500\/10,
+.pos-portal .bg-rose-500\/20 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
 }
 
 /* Form Inputs, Selects & Textareas */
@@ -559,17 +678,27 @@
   color: #0f172a !important;
 }
 
-/* Preserve bright contrast for colored action buttons & badges */
+/* Solid Action Buttons - always preserve white text */
 .accounting-portal button.bg-blue-600,
 .accounting-portal button.bg-blue-600 *,
 .accounting-portal button.bg-emerald-600,
 .accounting-portal button.bg-emerald-600 *,
+.accounting-portal button.bg-emerald-500,
+.accounting-portal button.bg-emerald-500 *,
 .accounting-portal button.bg-purple-600,
 .accounting-portal button.bg-purple-600 *,
 .accounting-portal button.bg-rose-600,
 .accounting-portal button.bg-rose-600 *,
+.accounting-portal button.bg-amber-600,
+.accounting-portal button.bg-amber-600 *,
 .pos-portal button.bg-emerald-500,
 .pos-portal button.bg-emerald-500 *,
+.pos-portal button.bg-emerald-600,
+.pos-portal button.bg-emerald-600 *,
+.pos-portal button.bg-amber-500,
+.pos-portal button.bg-amber-500 *,
+.pos-portal button.bg-amber-600,
+.pos-portal button.bg-amber-600 *,
 .pos-portal button.bg-blue-600,
 .pos-portal button.bg-blue-600 * {
   color: #ffffff !important;
