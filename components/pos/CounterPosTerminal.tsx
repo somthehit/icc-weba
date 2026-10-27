@@ -297,6 +297,71 @@ export default function CounterPosTerminal() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [tenderMethod, setTenderMethod] = useState<'cash' | 'card' | 'qr' | 'esewa' | 'khalti' | 'connectips'>('cash');
   const [tenderAmount, setTenderAmount] = useState('');
+
+  // Dynamic Cash Presets based on current cartTotal
+  const dynamicCashPresets = useMemo(() => {
+    if (!cartTotal || cartTotal <= 0) {
+      return [100, 500, 1000, 2000, 5000];
+    }
+
+    const presets: number[] = [cartTotal];
+    const roundUp = (val: number, step: number) => Math.ceil(val / step) * step;
+
+    // Standard cash intervals tailored to cart total
+    const candidates = [
+      cartTotal < 500 ? roundUp(cartTotal, 50) : roundUp(cartTotal, 100),
+      roundUp(cartTotal, 500),
+      roundUp(cartTotal, 1000),
+      roundUp(cartTotal, 2000),
+      roundUp(cartTotal, 5000),
+      roundUp(cartTotal, 10000),
+      roundUp(cartTotal, 20000),
+      roundUp(cartTotal, 50000),
+    ];
+
+    for (const cand of candidates) {
+      if (cand > cartTotal && !presets.includes(cand)) {
+        presets.push(cand);
+      }
+      if (presets.length >= 5) break;
+    }
+
+    // Fill remaining presets to always provide 5 intuitive note choices
+    let currentMax = presets[presets.length - 1];
+    while (presets.length < 5) {
+      const step = currentMax >= 10000 ? 5000 : currentMax >= 2000 ? 1000 : 500;
+      currentMax = roundUp(currentMax + step, step);
+      if (!presets.includes(currentMax)) {
+        presets.push(currentMax);
+      }
+    }
+
+    return presets.slice(0, 5);
+  }, [cartTotal]);
+
+  // Dynamic Cash Note Click Function
+  const handleNoteClick = (amt: number, idx: number) => {
+    if (idx === 0 || amt === cartTotal) {
+      // First preset is always exact cartTotal
+      setTenderAmount(cartTotal.toString());
+      return;
+    }
+
+    setTenderAmount((prev) => {
+      const prevNum = parseFloat(prev || '0');
+      // If empty, 0, NaN, or currently exact cart total, set note directly
+      if (!prev || isNaN(prevNum) || prevNum === 0 || prevNum === cartTotal) {
+        return amt.toString();
+      }
+      // If clicking the same note button again or adding notes under cartTotal, accumulate
+      if (prevNum === amt || prevNum < cartTotal) {
+        return (prevNum + amt).toString();
+      }
+      // If switching between presets when already >= cartTotal, select that preset
+      return amt.toString();
+    });
+  };
+
   const [customerName, setCustomerName] = useState('Walk-in Customer');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerPan, setCustomerPan] = useState('');
@@ -1815,11 +1880,11 @@ export default function CounterPosTerminal() {
 
                   {/* Cash Quick Presets */}
                   <div className="flex gap-2">
-                    {[cartTotal, 500, 1000, 2000, 5000].map((amt, idx) => (
+                    {dynamicCashPresets.map((amt, idx) => (
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setTenderAmount(amt.toString())}
+                        onClick={() => handleNoteClick(amt, idx)}
                         className="flex-1 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-[11px] font-bold text-slate-300 hover:text-white"
                       >
                         Rs. {amt}
