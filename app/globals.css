@@ -432,6 +432,16 @@
     display: block !important;
     inset: auto !important;
   }
+
+  .pos-receipt-backdrop,
+  .pos-receipt-backdrop > div {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+  }
 }
 
 /* ========================================================================= */
