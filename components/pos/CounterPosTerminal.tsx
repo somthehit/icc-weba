@@ -994,134 +994,171 @@ export default function CounterPosTerminal() {
     }
   };
 
-  // Dedicated thermal receipt printer handler
+  // Dedicated thermal receipt printer handler (Double Slip: Customer + Office)
   const handlePrintReceipt = useCallback(() => {
+    if (!completedReceipt) return;
+    const slip = document.getElementById('pos-receipt-print-slip');
+    const contentHtml = slip ? slip.innerHTML : '';
+
+    const printHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Receipt-${completedReceipt.orderNumber}</title>
+  <style>
+    @page {
+      margin: 0;
+      size: 80mm auto;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #000000;
+      width: 78mm;
+      font-family: 'Courier New', Courier, monospace, system-ui, sans-serif;
+      font-size: 11px;
+      line-height: 1.25;
+    }
+    .receipt-print-wrapper {
+      width: 76mm;
+      margin: 0 auto;
+      padding: 4mm 2mm 10mm 2mm;
+    }
+    .cut-divider {
+      margin: 16px 0;
+      text-align: center;
+      border-top: 1px dashed #444;
+      position: relative;
+      page-break-inside: avoid;
+    }
+    .cut-badge {
+      position: relative;
+      top: -9px;
+      background: #ffffff;
+      padding: 0 6px;
+      font-size: 9px;
+      font-weight: bold;
+      color: #333333;
+    }
+    .badge-warranty {
+      display: inline-block;
+      background: #ecfdf5;
+      border: 1px solid #059669;
+      color: #065f46;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-top: 2px;
+    }
+    .border-b { border-bottom: 1px dashed #444; }
+    .border-t { border-top: 1px dashed #444; }
+    .border-dashed { border-style: dashed; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 700; }
+    .font-black { font-weight: 900; }
+    .uppercase { text-transform: uppercase; }
+    .flex { display: flex; }
+    .justify-between { justify-content: space-between; }
+    .items-start { align-items: flex-start; }
+    .items-center { align-items: center; }
+    .gap-1 { gap: 4px; }
+    .gap-2 { gap: 6px; }
+    .space-y-1 > * + * { margin-top: 4px; }
+    .space-y-1\\.5 > * + * { margin-top: 6px; }
+    .space-y-2 > * + * { margin-top: 8px; }
+    .grid { display: grid; }
+    .grid-cols-2 { grid-template-columns: 1fr 1fr; }
+    .my-1\\.5 { margin-top: 6px; margin-bottom: 6px; }
+    .mb-1 { margin-bottom: 4px; }
+    .mb-2 { margin-bottom: 6px; }
+    .mb-3 { margin-bottom: 10px; }
+    .pb-1\\.5 { padding-bottom: 6px; }
+    .pb-2 { padding-bottom: 8px; }
+    .pb-3 { padding-bottom: 12px; }
+    .pt-1 { padding-top: 4px; }
+    .mt-0\\.5 { margin-top: 2px; }
+    .mt-1 { margin-top: 4px; }
+    .mt-2 { margin-top: 8px; }
+    .text-xs { font-size: 11px; }
+    .text-sm { font-size: 13px; }
+    .text-base { font-size: 14px; }
+    .text-\\[10px\\] { font-size: 10px; }
+    .text-\\[9px\\] { font-size: 9px; }
+    .text-\\[8px\\] { font-size: 8px; }
+    .bg-slate-100 { background-color: #f1f5f9; }
+    .bg-slate-900 { background-color: #0f172a; }
+    .text-white { color: #ffffff; }
+    .text-slate-900 { color: #000000; }
+    .text-slate-600 { color: #444444; }
+    .text-slate-500 { color: #666666; }
+    .text-slate-400 { color: #888888; }
+  </style>
+</head>
+<body>
+  <div class="receipt-print-wrapper">
+    ${contentHtml}
+  </div>
+</body>
+</html>`;
+
+    // Strategy 1: Dedicated popup print window (Direct DOM render, zero clipping)
     try {
-      const slip = document.getElementById('pos-receipt-print-slip');
-      if (!slip) {
-        window.print();
+      const printWin = window.open('', '_blank', 'width=460,height=800,menubar=no,toolbar=no,location=no,status=no');
+      if (printWin) {
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+        printWin.focus();
+        setTimeout(() => {
+          printWin.print();
+        }, 350);
         return;
       }
+    } catch (e) {
+      console.warn('Popup blocked, using iframe fallback:', e);
+    }
 
+    // Strategy 2: In-DOM iframe with actual dimensions and opacity to force browser layout
+    try {
       let iframe = document.getElementById('receipt-print-iframe') as HTMLIFrameElement | null;
-      if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.id = 'receipt-print-iframe';
-        iframe.style.position = 'fixed';
-        iframe.style.top = '-9999px';
-        iframe.style.left = '-9999px';
-        iframe.style.width = '80mm';
-        iframe.style.height = '0';
-        iframe.style.border = '0';
-        document.body.appendChild(iframe);
-      }
+      if (iframe) iframe.remove();
+      iframe = document.createElement('iframe');
+      iframe.id = 'receipt-print-iframe';
+      iframe.style.position = 'fixed';
+      iframe.style.bottom = '10px';
+      iframe.style.right = '10px';
+      iframe.style.width = '320px';
+      iframe.style.height = '400px';
+      iframe.style.opacity = '0.01';
+      iframe.style.pointerEvents = 'none';
+      iframe.style.zIndex = '-999';
+      document.body.appendChild(iframe);
 
       const doc = iframe.contentWindow?.document;
-      if (!doc) {
-        window.print();
+      if (doc) {
+        doc.open();
+        doc.write(printHtml);
+        doc.close();
+        setTimeout(() => {
+          iframe?.contentWindow?.focus();
+          iframe?.contentWindow?.print();
+        }, 400);
         return;
       }
-
-      doc.open();
-      doc.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Receipt - ${completedReceipt?.orderNumber || 'Invoice'}</title>
-          <style>
-            @page {
-              margin: 0;
-              size: 80mm auto;
-            }
-            html, body {
-              margin: 0;
-              padding: 0;
-              background: #ffffff;
-              color: #000000;
-              width: 78mm;
-              font-family: 'Courier New', Courier, monospace, system-ui;
-              font-size: 11px;
-              line-height: 1.3;
-            }
-            * {
-              box-sizing: border-box;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            .slip-container {
-              padding: 4mm 3mm 8mm 3mm;
-              width: 78mm;
-              margin: 0 auto;
-            }
-            .text-center { text-align: center; }
-            .text-right { text-align: right; }
-            .font-bold { font-weight: 700; }
-            .font-black { font-weight: 900; }
-            .uppercase { text-transform: uppercase; }
-            .border-b { border-bottom: 1px dashed #444; }
-            .border-t { border-top: 1px dashed #444; }
-            .border-dashed { border-style: dashed; }
-            .pb-2 { padding-bottom: 6px; }
-            .pb-3 { padding-bottom: 10px; }
-            .pt-1 { padding-top: 4px; }
-            .mb-1 { margin-bottom: 4px; }
-            .mb-2 { margin-bottom: 6px; }
-            .mb-3 { margin-bottom: 10px; }
-            .mb-4 { margin-bottom: 14px; }
-            .mt-0\\.5 { margin-top: 2px; }
-            .mt-1 { margin-top: 4px; }
-            .my-1\\.5 { margin-top: 6px; margin-bottom: 6px; }
-            .flex { display: flex; }
-            .justify-between { justify-content: space-between; }
-            .items-start { align-items: flex-start; }
-            .items-center { align-items: center; }
-            .gap-1 { gap: 4px; }
-            .gap-2 { gap: 6px; }
-            .space-y-1 > * + * { margin-top: 4px; }
-            .space-y-1\\.5 > * + * { margin-top: 6px; }
-            .space-y-0\\.5 > * + * { margin-top: 2px; }
-            .grid { display: grid; }
-            .grid-cols-2 { grid-template-columns: 1fr 1fr; }
-            .text-xs { font-size: 11px; }
-            .text-sm { font-size: 13px; }
-            .text-base { font-size: 14px; }
-            .text-\\[10px\\] { font-size: 10px; }
-            .text-\\[9px\\] { font-size: 9px; }
-            .text-slate-900, .text-black { color: #000000; }
-            .text-slate-600, .text-slate-500 { color: #444444; }
-            .text-slate-400 { color: #666666; }
-            .bg-slate-100 { background-color: #f1f5f9; }
-            .badge-warranty {
-              display: inline-block;
-              background: #f1f5f9;
-              border: 1px solid #94a3b8;
-              color: #0f172a;
-              font-size: 9px;
-              font-weight: 700;
-              padding: 1px 4px;
-              border-radius: 3px;
-              margin-top: 3px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="slip-container">
-            ${slip.innerHTML}
-          </div>
-        </body>
-        </html>
-      `);
-      doc.close();
-
-      setTimeout(() => {
-        iframe?.contentWindow?.focus();
-        iframe?.contentWindow?.print();
-      }, 250);
-    } catch (err) {
-      console.error('Print iframe error, fallback to window.print():', err);
-      window.print();
+    } catch (e) {
+      console.error('Iframe fallback error:', e);
     }
+
+    // Strategy 3: Direct browser print
+    window.print();
   }, [completedReceipt]);
 
   // -------------------------------------------------------------
@@ -2174,118 +2211,240 @@ export default function CounterPosTerminal() {
         </div>
       )}
 
-      {/* 4. Thermal ESC/POS Receipt Modal */}
+      {/* 4. Thermal ESC/POS Receipt Modal (Double Slip: Customer + Office) */}
       {completedReceipt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm pos-receipt-backdrop overflow-y-auto">
-          <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-slate-800 bg-white text-slate-900 shadow-2xl p-6 font-mono text-xs my-auto">
-            {/* Thermal Printable Slip Container */}
-            <div id="pos-receipt-print-slip" className="w-full text-slate-900 bg-white">
-              <div className="text-center border-b border-dashed border-slate-300 pb-3 mb-3">
-                <h4 className="font-black text-base uppercase tracking-tight">Intel Computer Center</h4>
-                <p className="text-[10px] text-slate-600">Dhangadhi Flagship Station #104</p>
-                <p className="text-[10px] text-slate-600">PAN: 601234567 | IRD Approved</p>
-                <div className="my-1.5 py-0.5 px-2 bg-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-800 border-y border-dashed border-slate-300">
-                  *** TAX INVOICE / CASH MEMO ***
-                </div>
-                <div className="grid grid-cols-2 text-left text-[10px] text-slate-600 gap-x-2 gap-y-0.5 mt-1">
-                  <div><span className="font-bold">Invoice:</span> {completedReceipt.orderNumber}</div>
-                  <div className="text-right"><span className="font-bold">Date:</span> {new Date(completedReceipt.createdAt).toLocaleDateString()}</div>
-                  <div><span className="font-bold">Customer:</span> {completedReceipt.customerName || 'Walk-in Customer'}</div>
-                  <div className="text-right"><span className="font-bold">Time:</span> {new Date(completedReceipt.createdAt).toLocaleTimeString()}</div>
-                  {completedReceipt.customerPan && (
-                    <div className="col-span-2"><span className="font-bold">Buyer PAN:</span> {completedReceipt.customerPan}</div>
-                  )}
-                  {completedReceipt.customerPhone && (
-                    <div className="col-span-2"><span className="font-bold">Phone:</span> {completedReceipt.customerPhone}</div>
-                  )}
-                </div>
+          <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-slate-800 bg-white text-slate-900 shadow-2xl p-5 font-mono text-xs my-auto flex flex-col max-h-[90vh]">
+            {/* Top Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2 no-print shrink-0 font-sans">
+              <div className="flex items-center gap-1.5">
+                <Printer className="h-4 w-4 text-emerald-600" />
+                <span className="font-bold text-xs text-slate-800">Double Slip Receipt</span>
               </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                Customer + Office
+              </span>
+            </div>
 
-              <div className="space-y-2 border-b border-dashed border-slate-300 pb-3 mb-3">
-                {(completedReceipt.items || []).map((it, idx) => {
-                  const lineTotal = Number(
-                    it.lineTotal ?? (it.price ?? (it as any).unitPrice ?? 0) * (it.quantity || 1)
-                  );
-                  const prodInfo = products.find(
-                    (p) => String(p.id) === String(it.productId || (it as any).id) || p.sku === it.sku
-                  );
-                  const itemWarranty =
-                    it.warrantyText ||
-                    prodInfo?.warrantyText ||
-                    (it.warrantyMonths ? `${it.warrantyMonths} Months Official Warranty` : null) ||
-                    (prodInfo?.warrantyMonths ? `${prodInfo.warrantyMonths} Months Official Warranty` : null);
+            {/* Thermal Printable Slip Container (Both Slips) */}
+            <div id="pos-receipt-print-slip" className="w-full text-slate-900 bg-white overflow-y-auto pr-1 flex-1">
+              {/* ========================================================= */}
+              {/* SLIP 1: CUSTOMER COPY                                     */}
+              {/* ========================================================= */}
+              <div className="slip customer-slip pb-1">
+                <div className="text-center border-b border-dashed border-slate-300 pb-2.5 mb-2.5">
+                  <h4 className="font-black text-sm uppercase tracking-tight">Intel Computer Center</h4>
+                  <p className="text-[10px] text-slate-600">Dhangadhi Flagship Station #104</p>
+                  <p className="text-[10px] text-slate-600 font-bold">PAN: 601234567 | IRD Approved</p>
+                  <p className="text-[9px] text-slate-500">Tel: 091-525287 · Ratopool, Kailali</p>
+                  <div className="my-1 py-0.5 px-2 bg-slate-100 text-[9px] font-bold uppercase tracking-wider text-slate-800 border-y border-dashed border-slate-300">
+                    *** TAX INVOICE / CASH MEMO ***
+                  </div>
+                  <div className="inline-block bg-slate-900 text-white text-[9px] font-black px-2 py-0.5 rounded mt-0.5">
+                    [ 1. CUSTOMER COPY ]
+                  </div>
+                  <div className="grid grid-cols-2 text-left text-[10px] text-slate-600 gap-x-2 gap-y-0.5 mt-2">
+                    <div><span className="font-bold">Invoice:</span> {completedReceipt.orderNumber}</div>
+                    <div className="text-right"><span className="font-bold">Date:</span> {new Date(completedReceipt.createdAt).toLocaleDateString()}</div>
+                    <div><span className="font-bold">Customer:</span> {completedReceipt.customerName || 'Walk-in Customer'}</div>
+                    <div className="text-right"><span className="font-bold">Time:</span> {new Date(completedReceipt.createdAt).toLocaleTimeString()}</div>
+                    {completedReceipt.customerPan && (
+                      <div className="col-span-2"><span className="font-bold">Buyer PAN:</span> {completedReceipt.customerPan}</div>
+                    )}
+                    {completedReceipt.customerPhone && (
+                      <div className="col-span-2"><span className="font-bold">Phone:</span> {completedReceipt.customerPhone}</div>
+                    )}
+                    <div><span className="font-bold">Cashier:</span> {completedReceipt.cashierName || 'Cashier 1'}</div>
+                    <div className="text-right"><span className="font-bold">Reg:</span> {completedReceipt.registerCode || '#104'}</div>
+                  </div>
+                </div>
 
-                  return (
-                    <div key={idx} className="pb-1.5 border-b border-dashed border-slate-100 last:border-b-0 last:pb-0">
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-slate-900 leading-snug">{it.name}</p>
-                          <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-slate-500 mt-0.5">
-                            <span>{it.quantity} × Rs. {formatNepaliNumber(String(it.price ?? (it as any).unitPrice ?? 0))}</span>
-                            {it.sku && <span className="font-mono text-slate-400">[{it.sku}]</span>}
-                            {it.serialNumber && (
-                              <span className="font-mono text-blue-600 font-semibold">S/N: {it.serialNumber}</span>
+                {/* Items List with Warranty / Guarantee */}
+                <div className="space-y-1.5 border-b border-dashed border-slate-300 pb-2 mb-2">
+                  {(completedReceipt.items || []).map((it, idx) => {
+                    const lineTotal = Number(
+                      it.lineTotal ?? (it.price ?? (it as any).unitPrice ?? 0) * (it.quantity || 1)
+                    );
+                    const prodInfo = products.find(
+                      (p) => String(p.id) === String(it.productId || (it as any).id) || p.sku === it.sku
+                    );
+                    const itemWarranty =
+                      it.warrantyText ||
+                      prodInfo?.warrantyText ||
+                      (it.warrantyMonths ? `${it.warrantyMonths} Months Official Warranty` : null) ||
+                      (prodInfo?.warrantyMonths ? `${prodInfo.warrantyMonths} Months Official Warranty` : null);
+
+                    return (
+                      <div key={idx} className="pb-1 border-b border-dashed border-slate-100 last:border-b-0 last:pb-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-slate-900 leading-snug">{it.name}</p>
+                            <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-slate-500 mt-0.5">
+                              <span>{it.quantity} × Rs. {formatNepaliNumber(String(it.price ?? (it as any).unitPrice ?? 0))}</span>
+                              {it.sku && <span className="font-mono text-slate-400">[{it.sku}]</span>}
+                              {it.serialNumber && (
+                                <span className="font-mono text-blue-600 font-semibold">S/N: {it.serialNumber}</span>
+                              )}
+                            </div>
+                            {/* Warranty & Guarantee Details */}
+                            {itemWarranty ? (
+                              <div className="mt-1 inline-flex items-center gap-1 text-[9px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-medium badge-warranty">
+                                <span className="font-bold">🛡️ Warranty:</span>
+                                <span>{itemWarranty}</span>
+                              </div>
+                            ) : (
+                              <div className="mt-0.5 text-[8px] text-slate-400">
+                                Warranty: 7 Days Store Checking Guarantee
+                              </div>
                             )}
                           </div>
-                          {/* Warranty & Guarantee Details */}
-                          {itemWarranty ? (
-                            <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-medium badge-warranty">
-                              <span className="font-bold">🛡️ Warranty:</span>
-                              <span>{itemWarranty}</span>
-                            </div>
-                          ) : (
-                            <div className="mt-0.5 text-[9px] text-slate-400">
-                              Warranty: 7 Days Store Checking Guarantee
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="font-bold text-slate-900">Rs. {formatNepaliNumber(String(lineTotal))}</span>
+                          <div className="text-right shrink-0">
+                            <span className="font-bold text-slate-900">Rs. {formatNepaliNumber(String(lineTotal))}</span>
+                          </div>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+
+                {/* Totals */}
+                <div className="space-y-1 border-b border-dashed border-slate-300 pb-2 mb-2 text-xs">
+                  <div className="flex justify-between font-black text-sm">
+                    <span>TOTAL:</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.totalAmount || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[10px]">
+                    <span>Taxable Amount:</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.taxableAmount || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[10px]">
+                    <span>13% VAT:</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.vatAmount || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[10px]">
+                    <span>Tendered ({completedReceipt.paymentMethod}):</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.amountTendered || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[10px]">
+                    <span>Change:</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.changeAmount || 0))}</span>
+                  </div>
+                </div>
+
+                {/* Customer Policy Footer */}
+                <div className="text-center text-[9px] text-slate-500 space-y-0.5 mb-2">
+                  <p className="font-bold text-slate-700">Thank you for shopping at Intel Computer Center!</p>
+                  <p>Official Warranty Validated with Invoice &amp; Serial No.</p>
+                  <p>Goods once sold can be exchanged within 7 days with bill.</p>
+                </div>
+              </div>
+
+              {/* ========================================================= */}
+              {/* TEAR-OFF / CUT SEPARATOR                                  */}
+              {/* ========================================================= */}
+              <div className="cut-divider my-3 text-center border-t border-dashed border-slate-400 relative">
+                <span className="cut-badge relative -top-2.5 bg-white px-2 text-[9px] font-mono font-bold text-slate-500">
+                  ✂ - - - - - - - CUT / TEAR HERE - - - - - - - ✂
+                </span>
+              </div>
+
+              {/* ========================================================= */}
+              {/* SLIP 2: OFFICE / ACCOUNTS COPY                            */}
+              {/* ========================================================= */}
+              <div className="slip office-slip pt-1">
+                <div className="text-center border-b border-dashed border-slate-300 pb-2.5 mb-2.5">
+                  <h4 className="font-black text-sm uppercase tracking-tight">Intel Computer Center</h4>
+                  <p className="text-[10px] text-slate-600 font-bold">PAN: 601234567 | Station #104</p>
+                  <div className="my-1 py-0.5 px-2 bg-slate-100 text-[9px] font-bold uppercase tracking-wider text-slate-800 border-y border-dashed border-slate-300">
+                    *** SALES AUDIT SLIP / SHIFT VOUCHER ***
+                  </div>
+                  <div className="inline-block bg-slate-700 text-white text-[9px] font-black px-2 py-0.5 rounded mt-0.5">
+                    [ 2. OFFICE / ACCOUNTS COPY ]
+                  </div>
+                  <div className="grid grid-cols-2 text-left text-[10px] text-slate-600 gap-x-2 gap-y-0.5 mt-2">
+                    <div><span className="font-bold">Invoice:</span> {completedReceipt.orderNumber}</div>
+                    <div className="text-right"><span className="font-bold">Date:</span> {new Date(completedReceipt.createdAt).toLocaleDateString()}</div>
+                    <div><span className="font-bold">Customer:</span> {completedReceipt.customerName || 'Walk-in Customer'}</div>
+                    <div className="text-right"><span className="font-bold">Time:</span> {new Date(completedReceipt.createdAt).toLocaleTimeString()}</div>
+                    {completedReceipt.customerPan && (
+                      <div className="col-span-2"><span className="font-bold">Buyer PAN:</span> {completedReceipt.customerPan}</div>
+                    )}
+                    {completedReceipt.customerPhone && (
+                      <div className="col-span-2"><span className="font-bold">Phone:</span> {completedReceipt.customerPhone}</div>
+                    )}
+                    <div><span className="font-bold">Payment:</span> {completedReceipt.paymentMethod.toUpperCase()}</div>
+                    <div className="text-right"><span className="font-bold">Cashier:</span> {completedReceipt.cashierName || 'Cashier 1'}</div>
+                  </div>
+                </div>
+
+                {/* Audit Items Summary */}
+                <div className="space-y-1 border-b border-dashed border-slate-300 pb-2 mb-2">
+                  {(completedReceipt.items || []).map((it, idx) => {
+                    const lineTotal = Number(
+                      it.lineTotal ?? (it.price ?? (it as any).unitPrice ?? 0) * (it.quantity || 1)
+                    );
+                    return (
+                      <div key={idx} className="flex justify-between items-start text-[10px]">
+                        <div className="flex-1 min-w-0 pr-1">
+                          <span className="font-bold text-slate-900">{it.name}</span>
+                          <span className="text-slate-500"> × {it.quantity}</span>
+                          {it.serialNumber && <div className="text-[9px] text-blue-600">S/N: {it.serialNumber}</div>}
+                        </div>
+                        <span className="font-bold text-slate-900 shrink-0">Rs. {formatNepaliNumber(String(lineTotal))}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Financial Summary */}
+                <div className="space-y-0.5 border-b border-dashed border-slate-300 pb-2 mb-2 text-xs">
+                  <div className="flex justify-between font-black text-xs">
+                    <span>NET TOTAL:</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.totalAmount || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[10px]">
+                    <span>Taxable Sales:</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.taxableAmount || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[10px]">
+                    <span>13% VAT Collected:</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.vatAmount || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[10px]">
+                    <span>Tendered ({completedReceipt.paymentMethod}):</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.amountTendered || 0))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[10px]">
+                    <span>Change Returned:</span>
+                    <span>NPR {formatNepaliNumber(String(completedReceipt.changeAmount || 0))}</span>
+                  </div>
+                </div>
+
+                {/* Accounting Signatures */}
+                <div className="mt-3 pt-2 text-[9px] text-slate-700">
+                  <div className="flex justify-between pt-4">
+                    <div className="text-center border-t border-slate-400 w-[45%] pt-1 font-bold">
+                      Cashier Signature
                     </div>
-                  );
-                })}
-              </div>
-
-              <div className="space-y-1 border-b border-dashed border-slate-300 pb-3 mb-3">
-                <div className="flex justify-between font-black text-sm">
-                  <span>TOTAL:</span>
-                  <span>NPR {formatNepaliNumber(String(completedReceipt.totalAmount || 0))}</span>
+                    <div className="text-center border-t border-slate-400 w-[45%] pt-1 font-bold">
+                      Customer Signature
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-center text-slate-400 mt-2">
+                    [ Retain for Daily Shift Settlement &amp; IRD VAT Audit ]
+                  </p>
                 </div>
-                <div className="flex justify-between text-slate-600 text-[10px]">
-                  <span>Taxable Amount:</span>
-                  <span>NPR {formatNepaliNumber(String(completedReceipt.taxableAmount || 0))}</span>
-                </div>
-                <div className="flex justify-between text-slate-600 text-[10px]">
-                  <span>13% VAT:</span>
-                  <span>NPR {formatNepaliNumber(String(completedReceipt.vatAmount || 0))}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Tendered ({completedReceipt.paymentMethod}):</span>
-                  <span>NPR {formatNepaliNumber(String(completedReceipt.amountTendered || 0))}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Change:</span>
-                  <span>NPR {formatNepaliNumber(String(completedReceipt.changeAmount || 0))}</span>
-                </div>
-              </div>
-
-              <div className="text-center text-[9px] text-slate-500 space-y-0.5 mb-4">
-                <p className="font-bold text-slate-700">Thank you for shopping at Intel Computer Center!</p>
-                <p>Official Warranty Validated with Invoice &amp; Serial No.</p>
-                <p>Goods once sold can be exchanged within 7 days with bill.</p>
               </div>
             </div>
 
             {/* Print & Dismiss Actions (Hidden when printing via no-print class) */}
-            <div className="flex gap-2 no-print">
+            <div className="flex gap-2 pt-3 border-t border-slate-200 mt-2 no-print shrink-0">
               <button
                 type="button"
                 onClick={handlePrintReceipt}
                 className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center gap-1.5 hover:bg-slate-800 transition shadow-sm"
               >
-                <Printer className="h-4 w-4" /> Print
+                <Printer className="h-4 w-4" /> Print Double Slip
               </button>
               <button
                 type="button"

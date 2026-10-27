@@ -387,60 +387,45 @@
     print-color-adjust: exact !important;
   }
 
-  /* Hide entire page workspace & backgrounds */
-  body * {
-    visibility: hidden !important;
-  }
-
-  /* Unhide ONLY the receipt slip container and its contents */
-  #pos-receipt-print-slip,
-  #pos-receipt-print-slip * {
-    visibility: visible !important;
-  }
-
-  /* Position receipt at very top left with thermal roll sizing */
-  #pos-receipt-print-slip {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 78mm !important;
-    max-width: 78mm !important;
-    margin: 0 auto !important;
-    padding: 3mm 4mm 8mm 4mm !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    display: block !important;
-    font-family: 'Courier New', Courier, monospace !important;
-    font-size: 11px !important;
-    line-height: 1.25 !important;
-  }
-
-  /* Hide Action buttons, close button, modals and dialog controls */
+  /* Hide buttons, dialog controls, and unnecessary UI */
   .no-print,
   .no-print * {
     display: none !important;
     visibility: hidden !important;
   }
 
-  .pos-receipt-backdrop {
+  /* Unhide modal and receipt slip with natural unclipped flow */
+  .pos-portal,
+  .pos-receipt-backdrop,
+  .pos-receipt-backdrop > div {
     position: static !important;
-    background: transparent !important;
-    padding: 0 !important;
     display: block !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 78mm !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     inset: auto !important;
   }
 
-  .pos-receipt-backdrop,
-  .pos-receipt-backdrop > div {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    max-width: none !important;
-    width: auto !important;
+  #pos-receipt-print-slip {
+    position: static !important;
+    display: block !important;
+    width: 78mm !important;
+    max-width: 78mm !important;
+    margin: 0 auto !important;
+    padding: 2mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
   }
 }
 
