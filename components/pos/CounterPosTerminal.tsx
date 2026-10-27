@@ -1958,7 +1958,7 @@ export default function CounterPosTerminal() {
                 <button
                   type="submit"
                   disabled={isSubmittingSale}
-                  className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 font-black text-slate-950 text-sm flex items-center justify-center gap-2 transition disabled:opacity-50"
+                  className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 font-black text-white text-sm flex items-center justify-center gap-2 transition disabled:opacity-50 shadow-md active:scale-[0.99]"
                 >
                   {isSubmittingSale ? 'Completing Sale...' : 'Finalize Sale & Print Receipt'}
                   <CheckCircle2 className="h-4 w-4" />
