@@ -59,9 +59,16 @@ import SupervisorSignOffModal from './SupervisorSignOffModal';
 import BlindEodCloseModal from './BlindEodCloseModal';
 import LineVoidModal, { LineVoidTarget } from './LineVoidModal';
 import SupervisorReturnModal from './SupervisorReturnModal';
+import CashierDashboardView from './CashierDashboardView';
+import CashierProductsView from './CashierProductsView';
+import CashierCustomersView from './CashierCustomersView';
+import CashierReportView from './CashierReportView';
+import CashierSettingsView from './CashierSettingsView';
 import { formatNpr, formatNepaliNumber } from '@/lib/nepal/money';
 import { posIndexedDb, CatalogProduct } from '@/lib/pos/indexedDbCatalog';
 import { catalogSearchIndex } from '@/lib/pos/searchIndex';
+
+export type SidebarTab = 'dashboard' | 'sales' | 'products' | 'customers' | 'reports' | 'settings';
 
 export type PosState =
   | 'LOCKED_TERMINAL'
@@ -290,6 +297,7 @@ export default function CounterPosTerminal() {
 
   // State Machine
   const [terminalState, setTerminalState] = useState<PosState>('LOCKED_TERMINAL');
+  const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('sales');
 
   // Staff & Shift
   const [dutySupervisor, setDutySupervisor] = useState<StaffProfile | null>(null);
@@ -1400,82 +1408,50 @@ export default function CounterPosTerminal() {
 
           {/* Navigation Links */}
           <nav className="space-y-1.5">
-            <button
-              type="button"
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
-              title="Dashboard Overview"
-            >
-              <LayoutDashboard className="h-4 w-4 text-emerald-300" />
-              <span>Dashboard</span>
-            </button>
-
-            {/* Active Sales Item */}
-            <button
-              type="button"
-              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-black bg-[#00c569] text-white shadow-md transition"
-              title="Current Sales Terminal"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              <span>Sales</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => barcodeInputRef.current?.focus()}
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
-              title="Product Catalog & Inventory"
-            >
-              <Package className="h-4 w-4 text-emerald-300" />
-              <span>Products</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsCustomerPickerOpen(true)}
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
-              title="Customer Directory [F3]"
-            >
-              <Users className="h-4 w-4 text-emerald-300" />
-              <span>Customers</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsEodCloseOpen(true)}
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
-              title="Shift & Sales Reports"
-            >
-              <BarChart3 className="h-4 w-4 text-emerald-300" />
-              <span>Reports</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowShortcutsModal(true)}
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
-              title="POS Settings & Keyboard Shortcuts"
-            >
-              <Settings className="h-4 w-4 text-emerald-300" />
-              <span>Settings</span>
-            </button>
+            {[
+              { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
+              { id: 'sales' as const, label: 'Sales', icon: ShoppingBag },
+              { id: 'products' as const, label: 'Products', icon: Package },
+              { id: 'customers' as const, label: 'Customers', icon: Users },
+              { id: 'reports' as const, label: 'Reports', icon: BarChart3 },
+              { id: 'settings' as const, label: 'Settings', icon: Settings },
+            ].map((item) => {
+              const isActive = activeSidebarTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveSidebarTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition select-none ${
+                    isActive
+                      ? 'bg-[#00c569] text-white shadow-md font-black'
+                      : 'text-white hover:bg-emerald-800/60 hover:text-emerald-100'
+                  }`}
+                  title={item.label}
+                >
+                  <item.icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-emerald-300'}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
         </div>
 
         {/* Bottom Help & Support Card */}
-        <div className="bg-[#033d2f] rounded-2xl p-3.5 border border-emerald-800/50 text-white space-y-2.5 shadow-sm">
+        <div className="bg-[#033d2f] rounded-2xl p-3.5 border border-emerald-800/60 text-white space-y-2.5 shadow-sm">
           <div className="space-y-0.5">
-            <h5 className="text-xs font-black text-emerald-100">Need help?</h5>
-            <p className="text-[10px] text-emerald-300/80 leading-relaxed">
+            <h5 className="text-xs font-black text-white">Need help?</h5>
+            <p className="text-[11px] text-emerald-200/90 leading-relaxed font-medium">
               Contact our support team for assistance
             </p>
           </div>
           <button
             type="button"
             onClick={() => setShowShortcutsModal(true)}
-            className="w-full py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/30 text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"
+            className="w-full py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-900 text-xs font-black transition flex items-center justify-center gap-1.5 shadow-sm"
           >
-            <HelpCircle className="h-3.5 w-3.5" />
-            Contact Support
+            <HelpCircle className="h-4 w-4 text-emerald-700" />
+            <span>Contact Support</span>
           </button>
         </div>
       </aside>
@@ -1617,7 +1593,8 @@ export default function CounterPosTerminal() {
         </header>
 
         {/* 3. Split Main Workspace (Catalog on Left, Cart on Right) */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+        {activeSidebarTab === 'sales' && (
+          <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left / Center Column: SupaPOS Sales Transaction Catalog */}
         <section className="flex-1 flex flex-col min-h-0 bg-[#f8faf9] overflow-hidden border-r border-slate-200">
           {/* Header & Filter Bar */}
@@ -1678,21 +1655,8 @@ export default function CounterPosTerminal() {
             </div>
           </div>
 
-          {/* Product Items Grid with Card 1: Add New Product */}
+          {/* Product Items Grid (Retail Inventory Items Only) */}
           <div className="flex-1 min-h-0 overflow-y-auto px-6 py-2 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-            {/* Card 1: Add New Product Dashed Card */}
-            <div
-              onClick={() => barcodeInputRef.current?.focus()}
-              className="rounded-2xl border-2 border-dashed border-slate-300 hover:border-[#00c569] bg-white/70 hover:bg-emerald-50/30 flex flex-col items-center justify-center p-6 cursor-pointer group transition min-h-[220px] shadow-2xs"
-            >
-              <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200/60 text-[#00c569] flex items-center justify-center mb-3 group-hover:scale-110 group-hover:bg-[#00c569] group-hover:text-white transition shadow-2xs">
-                <Plus className="h-5 w-5 stroke-[2.5]" />
-              </div>
-              <span className="text-xs font-bold text-slate-600 group-hover:text-[#00c569] transition">
-                Add New Product
-              </span>
-            </div>
-
             {isLoadingProducts && products.length === 0 ? (
               <div className="col-span-full py-16 text-center text-xs text-slate-500">
                 <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#00c569]" />
@@ -2271,7 +2235,63 @@ export default function CounterPosTerminal() {
           </div>
         </section>
       </div>
-    </div>
+    )}
+
+    {/* SupaPOS Tab: Dashboard Overview */}
+    {activeSidebarTab === 'dashboard' && (
+      <CashierDashboardView
+        activeCashier={activeCashier}
+        activeShift={activeShift}
+        terminalCode={terminalCode}
+        theme={theme}
+        onSwitchTab={(tab) => setActiveSidebarTab(tab)}
+      />
+    )}
+
+    {/* SupaPOS Tab: Products (Read-Only Inventory, NO Add Allowed) */}
+    {activeSidebarTab === 'products' && (
+      <CashierProductsView
+        products={products}
+        theme={theme}
+        onAddToCart={addToCart}
+        onSwitchToSales={() => setActiveSidebarTab('sales')}
+      />
+    )}
+
+    {/* SupaPOS Tab: Customers Directory & Khata */}
+    {activeSidebarTab === 'customers' && (
+      <CashierCustomersView
+        theme={theme}
+        onSelectCustomer={(c) => {
+          setCustomerName(c.name);
+          setCustomerPhone(c.phone || '');
+          setCustomerPan(c.pan || '');
+        }}
+        onSwitchToSales={() => setActiveSidebarTab('sales')}
+      />
+    )}
+
+    {/* SupaPOS Tab: Reports (Cashier Shift X-Reading) */}
+    {activeSidebarTab === 'reports' && (
+      <CashierReportView
+        activeCashier={activeCashier}
+        activeShift={activeShift}
+        terminalCode={terminalCode}
+        theme={theme}
+      />
+    )}
+
+    {/* SupaPOS Tab: Settings (Cashier Change PIN & Password) */}
+    {activeSidebarTab === 'settings' && (
+      <CashierSettingsView
+        activeCashier={activeCashier}
+        terminalCode={terminalCode}
+        theme={theme}
+        onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onOpenShortcuts={() => setShowShortcutsModal(true)}
+      />
+    )}
+  </div>
 
       {/* 3. Tender & Checkout Modal */}
       {/* 2. Customer Selection Modal [F3] */}

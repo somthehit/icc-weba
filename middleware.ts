@@ -138,6 +138,8 @@ const RULES: readonly Rule[] = [
   // The physical till has no browser session — auth is enforced inside each
   // route via supervisor-gate / cashier PIN flow.
   { path: '/api/pos/terminal', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/pos/cashier', match: 'prefix', read: PUBLIC, write: PUBLIC },
+  { path: '/api/pos/customers', match: 'prefix', read: PUBLIC, write: PUBLIC },
   { path: '/api/pos', match: 'prefix', read: PUBLIC, write: SALES },
 
   // POS auth gates — supervisor unlock and cashier PIN login.
