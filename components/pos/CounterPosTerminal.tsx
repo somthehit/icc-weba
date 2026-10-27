@@ -123,6 +123,7 @@ interface ReceiptData {
 interface ProductTileProps {
   product: ProductItem;
   theme: 'dark' | 'light';
+  cartQty?: number;
   onAdd: (product: ProductItem) => void;
   onInfo: (product: ProductItem) => void;
 }
@@ -130,12 +131,14 @@ interface ProductTileProps {
 const ProductTile = React.memo(function ProductTile({
   product,
   theme,
+  cartQty = 0,
   onAdd,
   onInfo,
 }: ProductTileProps) {
   const isOutOfStock = product.stockQuantity <= 0;
   const isLowStock = !isOutOfStock && product.stockQuantity <= (product.lowStockThreshold || 3);
   const formattedPrice = `Rs. ${formatNepaliNumber(String(product.price))}`;
+  const isInCart = cartQty > 0;
 
   return (
     <div className="relative group flex flex-col justify-between">
@@ -146,7 +149,11 @@ const ProductTile = React.memo(function ProductTile({
         className={`w-full h-full flex flex-col justify-between text-left p-3 rounded-2xl border transition ${
           isOutOfStock ? 'opacity-60 cursor-not-allowed' : 'active:scale-95 cursor-pointer'
         } ${
-          theme === 'dark'
+          isInCart
+            ? theme === 'dark'
+              ? 'bg-[#18231c] border-emerald-500 ring-2 ring-emerald-500/30'
+              : 'bg-emerald-50/40 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+            : theme === 'dark'
             ? 'bg-[#141a17] border-slate-800 hover:border-emerald-500/50 hover:bg-[#1a231f]'
             : 'bg-white border-slate-200 hover:border-emerald-500 hover:shadow-md'
         }`}
@@ -155,12 +162,17 @@ const ProductTile = React.memo(function ProductTile({
           <div className="flex items-center justify-between gap-1 mb-1">
             <span
               className={`text-[10px] font-mono font-bold truncate max-w-[110px] ${
-                theme === 'dark' ? 'text-emerald-400' : 'text-slate-500'
+                isInCart ? 'text-emerald-700 dark:text-emerald-400 font-black' : theme === 'dark' ? 'text-emerald-400' : 'text-slate-500'
               }`}
             >
               {product.sku}
             </span>
             <div className="flex items-center gap-1 shrink-0">
+              {isInCart && (
+                <span className="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white font-black text-[9px] shadow-xs">
+                  {cartQty}×
+                </span>
+              )}
               {product.isSerialized && (
                 <span
                   className={`px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight border ${
@@ -284,10 +296,37 @@ export default function CounterPosTerminal() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [cart, setCart] = useState<CartLine[]>([]);
-  const cartSubtotal = cart.reduce((acc, item) => acc + item.lineTotal, 0);
-  const cartTotal = cartSubtotal;
+  const [orderDiscountAmount, setOrderDiscountAmount] = useState(0);
+  const [orderDiscountPercent, setOrderDiscountPercent] = useState(0);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [visibleCount, setVisibleCount] = useState(48); // Virtualized initial slice
+
+  // Accurate Nepal IRD 13% VAT & Subtotal calculations
+  const cartGrossSubtotal = useMemo(() => {
+    return cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  }, [cart]);
+
+  const lineDiscountsTotal = useMemo(() => {
+    return cart.reduce((acc, item) => acc + Math.max(0, (item.price * item.quantity) - (item.lineTotal || 0)), 0);
+  }, [cart]);
+
+  const totalDiscountAmount = useMemo(() => {
+    return lineDiscountsTotal + orderDiscountAmount;
+  }, [lineDiscountsTotal, orderDiscountAmount]);
+
+  const cartTotal = useMemo(() => {
+    return Math.max(0, cartGrossSubtotal - totalDiscountAmount);
+  }, [cartGrossSubtotal, totalDiscountAmount]);
+
+  const cartTaxableAmount = useMemo(() => {
+    return Number((cartTotal / 1.13).toFixed(2));
+  }, [cartTotal]);
+
+  const cartVatAmount = useMemo(() => {
+    return Number((cartTotal - cartTaxableAmount).toFixed(2));
+  }, [cartTotal, cartTaxableAmount]);
+
+  const cartSubtotal = cartGrossSubtotal;
 
   // Held / Parked Carts (State & Persistence)
   const [heldCarts, setHeldCarts] = useState<Array<{ id: string; time: string; items: CartLine[] }>>([]);
@@ -296,10 +335,42 @@ export default function CounterPosTerminal() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [unsyncedCount, setUnsyncedCount] = useState(0);
 
+  // Customer Selection Modal State
+  const [isCustomerPickerOpen, setIsCustomerPickerOpen] = useState(false);
+  const [tempCustomerName, setTempCustomerName] = useState('Walk-in Customer');
+  const [tempCustomerPhone, setTempCustomerPhone] = useState('');
+  const [tempCustomerPan, setTempCustomerPan] = useState('');
+  const [customerCreditLimit, setCustomerCreditLimit] = useState<number>(0);
+
+  // Discount & Profit Margin Calculator State
+  const [isDiscountCalcOpen, setIsDiscountCalcOpen] = useState(false);
+  const [calcDiscountPctInput, setCalcDiscountPctInput] = useState<string>('0');
+  const [calcDiscountFlatInput, setCalcDiscountFlatInput] = useState<string>('0');
+  const [calcSupervisorPin, setCalcSupervisorPin] = useState<string>('');
+  const [calcDiscountTargetItem, setCalcDiscountTargetItem] = useState<CartLine | null>(null);
+
+  // Serial Number Modal State
+  const [isSerialModalOpen, setIsSerialModalOpen] = useState(false);
+  const [serialTargetLine, setSerialTargetLine] = useState<CartLine | null>(null);
+  const [serialInputNumber, setSerialInputNumber] = useState('');
+
   // Checkout & Payment Modal
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [tenderMethod, setTenderMethod] = useState<'cash' | 'card' | 'qr' | 'esewa' | 'khalti' | 'connectips'>('cash');
+  const [tenderMethod, setTenderMethod] = useState<'cash' | 'card' | 'qr' | 'esewa' | 'khalti' | 'connectips' | 'split' | 'bank_transfer' | 'credit'>('cash');
   const [tenderAmount, setTenderAmount] = useState('');
+
+  // Split Payment Allocation States
+  const [splitCashAmount, setSplitCashAmount] = useState<string>('0');
+  const [splitCardAmount, setSplitCardAmount] = useState<string>('0');
+  const [splitQrAmount, setSplitQrAmount] = useState<string>('0');
+  const [splitCardRef, setSplitCardRef] = useState<string>('');
+  const [splitQrRef, setSplitQrRef] = useState<string>('');
+
+  // Card EDC & Bank Transfer Verification States
+  const [cardAuthCode, setCardAuthCode] = useState<string>('');
+  const [cardBrand, setCardBrand] = useState<'visa' | 'mastercard' | 'sct' | 'unionpay'>('visa');
+  const [bankTransferRef, setBankTransferRef] = useState<string>('');
+  const [isPaymentVerified, setIsPaymentVerified] = useState<boolean>(true);
 
   // Dynamic Cash Presets based on current cartTotal
   const dynamicCashPresets = useMemo(() => {
@@ -593,21 +664,20 @@ export default function CounterPosTerminal() {
         barcodeInputRef.current?.select();
         return;
       }
+      if (e.key === 'F3') {
+        e.preventDefault();
+        setTempCustomerName(customerName);
+        setTempCustomerPhone(customerPhone);
+        setTempCustomerPan(customerPan);
+        setIsCustomerPickerOpen(true);
+        return;
+      }
       if (e.key === 'F4') {
         e.preventDefault();
-        const discountStr = prompt('Enter Line/Cart Discount Percentage (e.g. 5 for 5%):');
-        if (discountStr) {
-          const pct = Math.min(50, Math.max(0, parseFloat(discountStr) || 0));
-          if (pct > 0 && cart.length > 0) {
-            setCart((prev) =>
-              prev.map((item) => ({
-                ...item,
-                discountPercent: pct,
-                lineTotal: item.price * item.quantity * (1 - pct / 100),
-              }))
-            );
-          }
-        }
+        setCalcDiscountTargetItem(null);
+        setCalcDiscountPctInput(orderDiscountPercent ? String(orderDiscountPercent) : '0');
+        setCalcDiscountFlatInput(orderDiscountAmount ? String(orderDiscountAmount) : '0');
+        setIsDiscountCalcOpen(true);
         return;
       }
       if (e.key === 'F5') {
@@ -931,13 +1001,50 @@ export default function CounterPosTerminal() {
     e.preventDefault();
     if (cart.length === 0) return;
 
-    const tendered = tenderMethod === 'cash' ? parseFloat(tenderAmount) || cartTotal : cartTotal;
-    if (tenderMethod === 'cash' && tendered < cartTotal) {
-      alert(`Amount tendered (Rs. ${formatNepaliNumber(String(tendered))}) cannot be less than Total.`);
-      return;
+    let tendered = cartTotal;
+    let change = 0;
+    let finalAllocations: any[] = [];
+
+    if (tenderMethod === 'cash') {
+      const parsedTender = parseFloat(tenderAmount) || cartTotal;
+      if (parsedTender < cartTotal) {
+        alert(`Amount tendered (Rs. ${formatNepaliNumber(String(parsedTender))}) cannot be less than Total.`);
+        return;
+      }
+      tendered = parsedTender;
+      change = Math.max(0, parsedTender - cartTotal);
+      finalAllocations = [{ method: 'cash', amount: cartTotal }];
+    } else if (tenderMethod === 'split') {
+      const cAmt = parseFloat(splitCashAmount) || 0;
+      const cardAmt = parseFloat(splitCardAmount) || 0;
+      const qAmt = parseFloat(splitQrAmount) || 0;
+      const splitSum = cAmt + cardAmt + qAmt;
+
+      if (splitSum < cartTotal) {
+        alert(`Split allocations total (NPR ${formatNepaliNumber(String(splitSum))}) is less than total due (NPR ${formatNepaliNumber(String(cartTotal))}).`);
+        return;
+      }
+
+      if (cAmt > 0) finalAllocations.push({ method: 'cash', amount: cAmt });
+      if (cardAmt > 0) finalAllocations.push({ method: 'card', amount: cardAmt, reference: splitCardRef });
+      if (qAmt > 0) finalAllocations.push({ method: 'qr', amount: qAmt, reference: splitQrRef });
+
+      tendered = splitSum;
+      change = Math.max(0, splitSum - cartTotal);
+    } else if (tenderMethod === 'card') {
+      finalAllocations = [{ method: 'card', amount: cartTotal, reference: cardAuthCode }];
+    } else if (tenderMethod === 'qr') {
+      finalAllocations = [{ method: 'qr', amount: cartTotal, reference: qrRefNumber, verified: isPaymentVerified }];
+    } else if (tenderMethod === 'bank_transfer') {
+      finalAllocations = [{ method: 'bank_transfer', amount: cartTotal, reference: bankTransferRef }];
+    } else if (tenderMethod === 'credit') {
+      if (!customerPhone && !customerPan) {
+        alert('Authorized credit sales require an identified customer with mobile phone or PAN.');
+        return;
+      }
+      finalAllocations = [{ method: 'credit', amount: cartTotal }];
     }
 
-    const change = Math.max(0, tendered - cartTotal);
     const idempotencyKey = `pos_${terminalCode}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
     setIsSubmittingSale(true);
@@ -957,6 +1064,7 @@ export default function CounterPosTerminal() {
             unitPrice: i.price,
             price: i.price,
             lineTotal: i.lineTotal ?? i.price * i.quantity,
+            costPrice: (i as any).costPrice,
             warrantyMonths: i.warrantyMonths,
             warrantyType: i.warrantyType,
             warrantyText: i.warrantyText,
@@ -965,6 +1073,7 @@ export default function CounterPosTerminal() {
           paymentMethod: tenderMethod,
           amountTendered: tendered,
           changeAmount: change,
+          discountAmount: totalDiscountAmount,
           customerName,
           customerPhone,
           customerPan,
@@ -976,6 +1085,7 @@ export default function CounterPosTerminal() {
           qrProvider: tenderMethod === 'qr' ? selectedBankQr?.bankName : undefined,
           qrReference: tenderMethod === 'qr' ? qrRefNumber : undefined,
           bankAccountId: tenderMethod === 'qr' ? selectedBankQr?.chartAccountId : undefined,
+          allocations: finalAllocations,
         }),
       });
 
@@ -986,6 +1096,13 @@ export default function CounterPosTerminal() {
 
       setCompletedReceipt(data.receipt);
       setCart([]);
+      setOrderDiscountAmount(0);
+      setOrderDiscountPercent(0);
+      setSplitCashAmount('0');
+      setSplitCardAmount('0');
+      setSplitQrAmount('0');
+      setCardAuthCode('');
+      setBankTransferRef('');
       setIsCheckoutOpen(false);
     } catch (err: any) {
       alert(`Checkout Error: ${err.message}`);
@@ -1502,15 +1619,19 @@ export default function CounterPosTerminal() {
                 No matching retail products found.
               </div>
             ) : (
-              filteredProducts.slice(0, visibleCount).map((p) => (
-                <ProductTile
-                  key={p.id}
-                  product={p}
-                  theme={theme}
-                  onAdd={addToCart}
-                  onInfo={(prod) => setDetailProduct(prod)}
-                />
-              ))
+              filteredProducts.slice(0, visibleCount).map((p) => {
+                const inCartItem = cart.find((i) => i.productId === p.id);
+                return (
+                  <ProductTile
+                    key={p.id}
+                    product={p}
+                    theme={theme}
+                    cartQty={inCartItem?.quantity || 0}
+                    onAdd={addToCart}
+                    onInfo={(prod) => setDetailProduct(prod)}
+                  />
+                );
+              })
             )}
 
             {filteredProducts.length > visibleCount && (
@@ -1714,6 +1835,48 @@ export default function CounterPosTerminal() {
               </div>
             )}
 
+            {cartMode === 'sale' && (
+              <div
+                onClick={() => {
+                  setTempCustomerName(customerName);
+                  setTempCustomerPhone(customerPhone);
+                  setTempCustomerPan(customerPan);
+                  setIsCustomerPickerOpen(true);
+                }}
+                className={`mb-3 p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                  theme === 'dark'
+                    ? 'bg-slate-900/90 border-slate-700/80 hover:border-emerald-500/60'
+                    : 'bg-emerald-50/60 border-emerald-200/80 hover:border-emerald-400 hover:bg-emerald-50'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-8 w-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 text-xs shadow-xs">
+                    <UserCheck className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold uppercase text-slate-500">Customer [F3]</span>
+                      {customerPan ? (
+                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          PAN: {customerPan}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className={`text-xs font-bold truncate ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                      {customerName || 'Walk-in Customer'}
+                      {customerPhone ? ` • ${customerPhone}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="text-[11px] font-bold text-emerald-600 hover:text-emerald-500 px-2 py-1 rounded-lg hover:bg-emerald-100/50 transition shrink-0"
+                >
+                  Change
+                </button>
+              </div>
+            )}
+
             {/* Line Void Feedback Banner */}
             {voidNotice && (
               <div className="mb-2 p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-[11px] font-semibold text-emerald-300 flex items-center justify-between animate-in fade-in">
@@ -1862,86 +2025,150 @@ export default function CounterPosTerminal() {
             ) : cart.length === 0 ? (
               /* ---- EMPTY CART ---- */
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 space-y-2">
-                <ShoppingCart className="h-10 w-10 stroke-[1.5] text-slate-600" />
+                <ShoppingCart className="h-10 w-10 stroke-[1.5] text-slate-400" />
                 <p className="text-xs font-bold">Cart is empty</p>
                 <p className="text-[11px] max-w-[200px]">
                   Scan barcode [F2] or click any product tile to add items.
                 </p>
               </div>
             ) : (
-              /* ---- CART ITEMS LIST ---- */
+              /* ---- ENHANCED CART ITEMS LIST ---- */
               cart.map((line) => (
                 <div
                   key={line.productId}
-                  className={`group flex items-center justify-between p-2.5 rounded-xl border text-xs transition ${
+                  className={`group flex flex-col gap-1.5 p-2.5 rounded-xl border text-xs transition ${
                     theme === 'dark'
                       ? 'bg-[#141a17] border-slate-800 hover:border-slate-700'
-                      : 'bg-white border-slate-200 hover:border-slate-300'
+                      : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
                   }`}
                 >
-                  <div className="flex-1 min-w-0 pr-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-[10px] text-emerald-400 font-bold truncate">
-                        {line.sku}
-                      </span>
-                      {line.discountPercent ? (
-                        <span className="px-1 py-0.2 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold">
-                          -{line.discountPercent}%
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-[10px] text-emerald-600 font-bold truncate">
+                          {line.sku}
                         </span>
-                      ) : null}
+                        {line.discountPercent ? (
+                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 text-[9px] font-bold">
+                            -{line.discountPercent}%
+                          </span>
+                        ) : null}
+                        {line.warrantyMonths ? (
+                          <span className="text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded font-semibold">
+                            🛡️ {line.warrantyMonths}M
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="font-bold truncate mt-0.5 text-slate-900 dark:text-white">{line.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          Rs. {formatNepaliNumber(String(line.price))} each
+                        </span>
+                        {/* Serial Number Pill */}
+                        {line.serialNumber ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSerialTargetLine(line);
+                              setSerialInputNumber(line.serialNumber || '');
+                              setIsSerialModalOpen(true);
+                            }}
+                            className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold hover:bg-blue-100 flex items-center gap-1"
+                            title="Click to change serial number"
+                          >
+                            <span>S/N: {line.serialNumber}</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSerialTargetLine(line);
+                              setSerialInputNumber('');
+                              setIsSerialModalOpen(true);
+                            }}
+                            className="text-[9px] px-1.5 py-0.5 rounded border border-dashed border-slate-300 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 font-semibold"
+                          >
+                            + Add S/N
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <p className="font-bold truncate mt-0.5">{line.name}</p>
-                    <p className="text-[10px] text-slate-500 font-mono">
-                      Rs. {formatNepaliNumber(String(line.price))} each
-                    </p>
+
+                    <div className="text-right shrink-0">
+                      <div className="font-mono font-black text-sm text-slate-900 dark:text-white">
+                        Rs. {formatNepaliNumber(String(line.lineTotal))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCalcDiscountTargetItem(line);
+                          setCalcDiscountPctInput(String(line.discountPercent || 0));
+                          setCalcDiscountFlatInput('0');
+                          setIsDiscountCalcOpen(true);
+                        }}
+                        className="text-[10px] text-emerald-600 hover:underline font-bold mt-0.5 flex items-center gap-0.5 justify-end"
+                      >
+                        <Percent className="h-2.5 w-2.5" /> Discount
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  {/* Quantity & Action Controls */}
+                  <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (line.quantity <= 1) {
+                            handleRequestLineVoid(line);
+                          } else {
+                            updateCartQty(line.productId, line.quantity - 1);
+                          }
+                        }}
+                        className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                        title={line.quantity <= 1 ? 'Line Void (Requires Supervisor)' : 'Decrease quantity'}
+                      >
+                        <Minus className="h-3 w-3 text-slate-600 dark:text-slate-300" />
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        max={999}
+                        value={line.quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val >= 1) {
+                            updateCartQty(line.productId, val);
+                          }
+                        }}
+                        className="w-10 h-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-center font-mono font-bold text-xs outline-none focus:border-emerald-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateCartQty(line.productId, line.quantity + 1)}
+                        className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                        title="Increase quantity"
+                      >
+                        <Plus className="h-3 w-3 text-slate-600 dark:text-slate-300" />
+                      </button>
+                    </div>
+
                     <button
-                      onClick={() => {
-                        if (line.quantity <= 1) {
-                          handleRequestLineVoid(line);
-                        } else {
-                          updateCartQty(line.productId, line.quantity - 1);
-                        }
-                      }}
-                      className="h-6 w-6 rounded border border-slate-700 flex items-center justify-center hover:bg-slate-700 transition"
-                      title={line.quantity <= 1 ? 'Line Void (Requires Supervisor)' : 'Decrease quantity'}
+                      type="button"
+                      onClick={() => handleRequestLineVoid(line)}
+                      className="h-7 px-2 rounded-lg border border-rose-200 bg-rose-50/50 text-rose-600 hover:bg-rose-100 text-[11px] font-bold flex items-center gap-1 transition"
+                      title="Line Void — Requires Supervisor Authorization"
                     >
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="w-6 text-center font-bold font-mono">{line.quantity}</span>
-                    <button
-                      onClick={() => updateCartQty(line.productId, line.quantity + 1)}
-                      className="h-6 w-6 rounded border border-slate-700 flex items-center justify-center hover:bg-slate-700 transition"
-                      title="Increase quantity"
-                    >
-                      <Plus className="h-3 w-3" />
+                      <Trash2 className="h-3 w-3" />
+                      <span>Remove</span>
                     </button>
                   </div>
-
-                  <div className="font-mono font-black text-right shrink-0 w-22">
-                    Rs. {formatNepaliNumber(String(line.lineTotal))}
-                  </div>
-
-                  {/* Line Void button */}
-                  <button
-                    onClick={() => handleRequestLineVoid(line)}
-                    className={`opacity-0 group-hover:opacity-100 transition h-6 w-6 rounded border flex items-center justify-center shrink-0 ml-1 ${
-                      theme === 'dark'
-                        ? 'border-rose-500/40 bg-rose-950/30 text-rose-400 hover:bg-rose-500/20'
-                        : 'border-rose-300 bg-rose-50 text-rose-500 hover:bg-rose-100'
-                    }`}
-                    title="Line Void — Requires Supervisor Authorization"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
                 </div>
               ))
             )}
           </div>
 
-          {/* Cart Summary & Checkout Action */}
+          {/* Cart Summary & Sticky Checkout Controls */}
           <div
             className={`p-4 border-t shrink-0 z-10 space-y-3 mt-auto ${
               theme === 'dark' ? 'border-slate-800 bg-[#121815]' : 'border-slate-200 bg-white'
@@ -1949,27 +2176,82 @@ export default function CounterPosTerminal() {
           >
             {cartMode === 'sale' ? (
               <>
-                <div className="flex justify-between items-center text-xs">
-                  <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600 font-semibold'}>Total Net Amount:</span>
-                  <span className={`font-black text-lg font-mono ${theme === 'dark' ? 'text-white' : 'text-slate-950'}`}>
-                    NPR {formatNepaliNumber(String(cartTotal))}
-                  </span>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                    <span>Subtotal:</span>
+                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                      NPR {formatNepaliNumber(cartGrossSubtotal.toFixed(2))}
+                    </span>
+                  </div>
+                  {totalDiscountAmount > 0 && (
+                    <div className="flex justify-between text-amber-600 font-semibold">
+                      <span className="flex items-center gap-1">
+                        Discount:
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCalcDiscountTargetItem(null);
+                            setIsDiscountCalcOpen(true);
+                          }}
+                          className="text-[10px] underline hover:text-amber-700"
+                        >
+                          (Edit)
+                        </button>
+                      </span>
+                      <span className="font-mono">-NPR {formatNepaliNumber(totalDiscountAmount.toFixed(2))}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-slate-500 dark:text-slate-400 text-[11px]">
+                    <span>Taxable Base:</span>
+                    <span className="font-mono">NPR {formatNepaliNumber(cartTaxableAmount.toFixed(2))}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500 dark:text-slate-400 text-[11px]">
+                    <span>13% Nepal VAT:</span>
+                    <span className="font-mono">NPR {formatNepaliNumber(cartVatAmount.toFixed(2))}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className={`font-black text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                        Total:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCalcDiscountTargetItem(null);
+                          setIsDiscountCalcOpen(true);
+                        }}
+                        className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold hover:bg-emerald-100 flex items-center gap-0.5"
+                        title="Discount & Profit Margin Calculator [F4]"
+                      >
+                        <Percent className="h-2.5 w-2.5" /> Margin [F4]
+                      </button>
+                    </div>
+                    <span className="font-black text-xl font-mono text-emerald-600">
+                      NPR {formatNepaliNumber(cartTotal.toFixed(2))}
+                    </span>
+                  </div>
                 </div>
+
                 <button
+                  type="button"
                   onClick={() => {
                     if (cart.length > 0) {
                       setTenderAmount(cartTotal.toString());
+                      setSplitCashAmount(cartTotal.toString());
+                      setSplitCardAmount('0');
+                      setSplitQrAmount('0');
                       setIsCheckoutOpen(true);
                     }
                   }}
                   disabled={cart.length === 0}
-                  className={`w-full py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition shadow-xs ${
+                  className={`w-full py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition shadow-md active:scale-[0.99] ${
                     cart.length === 0
-                      ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                      : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer active:scale-[0.99] shadow-md'
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'
                   }`}
                 >
-                  <span>Accept Tender / Pay (Space / Enter / F12)</span>
+                  <ShoppingCart className="h-4 w-4" />
+                  <span>Proceed to Payment (F12 / Enter)</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </>
@@ -1983,209 +2265,515 @@ export default function CounterPosTerminal() {
       </div>
 
       {/* 3. Tender & Checkout Modal */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      {/* 2. Customer Selection Modal [F3] */}
+      {isCustomerPickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in">
           <div
             className={`w-full max-w-md rounded-3xl border shadow-2xl p-6 space-y-4 ${
-              theme === 'dark' ? 'bg-[#121815] border-slate-700' : 'bg-white border-slate-200'
+              theme === 'dark' ? 'bg-[#121815] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
             }`}
           >
-            <div className="flex items-center justify-between border-b pb-3 border-slate-800">
-              <div>
-                <h3 className="text-base font-black uppercase text-emerald-400">Tender & Payment</h3>
-                <p className="text-[11px] text-slate-400">Station #104 • {terminalName}</p>
+            <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-5 w-5 text-emerald-600" />
+                <h3 className="text-sm font-black uppercase tracking-wide">Attach Customer (F3)</h3>
               </div>
               <button
-                onClick={() => setIsCheckoutOpen(false)}
-                className="p-1 rounded-lg hover:bg-slate-800"
+                type="button"
+                onClick={() => setIsCustomerPickerOpen(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 text-slate-500" />
               </button>
             </div>
 
-            <form onSubmit={handleProcessSale} className="space-y-4">
-              {/* Customer Attachment (Optional Phone & PAN) */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="mb-1 block text-[10px] font-bold uppercase text-slate-400">
-                    Customer Name / Phone
-                  </label>
-                  <input
-                    type="text"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="98XXXXXXXX"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs font-mono text-white outline-none focus:border-emerald-400"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-[10px] font-bold uppercase text-slate-400">
-                    Customer PAN (For Tax Bill)
-                  </label>
-                  <input
-                    type="text"
-                    value={customerPan}
-                    onChange={(e) => setCustomerPan(e.target.value)}
-                    placeholder="9-digit PAN"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs font-mono text-white outline-none focus:border-emerald-400"
-                  />
-                </div>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerName('Walk-in Customer');
+                  setCustomerPhone('');
+                  setCustomerPan('');
+                  setIsCustomerPickerOpen(false);
+                }}
+                className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-between transition ${
+                  customerName === 'Walk-in Customer' && !customerPhone
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                    : 'border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span>Walk-in Customer (Standard Retail Cash Memo)</span>
+                <Check className="h-4 w-4 text-emerald-600" />
+              </button>
+
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                <span className="flex-shrink mx-2 text-[10px] font-bold uppercase text-slate-400">Or Registered Buyer</span>
+                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
               </div>
 
-              {/* Total Payable Box */}
-              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex justify-between items-center">
-                <span className="text-xs font-bold text-emerald-300">Net Due (Inc. 13% VAT):</span>
-                <span className="text-xl font-black font-mono text-emerald-400">
-                  NPR {formatNepaliNumber(String(cartTotal))}
-                </span>
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                  Customer / Business Name
+                </label>
+                <input
+                  type="text"
+                  value={tempCustomerName}
+                  onChange={(e) => setTempCustomerName(e.target.value)}
+                  placeholder="e.g. Ramesh Sharma / Nepal Telecom"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs font-bold outline-none focus:border-emerald-500"
+                />
               </div>
 
-              {/* Tender Selector */}
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTenderMethod('cash')}
-                  className={`py-3 rounded-xl border flex flex-col items-center justify-center gap-1 font-bold text-xs transition ${
-                    tenderMethod === 'cash'
-                      ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
-                      : 'border-slate-800 bg-slate-950 text-slate-400'
-                  }`}
-                >
-                  <Banknote className="h-4 w-4" />
-                  <span>Cash Tender</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTenderMethod('card')}
-                  className={`py-3 rounded-xl border flex flex-col items-center justify-center gap-1 font-bold text-xs transition ${
-                    tenderMethod === 'card'
-                      ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                      : 'border-slate-800 bg-slate-950 text-slate-400'
-                  }`}
-                >
-                  <CreditCard className="h-4 w-4" />
-                  <span>Card Swipe</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTenderMethod('qr')}
-                  className={`py-3 rounded-xl border flex flex-col items-center justify-center gap-1 font-bold text-xs transition ${
-                    tenderMethod === 'qr'
-                      ? 'border-purple-500 bg-purple-500/20 text-purple-300'
-                      : 'border-slate-800 bg-slate-950 text-slate-400'
-                  }`}
-                >
-                  <QrCode className="h-4 w-4" />
-                  <span>Fonepay / QR</span>
-                </button>
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                  Mobile Number (Nepal 10 Digits)
+                </label>
+                <input
+                  type="text"
+                  value={tempCustomerPhone}
+                  onChange={(e) => setTempCustomerPhone(e.target.value)}
+                  placeholder="98XXXXXXXX"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                />
               </div>
 
-              {tenderMethod === 'cash' && (
-                <div className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                  Buyer PAN (For IRD Nepal Tax Bill)
+                </label>
+                <input
+                  type="text"
+                  value={tempCustomerPan}
+                  onChange={(e) => setTempCustomerPan(e.target.value)}
+                  placeholder="9-digit PAN"
+                  maxLength={9}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsCustomerPickerOpen(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerName(tempCustomerName.trim() || 'Walk-in Customer');
+                  setCustomerPhone(tempCustomerPhone.trim());
+                  setCustomerPan(tempCustomerPan.trim());
+                  setIsCustomerPickerOpen(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md transition"
+              >
+                Save &amp; Attach
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discount & Profit Margin Calculator Modal [F4] */}
+      {isDiscountCalcOpen && (() => {
+        const isLineTarget = !!calcDiscountTargetItem;
+        const grossAmount = isLineTarget
+          ? calcDiscountTargetItem.price * calcDiscountTargetItem.quantity
+          : cartGrossSubtotal;
+        const costAmount = isLineTarget
+          ? ((calcDiscountTargetItem as any).costPrice || calcDiscountTargetItem.price * 0.75) * calcDiscountTargetItem.quantity
+          : cart.reduce((s, i) => s + ((i as any).costPrice || i.price * 0.75) * i.quantity, 0);
+
+        const pctVal = parseFloat(calcDiscountPctInput) || 0;
+        const discountAmt = parseFloat(calcDiscountFlatInput) || (grossAmount * pctVal) / 100;
+        const netSelling = Math.max(0, grossAmount - discountAmt);
+        const projectedProfit = netSelling - costAmount;
+        const marginPct = netSelling > 0 ? (projectedProfit / netSelling) * 100 : 0;
+        const markupPct = costAmount > 0 ? (projectedProfit / costAmount) * 100 : 0;
+        const isSupervisorRequired = pctVal > 10;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in">
+            <div
+              className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-4 ${
+                theme === 'dark' ? 'bg-[#121815] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+              }`}
+            >
+              <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Percent className="h-5 w-5 text-emerald-600" />
                   <div>
-                    <label className="mb-1 block text-xs font-bold uppercase text-slate-300">
-                      Amount Tendered (NPR)
+                    <h3 className="text-sm font-black uppercase tracking-wide">Discount &amp; Margin Calculator (F4)</h3>
+                    <p className="text-[10px] text-slate-500">
+                      {isLineTarget ? `Target: ${calcDiscountTargetItem.name}` : 'Target: Entire Cart Order'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDiscountCalcOpen(false)}
+                  className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                >
+                  <X className="h-4 w-4 text-slate-500" />
+                </button>
+              </div>
+
+              {/* Profitability Analysis Cards */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="block text-[10px] font-bold uppercase text-slate-500">Gross Price</span>
+                  <span className="text-xs font-mono font-black">NPR {formatNepaliNumber(grossAmount.toFixed(2))}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="block text-[10px] font-bold uppercase text-slate-500">Est. Cost (COGS)</span>
+                  <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">NPR {formatNepaliNumber(costAmount.toFixed(2))}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                  <span className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400">Net Selling</span>
+                  <span className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-300">NPR {formatNepaliNumber(netSelling.toFixed(2))}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className={`p-2.5 rounded-xl border ${projectedProfit >= 0 ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                  <span className="block text-[10px] font-bold uppercase text-slate-500">Gross Profit</span>
+                  <span className={`text-xs font-mono font-black ${projectedProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    NPR {formatNepaliNumber(projectedProfit.toFixed(2))}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="block text-[10px] font-bold uppercase text-slate-500">Margin %</span>
+                  <span className="text-xs font-mono font-black">{marginPct.toFixed(1)}%</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="block text-[10px] font-bold uppercase text-slate-500">Markup %</span>
+                  <span className="text-xs font-mono font-black">{markupPct.toFixed(1)}%</span>
+                </div>
+              </div>
+
+              {/* Discount Inputs */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                    Discount Percentage (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={calcDiscountPctInput}
+                    onChange={(e) => {
+                      const p = parseFloat(e.target.value) || 0;
+                      setCalcDiscountPctInput(e.target.value);
+                      setCalcDiscountFlatInput(((grossAmount * p) / 100).toFixed(2));
+                    }}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                    Discount Amount (NPR)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max={grossAmount}
+                    step="1"
+                    value={calcDiscountFlatInput}
+                    onChange={(e) => {
+                      const flat = parseFloat(e.target.value) || 0;
+                      setCalcDiscountFlatInput(e.target.value);
+                      setCalcDiscountPctInput(grossAmount > 0 ? ((flat / grossAmount) * 100).toFixed(1) : '0');
+                    }}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* Cashier Policy Limit Warning (10%) */}
+              {isSupervisorRequired && (
+                <div className="p-3 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-700 text-xs text-amber-800 dark:text-amber-300 space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span>Supervisor Authorization Required (Exceeds 10% Cashier Limit)</span>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-0.5">
+                      Supervisor PIN Code
                     </label>
                     <input
-                      type="number"
-                      required
-                      min={cartTotal}
-                      value={tenderAmount}
-                      onChange={(e) => setTenderAmount(e.target.value)}
-                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-3 text-lg font-mono font-bold text-white outline-none focus:border-emerald-400"
+                      type="password"
+                      value={calcSupervisorPin}
+                      onChange={(e) => setCalcSupervisorPin(e.target.value)}
+                      placeholder="Enter 4-digit PIN..."
+                      className="w-full rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono font-bold outline-none"
                     />
                   </div>
-
-                  {/* Cash Quick Presets */}
-                  <div className="flex gap-2">
-                    {dynamicCashPresets.map((amt, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleNoteClick(amt, idx)}
-                        className="flex-1 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-[11px] font-bold text-slate-300 hover:text-white"
-                      >
-                        Rs. {amt}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Change Return */}
-                  {parseFloat(tenderAmount) >= cartTotal && (
-                    <div className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
-                      <span className="text-xs text-slate-400">Change Due to Customer:</span>
-                      <span className="text-base font-black font-mono text-emerald-400">
-                        NPR {formatNepaliNumber((parseFloat(tenderAmount) - cartTotal).toFixed(2))}
-                      </span>
-                    </div>
-                  )}
                 </div>
               )}
 
-              {tenderMethod === 'qr' && (
-                <div className="space-y-3">
-                  {/* Bank QR Selection Tabs if multiple banks configured */}
-                  {availableBankQrs.length > 1 && (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] font-bold">
-                        <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
-                          Choose Bank / Wallet QR:
-                        </span>
-                        <span className="text-[10px] font-mono font-bold text-slate-500">
-                          {availableBankQrs.length} Bank QRs Active
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                        {availableBankQrs.map((b) => {
-                          const isSel = selectedBankQr?.id === b.id;
-                          return (
-                            <button
-                              key={b.id}
-                              type="button"
-                              onClick={() => setSelectedBankQr(b)}
-                              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition border flex items-center gap-1.5 ${
-                                isSel
-                                  ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
-                                  : theme === 'dark'
-                                  ? 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
-                                  : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
-                              }`}
-                            >
-                              <span>{b.bankName}</span>
-                              {b.isDefault && (
-                                <span className="text-[9px] bg-amber-400/20 text-amber-500 px-1 py-0.2 rounded font-black">
-                                  ★
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+              <div className="flex gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsDiscountCalcOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isSupervisorRequired && !calcSupervisorPin.trim()) {
+                      alert('Please enter a supervisor PIN to authorize a discount above 10%.');
+                      return;
+                    }
+                    if (isLineTarget) {
+                      setCart((prev) =>
+                        prev.map((it) =>
+                          it.productId === calcDiscountTargetItem.productId
+                            ? {
+                                ...it,
+                                discountPercent: pctVal,
+                                lineTotal: it.price * it.quantity * (1 - pctVal / 100),
+                              }
+                            : it
+                        )
+                      );
+                    } else {
+                      setOrderDiscountPercent(pctVal);
+                      setOrderDiscountAmount(discountAmt);
+                    }
+                    setIsDiscountCalcOpen(false);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md transition"
+                >
+                  Apply Discount
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
-                  {/* Dynamic QR Display Card */}
-                  <div
-                    className={`p-4 rounded-2xl border text-center space-y-3 ${
-                      theme === 'dark'
-                        ? 'bg-slate-950 border-slate-800'
-                        : 'bg-slate-50/80 border-slate-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between px-1 text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <QrCode className="h-4 w-4 text-slate-800" />
-                        <span className={`font-black text-xs ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          {selectedBankQr?.bankName || 'Fonepay / Mobile Banking'}
-                        </span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 font-bold text-[10px] border border-slate-300">
-                        Dynamic QR
-                      </span>
+      {/* Serial Number Entry Modal */}
+      {isSerialModalOpen && serialTargetLine && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in">
+          <div
+            className={`w-full max-w-sm rounded-3xl border shadow-2xl p-6 space-y-4 ${
+              theme === 'dark' ? 'bg-[#121815] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+            }`}
+          >
+            <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Barcode className="h-5 w-5 text-emerald-600" />
+                <h3 className="text-sm font-black uppercase tracking-wide">Attach Serial Number</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSerialModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                <X className="h-4 w-4 text-slate-500" />
+              </button>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{serialTargetLine.name}</p>
+              <p className="text-[10px] font-mono text-slate-500">{serialTargetLine.sku}</p>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                Serial Number (Scan or Type)
+              </label>
+              <input
+                type="text"
+                autoFocus
+                value={serialInputNumber}
+                onChange={(e) => setSerialInputNumber(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    setCart((prev) =>
+                      prev.map((it) =>
+                        it.productId === serialTargetLine.productId
+                          ? { ...it, serialNumber: serialInputNumber.trim() }
+                          : it
+                      )
+                    );
+                    setIsSerialModalOpen(false);
+                  }
+                }}
+                placeholder="Scan S/N barcode..."
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2.5 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Required for manufacturer warranty claims and invoice linking.
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsSerialModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCart((prev) =>
+                    prev.map((it) =>
+                      it.productId === serialTargetLine.productId
+                        ? { ...it, serialNumber: serialInputNumber.trim() }
+                        : it
+                    )
+                  );
+                  setIsSerialModalOpen(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md transition"
+              >
+                Save S/N
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Redesigned Payment Option Modal (Matching Reference Screenshot 3) */}
+      {isCheckoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div
+            className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-4 my-auto ${
+              theme === 'dark' ? 'bg-[#121815] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+            }`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
+                Select Payment Option
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsCheckoutOpen(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                <X className="h-5 w-5 text-slate-500" />
+              </button>
+            </div>
+
+            <form onSubmit={handleProcessSale} className="space-y-3.5">
+              {/* Option 1: Cash */}
+              <div
+                onClick={() => setTenderMethod('cash')}
+                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                  tenderMethod === 'cash'
+                    ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-600/30'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                    tenderMethod === 'cash' ? 'border-emerald-600 bg-white' : 'border-slate-400'
+                  }`}>
+                    {tenderMethod === 'cash' && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
+                  </div>
+                  <div>
+                    <div className="font-bold text-xs text-slate-900 dark:text-white">Cash</div>
+                    <div className="text-[11px] text-slate-500">Complete payment using cash</div>
+                  </div>
+                </div>
+
+                {tenderMethod === 'cash' && (
+                  <div className="mt-3 pl-7 space-y-2.5">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                        Amount Tendered (NPR)
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min={cartTotal}
+                        value={tenderAmount}
+                        onChange={(e) => setTenderAmount(e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-base font-mono font-bold outline-none focus:border-emerald-500"
+                      />
                     </div>
 
-                    {/* Scannable Dynamic QR Code Image */}
-                    <div className="w-48 h-48 mx-auto bg-white p-2.5 rounded-2xl flex items-center justify-center shadow-md border border-slate-200">
+                    {/* Dynamic Cash Note Presets */}
+                    <div className="flex gap-1.5 flex-wrap">
+                      {dynamicCashPresets.map((amt, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleNoteClick(amt, idx)}
+                          className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                        >
+                          Rs. {amt}
+                        </button>
+                      ))}
+                    </div>
+
+                    {parseFloat(tenderAmount) >= cartTotal && (
+                      <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                        <span className="text-xs text-emerald-800 dark:text-emerald-300 font-bold">Change Due:</span>
+                        <span className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-300">
+                          NPR {formatNepaliNumber((parseFloat(tenderAmount) - cartTotal).toFixed(2))}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Option 2: E-Wallet / Dynamic QR (Matching Screenshot 3 Grid) */}
+              <div
+                onClick={() => setTenderMethod('qr')}
+                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                  tenderMethod === 'qr'
+                    ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-600/30'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                    tenderMethod === 'qr' ? 'border-emerald-600 bg-white' : 'border-slate-400'
+                  }`}>
+                    {tenderMethod === 'qr' && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
+                  </div>
+                  <div>
+                    <div className="font-bold text-xs text-slate-900 dark:text-white">E-Wallet / Dynamic QR</div>
+                    <div className="text-[11px] text-slate-500">Generate QR code and pay using e-money</div>
+                  </div>
+                </div>
+
+                {tenderMethod === 'qr' && (
+                  <div className="mt-3 pl-7 space-y-3">
+                    {/* Nepal E-Wallet Sub-Grid */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { name: 'Fonepay', color: 'text-red-600 border-red-200' },
+                        { name: 'eSewa', color: 'text-green-600 border-green-200' },
+                        { name: 'Khalti', color: 'text-purple-600 border-purple-200' },
+                      ].map((wallet, idx) => (
+                        <div
+                          key={idx}
+                          className={`p-2.5 rounded-xl border text-center font-bold text-xs bg-white dark:bg-slate-900 ${wallet.color}`}
+                        >
+                          <QrCode className="h-4 w-4 mx-auto mb-1" />
+                          <span>{wallet.name}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Centered Dynamic QR Image */}
+                    <div className="w-44 h-44 mx-auto bg-white p-2 rounded-2xl flex items-center justify-center shadow-md border border-slate-200">
                       {generatedQrDataUrl ? (
                         <img
                           src={generatedQrDataUrl}
@@ -2193,58 +2781,179 @@ export default function CounterPosTerminal() {
                           className="w-full h-full object-contain"
                         />
                       ) : (
-                        <QrCode className="w-36 h-36 text-slate-900 animate-pulse" />
+                        <QrCode className="w-32 h-32 text-slate-900 animate-pulse" />
                       )}
                     </div>
 
-                    {/* Exact Bill Due & Account Info */}
-                    <div className="space-y-0.5">
-                      <div className="text-[11px] text-slate-500 font-medium">Exact Amount to Pay:</div>
-                      <div className={`text-xl font-black font-mono tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-950'}`}>
-                        NPR {formatNepaliNumber(String(cartTotal))}
-                      </div>
-                      <p className={`text-xs font-bold mt-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                        {selectedBankQr?.accountName || 'Intel Computer Center Pvt. Ltd.'}
-                      </p>
-                      <p className="text-[10px] text-slate-500 font-mono">
-                        A/C: {selectedBankQr?.accountNumber || '01201017500123'} • Station #104
-                      </p>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                        Bank Reference / Trace # (From Confirmation SMS)
+                      </label>
+                      <input
+                        type="text"
+                        value={qrRefNumber}
+                        onChange={(e) => setQrRefNumber(e.target.value)}
+                        placeholder="e.g. 984029104"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                      />
                     </div>
-
-                    {/* Instructions */}
-                    <p className="text-[11px] text-slate-500 italic max-w-xs mx-auto leading-tight">
-                      {selectedBankQr?.instructions || 'Scan with Fonepay, eSewa, Khalti, or any Nepal Mobile Banking App'}
-                    </p>
                   </div>
+                )}
+              </div>
 
-                  {/* Bank Reference / Trace Number input */}
+              {/* Option 3: Electronic Data Capture (EDC) / Card */}
+              <div
+                onClick={() => setTenderMethod('card')}
+                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                  tenderMethod === 'card'
+                    ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-600/30'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                    tenderMethod === 'card' ? 'border-emerald-600 bg-white' : 'border-slate-400'
+                  }`}>
+                    {tenderMethod === 'card' && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
+                  </div>
                   <div>
-                    <label className={`block text-[10px] font-bold uppercase mb-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                      Bank Reference / Trace # (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={qrRefNumber}
-                      onChange={(e) => setQrRefNumber(e.target.value)}
-                      placeholder="e.g. 849201 (from customer payment confirmation)"
-                      className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono font-bold outline-none transition ${
-                        theme === 'dark'
-                          ? 'border-slate-700 bg-slate-950 text-white focus:border-slate-500'
-                          : 'border-slate-200 bg-white text-slate-900 focus:border-slate-800 placeholder-slate-400'
-                      }`}
-                    />
+                    <div className="font-bold text-xs text-slate-900 dark:text-white">Electronic Data Capture (EDC) / Card</div>
+                    <div className="text-[11px] text-slate-500">Use POS terminal swipe or chip insertion</div>
                   </div>
                 </div>
-              )}
 
-              <div className="pt-2">
+                {tenderMethod === 'card' && (
+                  <div className="mt-3 pl-7 space-y-2.5">
+                    <div className="flex gap-2">
+                      {(['visa', 'mastercard', 'sct', 'unionpay'] as const).map((b) => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setCardBrand(b)}
+                          className={`flex-1 py-1.5 rounded-lg border text-[11px] font-bold uppercase transition ${
+                            cardBrand === b
+                              ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40'
+                              : 'border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                        EDC Approval Code / RRN (From POS Slip)
+                      </label>
+                      <input
+                        type="text"
+                        value={cardAuthCode}
+                        onChange={(e) => setCardAuthCode(e.target.value)}
+                        placeholder="e.g. APP-049182"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Option 4: Split Payment (Multi-Tender) */}
+              <div
+                onClick={() => setTenderMethod('split')}
+                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                  tenderMethod === 'split'
+                    ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-600/30'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                    tenderMethod === 'split' ? 'border-emerald-600 bg-white' : 'border-slate-400'
+                  }`}>
+                    {tenderMethod === 'split' && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
+                  </div>
+                  <div>
+                    <div className="font-bold text-xs text-slate-900 dark:text-white">Split Payment (Multi-Tender)</div>
+                    <div className="text-[11px] text-slate-500">Divide payment across Cash, Card, and QR</div>
+                  </div>
+                </div>
+
+                {tenderMethod === 'split' && (() => {
+                  const c = parseFloat(splitCashAmount) || 0;
+                  const cd = parseFloat(splitCardAmount) || 0;
+                  const q = parseFloat(splitQrAmount) || 0;
+                  const allocated = c + cd + q;
+                  const remaining = cartTotal - allocated;
+
+                  return (
+                    <div className="mt-3 pl-7 space-y-2.5">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                            Cash (NPR)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={splitCashAmount}
+                            onChange={(e) => setSplitCashAmount(e.target.value)}
+                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                            Card (NPR)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={splitCardAmount}
+                            onChange={(e) => setSplitCardAmount(e.target.value)}
+                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                            QR / Wallet (NPR)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={splitQrAmount}
+                            onChange={(e) => setSplitQrAmount(e.target.value)}
+                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className={`p-2 rounded-xl border flex justify-between text-xs font-bold ${
+                        remaining === 0
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                          : 'bg-amber-50 text-amber-800 border-amber-300'
+                      }`}>
+                        <span>Remaining to Allocate:</span>
+                        <span className="font-mono">NPR {formatNepaliNumber(remaining.toFixed(2))}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Total Payment & Emerald Submit Button (Matching Reference Screenshot 3) */}
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Total Payment</span>
+                  <span className="font-black text-xl font-mono text-slate-900 dark:text-white">
+                    NPR {formatNepaliNumber(String(cartTotal))}
+                  </span>
+                </div>
+
                 <button
                   type="submit"
                   disabled={isSubmittingSale}
-                  className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 font-black text-white text-sm flex items-center justify-center gap-2 transition disabled:opacity-50 shadow-md active:scale-[0.99]"
+                  className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm flex items-center justify-center gap-2 transition disabled:opacity-50 shadow-md active:scale-[0.99] cursor-pointer"
                 >
-                  {isSubmittingSale ? 'Completing Sale...' : 'Finalize Sale & Print Receipt'}
                   <CheckCircle2 className="h-4 w-4" />
+                  <span>{isSubmittingSale ? 'Processing...' : 'Finalize Sale & Print Double Slip'}</span>
                 </button>
               </div>
             </form>

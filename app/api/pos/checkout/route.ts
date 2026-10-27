@@ -8,6 +8,9 @@ import {
   inventory,
   posShifts,
   posTransactions,
+  accounts,
+  journalEntries,
+  journalLines,
 } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { posCache } from '@/lib/redis/client';
@@ -16,6 +19,15 @@ import { posQueue } from '@/lib/pos/backgroundQueue';
 import { PosProfiler } from '@/lib/pos/perf';
 
 export const dynamic = 'force-dynamic';
+
+export interface PosPaymentAllocation {
+  method: 'cash' | 'card' | 'qr' | 'esewa' | 'khalti' | 'connectips' | 'bank_transfer' | 'credit';
+  amount: number;
+  reference?: string;
+  accountNumber?: string;
+  payerPhone?: string;
+  verified?: boolean;
+}
 
 interface PosCartLine {
   productId: string;
@@ -27,11 +39,14 @@ interface PosCartLine {
   lineTotal?: number;
   costPrice?: number | null;
   serialNumber?: string;
+  warrantyMonths?: number;
+  warrantyType?: string;
+  warrantyText?: string;
 }
 
 interface PosCheckoutRequest {
   items: PosCartLine[];
-  paymentMethod: 'cash' | 'card' | 'qr' | 'esewa' | 'khalti' | 'split' | 'connectips';
+  paymentMethod: 'cash' | 'card' | 'qr' | 'esewa' | 'khalti' | 'split' | 'connectips' | 'credit' | 'bank_transfer';
   amountTendered: number;
   changeAmount: number;
   discountAmount?: number;
@@ -47,6 +62,7 @@ interface PosCheckoutRequest {
   qrProvider?: string;
   qrReference?: string;
   bankAccountId?: string;
+  allocations?: PosPaymentAllocation[];
 }
 
 export async function POST(request: NextRequest) {
@@ -91,23 +107,37 @@ export async function POST(request: NextRequest) {
       qrProvider,
       qrReference,
       bankAccountId,
+      allocations = [],
     } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Cart cannot be empty for checkout' }, { status: 400 });
     }
 
+    const subtotal = items.reduce((acc, item) => acc + (item.unitPrice || item.price || 0) * item.quantity, 0);
+    const finalTotal = Math.max(0, subtotal - discountAmount);
+
+    // Validate Split Payment Allocations
+    if (paymentMethod === 'split') {
+      if (!allocations || allocations.length === 0) {
+        return NextResponse.json({ error: 'Split payment requires at least one payment allocation.' }, { status: 400 });
+      }
+      const allocationsTotal = allocations.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+      if (allocationsTotal < finalTotal) {
+        return NextResponse.json({
+          error: `Split payment allocations total (NPR ${allocationsTotal}) cannot be less than bill total (NPR ${finalTotal}).`,
+        }, { status: 400 });
+      }
+    }
+
     // Allocate sequential gapless invoice number inside transactional context
     const currentYear = new Date().getFullYear().toString().slice(-2);
     const orderNumber = `INV-${currentYear}${String(Date.now()).slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
-    const subtotal = items.reduce((acc, item) => acc + (item.unitPrice || item.price || 0) * item.quantity, 0);
-    const finalTotal = Math.max(0, subtotal - discountAmount);
-
     let dbPaymentMethod: 'cod' | 'esewa' | 'khalti' | 'bank_transfer' = 'cod';
     if (paymentMethod === 'esewa') dbPaymentMethod = 'esewa';
     else if (paymentMethod === 'khalti') dbPaymentMethod = 'khalti';
-    else if (paymentMethod === 'card' || paymentMethod === 'qr' || paymentMethod === 'connectips') dbPaymentMethod = 'bank_transfer';
+    else if (paymentMethod === 'card' || paymentMethod === 'qr' || paymentMethod === 'connectips' || paymentMethod === 'split' || paymentMethod === 'bank_transfer') dbPaymentMethod = 'bank_transfer';
     else dbPaymentMethod = 'cod';
 
     // 2. ACID Database Transaction
@@ -123,6 +153,8 @@ export async function POST(request: NextRequest) {
         quantitySold: number;
         stockStatus: string;
       }> = [];
+
+      let totalCostAmount = 0;
 
       // A. Verify and decrement stock with SELECT FOR UPDATE
       for (const line of items) {
@@ -150,6 +182,9 @@ export async function POST(request: NextRequest) {
             `Insufficient stock for "${productRow.name}". In-store stock: ${currentStock}, Requested: ${line.quantity}`
           );
         }
+
+        const lineCost = Number(line.costPrice ?? productRow.costPrice ?? 0);
+        totalCostAmount += lineCost * line.quantity;
 
         const newStock = currentStock - line.quantity;
         const lowThreshold = productRow.lowStockThreshold || 5;
@@ -206,8 +241,8 @@ export async function POST(request: NextRequest) {
           discountAmount: String(discountAmount.toFixed(2)),
           totalAmount: String(finalTotal.toFixed(2)),
           paymentMethod: dbPaymentMethod,
-          paymentStatus: 'paid',
-          customerNote: `POS Counter Sale | Cashier: ${cashierName} | Register: ${registerCode} | Tendered: NPR ${amountTendered} | Change: NPR ${changeAmount} ${
+          paymentStatus: paymentMethod === 'credit' ? 'pending' : 'paid',
+          customerNote: `POS Counter Sale | Cashier: ${cashierName} | Register: ${registerCode} | Method: ${paymentMethod.toUpperCase()} | Tendered: NPR ${amountTendered} | Change: NPR ${changeAmount} ${
             customerPhone ? `| Phone: ${customerPhone}` : ''
           } ${customerPan ? `| PAN: ${customerPan}` : ''}`,
           shippingAddressSnapshot: {
@@ -253,21 +288,149 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // E. Update shift sales if active shift
+      // E. Double-Entry General Ledger Commit (Nepal IRD & Chart of Accounts compliant)
+      try {
+        const [accCash] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '1000')).limit(1);
+        const [accBank] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '1010')).limit(1);
+        const [accAr] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '1100')).limit(1);
+        const [accInv] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '1200')).limit(1);
+        const [accVat] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '2100')).limit(1);
+        const [accRev] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '4000')).limit(1);
+        const [accCogs] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, '5000')).limit(1);
+
+        if (accRev && (accCash || accBank)) {
+          const [je] = await tx.insert(journalEntries).values({
+            entryNumber: `JE-${orderNumber}`,
+            entryDate: new Date().toISOString().slice(0, 10),
+            description: `POS Retail Sale #${orderNumber} [${paymentMethod.toUpperCase()}] • ${customerName}`,
+            sourceType: 'pos_sale',
+            sourceId: order.id,
+          }).returning();
+
+          const linesToInsert: Array<{
+            journalEntryId: string;
+            accountId: string;
+            debit: string;
+            credit: string;
+          }> = [];
+
+          // 1. Debit Payment Asset Accounts
+          if (paymentMethod === 'split' && allocations.length > 0) {
+            for (const alloc of allocations) {
+              const allocAmt = Number(alloc.amount) || 0;
+              if (allocAmt <= 0) continue;
+              let targetAccId = accBank?.id || accCash?.id;
+              if (alloc.method === 'cash' && accCash) targetAccId = accCash.id;
+              else if (alloc.method === 'credit' && accAr) targetAccId = accAr.id;
+              else if (accBank) targetAccId = accBank.id;
+
+              if (targetAccId) {
+                linesToInsert.push({
+                  journalEntryId: je.id,
+                  accountId: targetAccId,
+                  debit: String(allocAmt.toFixed(2)),
+                  credit: '0.00',
+                });
+              }
+            }
+          } else {
+            let targetAccId = accBank?.id || accCash?.id;
+            if (paymentMethod === 'cash' && accCash) targetAccId = accCash.id;
+            else if (paymentMethod === 'credit' && accAr) targetAccId = accAr.id;
+            else if (accBank) targetAccId = accBank.id;
+
+            if (targetAccId) {
+              linesToInsert.push({
+                journalEntryId: je.id,
+                accountId: targetAccId,
+                debit: String(finalTotal.toFixed(2)),
+                credit: '0.00',
+              });
+            }
+          }
+
+          // 2. Debit Cost of Goods Sold (if applicable)
+          if (totalCostAmount > 0 && accCogs) {
+            linesToInsert.push({
+              journalEntryId: je.id,
+              accountId: accCogs.id,
+              debit: String(totalCostAmount.toFixed(2)),
+              credit: '0.00',
+            });
+          }
+
+          // 3. Credit Product Sales Revenue (Net Taxable Amount)
+          linesToInsert.push({
+            journalEntryId: je.id,
+            accountId: accRev.id,
+            debit: '0.00',
+            credit: String(taxableAmount.toFixed(2)),
+          });
+
+          // 4. Credit 13% VAT Payable
+          if (vatPortion > 0 && accVat) {
+            linesToInsert.push({
+              journalEntryId: je.id,
+              accountId: accVat.id,
+              debit: '0.00',
+              credit: String(vatPortion.toFixed(2)),
+            });
+          }
+
+          // 5. Credit Merchandise Inventory (Asset reduction)
+          if (totalCostAmount > 0 && accInv) {
+            linesToInsert.push({
+              journalEntryId: je.id,
+              accountId: accInv.id,
+              debit: '0.00',
+              credit: String(totalCostAmount.toFixed(2)),
+            });
+          }
+
+          if (linesToInsert.length > 0) {
+            await tx.insert(journalLines).values(linesToInsert);
+          }
+        }
+      } catch (accountingErr) {
+        console.warn('POS general ledger auto-post warning:', accountingErr);
+      }
+
+      // F. Update shift sales with accurate tender breakdown
       if (shiftId) {
-        const isCash = paymentMethod === 'cash';
-        const cashContribution = isCash ? Math.min(finalTotal, amountTendered - changeAmount) : 0;
+        let cashContribution = 0;
+        let cardContribution = 0;
+        let qrContribution = 0;
+
+        if (paymentMethod === 'split' && allocations.length > 0) {
+          for (const a of allocations) {
+            const aAmt = Number(a.amount) || 0;
+            if (a.method === 'cash') cashContribution += aAmt;
+            else if (a.method === 'card') cardContribution += aAmt;
+            else if (['qr', 'esewa', 'khalti', 'connectips'].includes(a.method)) qrContribution += aAmt;
+          }
+          cashContribution = Math.max(0, cashContribution - changeAmount);
+        } else if (paymentMethod === 'cash') {
+          cashContribution = Math.max(0, Math.min(finalTotal, amountTendered - changeAmount));
+        } else if (paymentMethod === 'card') {
+          cardContribution = finalTotal;
+        } else if (['qr', 'esewa', 'khalti', 'connectips'].includes(paymentMethod)) {
+          qrContribution = finalTotal;
+        }
+
         await tx
           .update(posShifts)
           .set({
             totalSales: sql`${posShifts.totalSales} + ${finalTotal}`,
             totalTransactions: sql`${posShifts.totalTransactions} + 1`,
+            totalCashSales: sql`${posShifts.totalCashSales} + ${cashContribution}`,
+            totalCardSales: sql`${posShifts.totalCardSales} + ${cardContribution}`,
+            totalQrSales: sql`${posShifts.totalQrSales} + ${qrContribution}`,
             expectedCash: sql`${posShifts.expectedCash} + ${cashContribution}`,
           })
           .where(eq(posShifts.id, String(shiftId)));
       }
 
-      // F. Record in pos_transactions table
+      // G. Record in pos_transactions table (Full Audit Record)
       try {
         await tx.insert(posTransactions).values({
           shiftId: shiftId ? String(shiftId) : null,
@@ -288,6 +451,7 @@ export async function POST(request: NextRequest) {
             qrProvider,
             qrReference,
             bankAccountId,
+            allocations,
           },
           items,
           customerName,
