@@ -41,6 +41,7 @@ import {
   Edit2,
   Settings2,
   ArrowRightLeft,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { formatNpr, sanitizeNumericAmount } from '@/lib/nepal/money';
 import { adToBs } from '@/lib/nepal/date';
@@ -943,67 +944,83 @@ export const BankReconciliationView: React.FC<BankReconciliationViewProps> = ({
       {/* ========================================================================= */}
       {/* 3. RECONCILIATION SUB-TABS NAVIGATION                                    */}
       {/* ========================================================================= */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-        <div className="flex items-center gap-2 overflow-x-auto">
-          {[
-            { id: 'feed', label: 'Statement Feed', count: filteredStatements.length },
-            { id: 'suggested', label: 'Suggested Matches', count: suggestedMatches.length },
-            { id: 'unreconciled', label: 'Unreconciled Aging', count: summary.unmatchedCount || 0 },
-            { id: 'reconciled', label: 'Reconciled History', count: summary.matchedCount || 0 },
-            { id: 'statements', label: 'BRS Statements & Closes', count: periodReconciliations.length },
-            { id: 'cheques', label: 'Cheque Lifecycle', count: chequesList.length },
-            { id: 'imports', label: 'Import Batches', count: recentImports.length },
-            { id: 'anomalies', label: 'Anomaly Alerts', count: anomalies.length, alert: anomalies.length > 0 },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as ReconTab)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                activeSubTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
-            >
-              <span>{tab.label}</span>
-              {typeof tab.count === 'number' && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    tab.alert
-                      ? 'bg-rose-500 text-white font-bold animate-pulse'
-                      : activeSubTab === tab.id
-                      ? 'bg-blue-800 text-blue-100'
-                      : 'bg-slate-800 text-slate-400'
+      <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-2 shadow-xl backdrop-blur-md space-y-2">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+          {/* Scrollable Sub-Tabs without native OS scrollbar */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none py-0.5 px-0.5 min-w-0 flex-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {[
+              { id: 'feed', label: 'Statement Feed', count: filteredStatements.length, icon: FileSpreadsheet },
+              { id: 'suggested', label: 'Suggested Matches', count: suggestedMatches.length, icon: Sparkles },
+              { id: 'unreconciled', label: 'Unreconciled Aging', count: summary.unmatchedCount || 0, icon: Clock },
+              { id: 'reconciled', label: 'Reconciled History', count: summary.matchedCount || 0, icon: CheckCircle2 },
+              { id: 'statements', label: 'BRS Statements & Closes', count: periodReconciliations.length, icon: FileCheck },
+              { id: 'cheques', label: 'Cheque Lifecycle', count: chequesList.length, icon: CreditCard },
+              { id: 'imports', label: 'Import Batches', count: recentImports.length, icon: Download },
+              { id: 'anomalies', label: 'Anomaly Alerts', count: anomalies.length, alert: anomalies.length > 0, icon: AlertTriangle },
+            ].map((tab) => {
+              const TabIcon = tab.icon;
+              const isActive = activeSubTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSubTab(tab.id as ReconTab)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 ring-1 ring-blue-400/40'
+                      : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/60'
                   }`}
                 >
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Global Search & Filters */}
-        <div className="hidden md:flex items-center gap-2">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search reference, desc, amount..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 w-52"
-            />
+                  <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <span>{tab.label}</span>
+                  {typeof tab.count === 'number' && (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono leading-none ${
+                        tab.alert
+                          ? 'bg-rose-500 text-white font-bold animate-pulse'
+                          : isActive
+                          ? 'bg-blue-900/90 text-blue-100 border border-blue-400/30'
+                          : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e: any) => setStatusFilter(e.target.value)}
-            className="px-2.5 py-1 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-blue-500"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="UNRECONCILED">Unreconciled Only</option>
-            <option value="MATCHED">Matched Only</option>
-          </select>
+          {/* Global Search & Filters Toolbar */}
+          <div className="flex items-center gap-2 flex-shrink-0 self-end lg:self-auto w-full lg:w-auto pt-1 lg:pt-0 border-t lg:border-t-0 border-slate-800/60">
+            <div className="relative flex-1 lg:w-56">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search reference, desc, amount..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-2.5 text-slate-500 hover:text-slate-300"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e: any) => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="UNRECONCILED">Unreconciled Only</option>
+              <option value="MATCHED">Matched Only</option>
+            </select>
+          </div>
         </div>
       </div>
 
