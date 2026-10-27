@@ -233,6 +233,7 @@ export async function POST(request: NextRequest) {
       const {
         cashierId,
         cashierName,
+        cashierCode,
         supervisorId,
         supervisorPin,
         supervisorName = 'Duty Supervisor',
@@ -278,6 +279,16 @@ export async function POST(request: NextRequest) {
 
         const shiftNumber = `SHIFT-${Date.now().toString().slice(-6)}`;
 
+        let resolvedCashierCode = cashierCode;
+        if (!resolvedCashierCode && cashierId) {
+          const [s] = await tx
+            .select({ staffCode: staff.staffCode })
+            .from(staff)
+            .where(eq(staff.id, String(cashierId)))
+            .limit(1);
+          if (s) resolvedCashierCode = s.staffCode;
+        }
+
         // Insert new shift
         const [newShift] = await tx
           .insert(posShifts)
@@ -286,10 +297,12 @@ export async function POST(request: NextRequest) {
             registerCode: terminalCode,
             cashierId: cashierId ? String(cashierId) : null,
             cashierName: cashierName || 'Cashier on Duty',
+            cashierCode: resolvedCashierCode || 'CSH01',
             openingFloat: numOpeningFloat.toFixed(2),
             openingDenominations,
             expectedCash: numOpeningFloat.toFixed(2), // Stored internally, NEVER exposed in client payload
             status: 'OPEN',
+            openedBySupervisorId: supervisorId ? String(supervisorId) : null,
             openedBySupervisorName: supervisorName,
             note,
           })

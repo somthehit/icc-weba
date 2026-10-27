@@ -126,6 +126,7 @@ export default function BodFloatInputModal({
           terminalCode,
           cashierId: cashier?.id,
           cashierName: cashier?.name || "Cashier",
+          cashierCode: cashier?.staffCode,
           supervisorId: supervisor?.id,
           supervisorPin: supervisorPin.trim(),
           supervisorName: supervisor?.name || "Duty Supervisor",
