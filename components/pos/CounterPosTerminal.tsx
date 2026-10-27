@@ -44,6 +44,14 @@ import {
   FolderInput,
   FolderOutput,
   Percent,
+  LayoutDashboard,
+  ShoppingBag,
+  Users,
+  BarChart3,
+  Settings,
+  Bell,
+  Menu,
+  ChevronDown,
 } from 'lucide-react';
 import TerminalDualAuthGate, { StaffProfile } from './TerminalDualAuthGate';
 import BodFloatInputModal from './BodFloatInputModal';
@@ -94,6 +102,7 @@ export interface CartLine {
   warrantyMonths?: number;
   warrantyType?: string;
   warrantyText?: string;
+  imageUrl?: string | null;
 }
 
 interface ReceiptData {
@@ -140,6 +149,20 @@ const ProductTile = React.memo(function ProductTile({
   const formattedPrice = `Rs. ${formatNepaliNumber(String(product.price))}`;
   const isInCart = cartQty > 0;
 
+  // Curated category visual icon fallback when imageUrl is null
+  const categoryIcon = useMemo(() => {
+    const name = (product.name || '').toLowerCase();
+    const cat = (product.categoryName || '').toLowerCase();
+    if (name.includes('macbook') || name.includes('laptop') || cat.includes('laptop')) return '💻';
+    if (name.includes('monitor') || cat.includes('monitor')) return '🖥️';
+    if (name.includes('printer') || cat.includes('printer')) return '🖨️';
+    if (name.includes('switch') || name.includes('router') || name.includes('nvr') || cat.includes('network')) return '🌐';
+    if (name.includes('geforce') || name.includes('rtx') || name.includes('graphics') || name.includes('gpu')) return '🎮';
+    if (name.includes('ram') || name.includes('memory') || name.includes('corsair') || name.includes('motherboard') || name.includes('cooler')) return '⚡';
+    if (name.includes('ups') || name.includes('power')) return '🔋';
+    return '📦';
+  }, [product.name, product.categoryName]);
+
   return (
     <div className="relative group flex flex-col justify-between">
       <div
@@ -147,61 +170,68 @@ const ProductTile = React.memo(function ProductTile({
           if (!isOutOfStock) onAdd(product);
         }}
         className={`w-full h-full flex flex-col justify-between text-left p-3 rounded-2xl border transition ${
-          isOutOfStock ? 'opacity-60 cursor-not-allowed' : 'active:scale-95 cursor-pointer'
+          isOutOfStock ? 'opacity-60 cursor-not-allowed' : 'active:scale-[0.98] cursor-pointer'
         } ${
           isInCart
             ? theme === 'dark'
-              ? 'bg-[#18231c] border-emerald-500 ring-2 ring-emerald-500/30'
-              : 'bg-emerald-50/40 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+              ? 'bg-[#18231c] border-emerald-500 ring-2 ring-emerald-500/30 shadow-sm'
+              : 'bg-emerald-50/40 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
             : theme === 'dark'
             ? 'bg-[#141a17] border-slate-800 hover:border-emerald-500/50 hover:bg-[#1a231f]'
-            : 'bg-white border-slate-200 hover:border-emerald-500 hover:shadow-md'
+            : 'bg-white border-slate-200/80 hover:border-emerald-500 hover:shadow-md'
         }`}
       >
         <div>
-          <div className="flex items-center justify-between gap-1 mb-1">
-            <span
-              className={`text-[10px] font-mono font-bold truncate max-w-[110px] ${
-                isInCart ? 'text-emerald-700 dark:text-emerald-400 font-black' : theme === 'dark' ? 'text-emerald-400' : 'text-slate-500'
-              }`}
-            >
-              {product.sku}
-            </span>
-            <div className="flex items-center gap-1 shrink-0">
-              {isInCart && (
-                <span className="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white font-black text-[9px] shadow-xs">
-                  {cartQty}×
-                </span>
-              )}
-              {product.isSerialized && (
-                <span
-                  className={`px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight border ${
-                    theme === 'dark'
-                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                      : 'bg-blue-50 text-blue-700 border-blue-200'
-                  }`}
-                  title="Serial/IMEI Tracked Product"
-                >
-                  SN
-                </span>
-              )}
-              {Boolean(product.warrantyMonths && product.warrantyMonths > 0) && (
-                <span
-                  className={`px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight border ${
-                    theme === 'dark'
-                      ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-                      : 'bg-purple-50 text-purple-700 border-purple-200'
-                  }`}
-                  title={`${product.warrantyMonths}M Warranty`}
-                >
-                  {product.warrantyMonths}M
-                </span>
-              )}
-            </div>
+          {/* Top Image Container (Matching SupaPOS Screenshot) */}
+          <div className="relative w-full h-32 rounded-xl bg-slate-50 dark:bg-slate-900/60 flex items-center justify-center overflow-hidden mb-2.5 p-2 border border-slate-100 dark:border-slate-800">
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center select-none group-hover:scale-110 transition">
+                <span className="text-4xl filter drop-shadow-sm">{categoryIcon}</span>
+              </div>
+            )}
+
+            {/* SupaPOS Discount or Warranty Pill Badge */}
+            {product.warrantyMonths && product.warrantyMonths > 0 ? (
+              <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-emerald-500 text-white font-black text-[9px] shadow-xs">
+                {product.warrantyMonths}M War.
+              </span>
+            ) : product.stockQuantity > 20 ? (
+              <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-emerald-500 text-white font-black text-[9px] shadow-xs">
+                Hot Deal
+              </span>
+            ) : null}
+
+            {/* In Cart Active Quantity Badge */}
+            {isInCart && (
+              <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[9px] shadow-sm flex items-center gap-1">
+                <Check className="h-2.5 w-2.5 stroke-[3]" /> {cartQty}×
+              </span>
+            )}
+
+            {/* SupaPOS Floating Green Plus Button */}
+            {!isOutOfStock && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAdd(product);
+                }}
+                className="absolute bottom-2 right-2 h-7 w-7 rounded-full bg-[#00c569] hover:bg-emerald-400 text-white flex items-center justify-center shadow-md active:scale-90 transition opacity-90 group-hover:opacity-100"
+                title="Add to order"
+              >
+                <Plus className="h-4 w-4 stroke-[3]" />
+              </button>
+            )}
           </div>
 
           <h4
-            className={`text-xs font-bold line-clamp-2 mt-0.5 leading-snug ${
+            className={`text-xs font-bold line-clamp-2 leading-snug ${
               theme === 'dark' ? 'text-white' : 'text-slate-900'
             }`}
           >
@@ -209,11 +239,7 @@ const ProductTile = React.memo(function ProductTile({
           </h4>
         </div>
 
-        <div
-          className={`mt-3 pt-2 border-t border-dashed flex items-center justify-between ${
-            theme === 'dark' ? 'border-slate-700/50' : 'border-slate-200'
-          }`}
-        >
+        <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <span
             className={`text-xs font-black font-mono tracking-tight ${
               theme === 'dark' ? 'text-white' : 'text-slate-950'
@@ -225,16 +251,10 @@ const ProductTile = React.memo(function ProductTile({
           <span
             className={`px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide border ${
               isOutOfStock
-                ? theme === 'dark'
-                  ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                  : 'bg-rose-50 text-rose-800 border-rose-200'
+                ? 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400'
                 : isLowStock
-                ? theme === 'dark'
-                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                  : 'bg-amber-50 text-amber-800 border-amber-200'
-                : theme === 'dark'
-                ? 'bg-slate-800 text-slate-200 border-slate-700'
-                : 'bg-slate-100 text-slate-900 border-slate-200 font-bold'
+                ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400'
+                : 'bg-slate-100 text-slate-800 border-slate-200 font-bold dark:bg-slate-800 dark:text-slate-200'
             }`}
           >
             {isOutOfStock ? 'OUT' : `Qty: ${product.stockQuantity}`}
@@ -257,20 +277,6 @@ const ProductTile = React.memo(function ProductTile({
       >
         <Info className="h-3 w-3" />
       </button>
-
-      {/* Quick Add overlay button */}
-      {!isOutOfStock && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAdd(product);
-          }}
-          className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition p-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shadow-md font-bold text-[10px] flex items-center gap-1"
-          title="Quick add to cart"
-        >
-          <Plus className="h-3 w-3 stroke-[3]" />
-        </button>
-      )}
     </div>
   );
 });
@@ -334,6 +340,20 @@ export default function CounterPosTerminal() {
   // Hardware & Network Status Icons
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [unsyncedCount, setUnsyncedCount] = useState(0);
+
+  // SupaPOS Live Header Timestamp
+  const [liveHeaderTime, setLiveHeaderTime] = useState('');
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const datePart = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      const timePart = now.toLocaleTimeString('en-GB');
+      setLiveHeaderTime(`${datePart} • ${timePart}`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Customer Selection Modal State
   const [isCustomerPickerOpen, setIsCustomerPickerOpen] = useState(false);
@@ -764,6 +784,7 @@ export default function CounterPosTerminal() {
             warrantyMonths: product.warrantyMonths,
             warrantyType: product.warrantyType,
             warrantyText: product.warrantyText,
+            imageUrl: product.imageUrl,
           },
         ];
       });
@@ -1357,265 +1378,328 @@ export default function CounterPosTerminal() {
   // RENDER: STATE 4 (Active Retail Billing Workspace)
   // -------------------------------------------------------------
   return (
-    <div
-      className={`pos-portal flex h-screen max-h-screen w-full flex-col overflow-hidden font-sans select-none ${
-        theme === 'dark' ? 'bg-[#0a0f0d] text-slate-100' : 'bg-white text-slate-900'
-      }`}
-    >
-      {/* 1. Counter POS Top Header */}
-      <header
-        className={`h-16 px-4 flex items-center justify-between border-b shrink-0 z-30 ${
-          theme === 'dark' ? 'bg-[#0f1412] border-slate-800' : 'bg-white border-slate-200 shadow-xs'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-            <Laptop className="h-5 w-5" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className={`font-black text-sm tracking-tight uppercase ${
-                theme === 'dark' ? 'text-white' : 'text-slate-900'
-              }`}>
-                Intel Computer Center
-              </span>
-              <span className={`rounded px-1.5 py-0.2 text-[9px] font-bold border ${
-                theme === 'dark'
-                  ? 'bg-slate-800 border-slate-700 text-slate-200'
-                  : 'bg-slate-100 border-slate-200 text-slate-900'
-              }`}>
-                Counter POS
-              </span>
+    <div className="pos-portal flex h-screen max-h-screen w-full overflow-hidden font-sans select-none bg-[#f4f7f6] text-slate-900">
+      {/* 1. SupaPOS Left Dark Emerald Navigation Sidebar */}
+      <aside className="w-56 lg:w-60 shrink-0 bg-[#064e3b] text-white flex flex-col justify-between p-4 z-30 select-none shadow-xl border-r border-emerald-950">
+        <div>
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-3 px-2 py-3 mb-6">
+            <div className="h-10 w-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shadow-inner">
+              <Layers className="h-6 w-6 stroke-[2.5]" />
             </div>
-            <span className={`text-[10px] font-semibold ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-              {terminalName} ({terminalCode}) • Station #104
-            </span>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-lg tracking-tight text-white">SupaPOS</span>
+                <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                  PRO
+                </span>
+              </div>
+              <p className="text-[11px] font-semibold text-emerald-200/70">ICC Electronics</p>
+            </div>
           </div>
+
+          {/* Navigation Links */}
+          <nav className="space-y-1.5">
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
+              title="Dashboard Overview"
+            >
+              <LayoutDashboard className="h-4 w-4 text-emerald-300" />
+              <span>Dashboard</span>
+            </button>
+
+            {/* Active Sales Item */}
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-black bg-[#00c569] text-white shadow-md transition"
+              title="Current Sales Terminal"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              <span>Sales</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => barcodeInputRef.current?.focus()}
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
+              title="Product Catalog & Inventory"
+            >
+              <Package className="h-4 w-4 text-emerald-300" />
+              <span>Products</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsCustomerPickerOpen(true)}
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
+              title="Customer Directory [F3]"
+            >
+              <Users className="h-4 w-4 text-emerald-300" />
+              <span>Customers</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsEodCloseOpen(true)}
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
+              title="Shift & Sales Reports"
+            >
+              <BarChart3 className="h-4 w-4 text-emerald-300" />
+              <span>Reports</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowShortcutsModal(true)}
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-emerald-100/75 hover:bg-emerald-800/40 hover:text-white transition"
+              title="POS Settings & Keyboard Shortcuts"
+            >
+              <Settings className="h-4 w-4 text-emerald-300" />
+              <span>Settings</span>
+            </button>
+          </nav>
         </div>
 
-        {/* Status Indicators & Non-Cashier Controls Removed */}
-        <div className="flex items-center gap-2">
-          {/* Online/Offline Status */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${
-              isOnline
-                ? theme === 'dark'
-                  ? 'border-slate-800 bg-slate-900 text-slate-200'
-                  : 'border-slate-200 bg-slate-50 text-slate-900 shadow-xs'
-                : 'border-rose-500/40 bg-rose-950/40 text-rose-300'
-            }`}
-            title={isOnline ? 'Online (LAN & Cloud Connected)' : 'Offline (Local Buffered Mode)'}
-          >
-            {isOnline ? (
-              <>
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] font-bold text-slate-900">Online</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="h-3.5 w-3.5 text-rose-500" />
-                <span className="text-[11px] font-bold">Offline</span>
-              </>
-            )}
+        {/* Bottom Help & Support Card */}
+        <div className="bg-[#033d2f] rounded-2xl p-3.5 border border-emerald-800/50 text-white space-y-2.5 shadow-sm">
+          <div className="space-y-0.5">
+            <h5 className="text-xs font-black text-emerald-100">Need help?</h5>
+            <p className="text-[10px] text-emerald-300/80 leading-relaxed">
+              Contact our support team for assistance
+            </p>
           </div>
-
-          {/* Thermal Receipt Printer Status */}
-          <div
-            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${
-              theme === 'dark'
-                ? 'border-slate-700 bg-slate-800/80 text-slate-300'
-                : 'border-slate-200 bg-white text-slate-700 shadow-xs'
-            }`}
-            title="Thermal POS Receipt Printer (80mm ESC/POS) Ready"
-          >
-            <Printer className="h-3.5 w-3.5 text-slate-700" />
-            <span className="text-[11px] font-bold">Printer: Ready</span>
-          </div>
-
-          {/* Unsynced Invoices Count Badge */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${
-              theme === 'dark'
-                ? 'border-slate-700 bg-slate-800/80 text-slate-300'
-                : 'border-slate-200 bg-white text-slate-700 shadow-xs'
-            }`}
-            title="Local unposted invoices queue"
-          >
-            <Cloud className="h-3.5 w-3.5 text-slate-700" />
-            <span className="text-[11px] font-bold">{unsyncedCount} Unsynced</span>
-          </div>
-
-          {/* Customer Second Display Toggle */}
           <button
-            onClick={() => setShowCustomerDisplay((prev) => !prev)}
-            className={`p-2 rounded-xl border transition ${
-              showCustomerDisplay
-                ? 'border-slate-800 bg-slate-100 text-slate-900'
-                : theme === 'dark'
-                ? 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
-                : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-xs'
-            }`}
-            title="Toggle Customer-Facing Second Display Window"
-          >
-            <Monitor className="h-4 w-4" />
-          </button>
-
-          {/* Shortcuts Overlay Toggle */}
-          <button
+            type="button"
             onClick={() => setShowShortcutsModal(true)}
-            className={`p-2 rounded-xl border transition ${
-              theme === 'dark'
-                ? 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
-                : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-xs'
-            }`}
-            title="POS Keyboard Shortcuts [?]"
+            className="w-full py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/30 text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"
           >
-            <HelpCircle className="h-4 w-4" />
-          </button>
-
-          {/* Duty Supervisor Badge */}
-          <div
-            className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
-              theme === 'dark'
-                ? 'bg-amber-950/20 border-amber-500/30 text-amber-300'
-                : 'bg-amber-50 border-amber-300 text-amber-900 shadow-xs'
-            }`}
-            title={dutySupervisor?.name ? `Supervisor: ${dutySupervisor.name}` : 'Supervisor On Duty'}
-          >
-            <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
-            <span className="font-bold">Supervisor On Duty</span>
-          </div>
-
-          {/* Cashier Badge */}
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
-              theme === 'dark'
-                ? 'bg-slate-900 border-slate-800 text-slate-200'
-                : 'bg-slate-50 border-slate-200 text-slate-900 shadow-xs'
-            }`}
-          >
-            <UserCheck className="h-3.5 w-3.5 text-slate-700" />
-            <span className="text-slate-900">
-              Cashier: <strong className="text-slate-950">{activeCashier?.name || 'Cashier'}</strong>
-            </span>
-          </div>
-
-          {/* Theme Switch */}
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className={`p-2 rounded-xl border transition ${
-              theme === 'dark'
-                ? 'border-slate-800 bg-slate-900 text-amber-400 hover:bg-slate-800'
-                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 shadow-xs'
-            }`}
-            title="Toggle Dark/Light Mode"
-          >
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-
-          {/* F10 Fast Lock */}
-          <button
-            onClick={handleLockTerminal}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
-              theme === 'dark'
-                ? 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200'
-                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-xs'
-            }`}
-            title="Emergency Lock Terminal [F10]"
-          >
-            <Lock className="h-3.5 w-3.5 text-amber-500" />
-            <span>F10 Lock</span>
-          </button>
-
-          {/* Supervisor Sign-Off */}
-          <button
-            onClick={() => setIsSignOffOpen(true)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
-              theme === 'dark'
-                ? 'border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300'
-                : 'border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 shadow-xs'
-            }`}
-            title="Supervisor Authorization Required"
-          >
-            <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />
-            <span>Sign-Off / Switch</span>
-          </button>
-
-          {/* End of Day Register Close */}
-          <button
-            onClick={() => setIsEodCloseOpen(true)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
-              theme === 'dark'
-                ? 'border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300'
-                : 'border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-900 shadow-xs'
-            }`}
-            title="Supervisor Authorization Required"
-          >
-            <Banknote className="h-3.5 w-3.5 text-rose-600" />
-            <span>Close Register (EOD)</span>
+            <HelpCircle className="h-3.5 w-3.5" />
+            Contact Support
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* 2. Main Retail Billing Layout */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left Column: Product Catalog & Barcode Trap (60% width) */}
-        <section
-          className={`relative flex flex-col flex-1 min-h-0 border-r overflow-hidden ${
-            theme === 'dark' ? 'border-slate-800 bg-[#0d1210]' : 'border-slate-200 bg-white'
-          }`}
-        >
-          {/* Barcode Search Bar */}
-          <div
-            className={`p-3 border-b flex items-center gap-2 ${
-              theme === 'dark' ? 'bg-[#0f1412] border-slate-800' : 'bg-slate-50 border-slate-200'
-            }`}
-          >
-            <form onSubmit={handleBarcodeSubmit} className="flex-1 relative">
-              <input
-                ref={barcodeInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Scan Barcode (USB Trap) or type SKU / Product Name... [F2]"
-                className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-xs font-mono outline-none transition ${
-                  theme === 'dark'
-                    ? 'bg-slate-900 border-slate-800 focus:border-emerald-500 text-white placeholder-slate-500'
-                    : 'bg-white border-slate-300 focus:border-emerald-600 text-slate-900 placeholder-slate-400 font-semibold'
-                }`}
-              />
-              <Barcode className={`absolute left-3 top-3 h-4 w-4 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`} />
-            </form>
-
-            {/* Category Quick Filter Pills */}
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-sm">
-              {['ALL', 'Laptops', 'Desktops', 'Accessories', 'Components'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
-                    selectedCategory === cat
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : theme === 'dark'
-                      ? 'bg-slate-900 text-slate-400 hover:text-white'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-xs'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+      {/* 2. Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#f4f7f6]">
+        {/* SupaPOS Top Header */}
+        <header className="h-16 px-6 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 z-20 shadow-2xs">
+          {/* Left: Menu & Greeting */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
+              title="Menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div>
+              <h2 className="text-sm font-black text-slate-800 tracking-tight">
+                Welcome back!
+              </h2>
+              <p className="text-[10px] font-bold text-slate-400">
+                {terminalName} ({terminalCode}) • Station #104
+              </p>
             </div>
           </div>
 
-          {/* Product Items Grid (Virtualized / Windowed) */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+          {/* Center: Live Date & Time Clock matching SupaPOS */}
+          <div className="hidden lg:flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600 font-mono shadow-2xs">
+            <Clock className="h-3.5 w-3.5 text-emerald-600" />
+            <span>{liveHeaderTime || 'Wednesday, July 2, 2025 • 15:55:16'}</span>
+          </div>
+
+          {/* Right: Operational Status, Cashier & Controls */}
+          <div className="flex items-center gap-2.5">
+            {/* Online Status Dot */}
+            <div
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold ${
+                isOnline
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  : 'border-rose-200 bg-rose-50 text-rose-800'
+              }`}
+              title={isOnline ? 'Online (LAN & Cloud Connected)' : 'Offline (Local Buffered Mode)'}
+            >
+              {isOnline ? (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-[#00c569] animate-pulse" />
+                  <span className="text-[11px]">Online</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-3 w-3 text-rose-500" />
+                  <span className="text-[11px]">Offline</span>
+                </>
+              )}
+            </div>
+
+            {/* Thermal Printer Status */}
+            <div
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-600"
+              title="Thermal POS Receipt Printer Ready"
+            >
+              <Printer className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-[11px] font-bold">Printer: Ready</span>
+            </div>
+
+            {/* Customer Second Display Toggle */}
+            <button
+              onClick={() => setShowCustomerDisplay((prev) => !prev)}
+              className={`p-2 rounded-full border transition ${
+                showCustomerDisplay
+                  ? 'border-slate-800 bg-slate-100 text-slate-900'
+                  : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-2xs'
+              }`}
+              title="Toggle Customer Facing Second Display"
+            >
+              <Monitor className="h-4 w-4" />
+            </button>
+
+            {/* Notification Bell with Red Dot */}
+            <div
+              className="relative p-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer shadow-2xs"
+              title="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
+            </div>
+
+            {/* Cashier / Store Manager Profile Pill */}
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+              <div className="h-8 w-8 rounded-full bg-amber-400 text-amber-950 font-black text-xs flex items-center justify-center shadow-xs">
+                {activeCashier?.name
+                  ? activeCashier.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2)
+                  : 'JD'}
+              </div>
+              <div className="hidden md:block text-left">
+                <p className="text-xs font-black text-slate-800 leading-none">
+                  {activeCashier?.name || 'James Davidson'}
+                </p>
+                <p className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                  {dutySupervisor ? 'Store Manager' : 'Cashier'}
+                </p>
+              </div>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </div>
+
+            {/* Quick Actions (F10 Lock, Sign-off, EOD) */}
+            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+              <button
+                onClick={handleLockTerminal}
+                className="p-2 rounded-xl text-slate-600 hover:text-amber-600 hover:bg-amber-50 transition border border-transparent hover:border-amber-200"
+                title="Lock Terminal [F10]"
+              >
+                <Lock className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setIsSignOffOpen(true)}
+                className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-[11px] font-bold shadow-2xs transition"
+                title="Supervisor Authorization Required"
+              >
+                <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />
+                <span>Switch</span>
+              </button>
+              <button
+                onClick={() => setIsEodCloseOpen(true)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-900 text-[11px] font-bold shadow-2xs transition"
+                title="Close Register (End of Day)"
+              >
+                <Banknote className="h-3.5 w-3.5 text-rose-600" />
+                <span>EOD</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* 3. Split Main Workspace (Catalog on Left, Cart on Right) */}
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Left / Center Column: SupaPOS Sales Transaction Catalog */}
+        <section className="flex-1 flex flex-col min-h-0 bg-[#f8faf9] overflow-hidden border-r border-slate-200">
+          {/* Header & Filter Bar */}
+          <div className="px-6 pt-5 pb-3 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h1 className="text-xl font-black text-slate-800 tracking-tight">Sales Transaction</h1>
+                <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                  {new Date().toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: '2-digit',
+                    year: 'numeric',
+                  })}{' '}
+                  - {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+                </p>
+              </div>
+
+              {/* Search Bar with USB Barcode listener trap */}
+              <form onSubmit={handleBarcodeSubmit} className="relative w-full sm:w-72 md:w-80">
+                <input
+                  ref={barcodeInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products... [F2]"
+                  className="w-full pl-9 pr-4 py-2 rounded-full border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 font-semibold shadow-2xs outline-none focus:border-[#00c569] focus:ring-2 focus:ring-emerald-500/20 transition"
+                />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              </form>
+            </div>
+
+            {/* Category Filter Pills (matching SupaPOS screenshot) */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+              {[
+                { id: 'ALL', label: 'All Products' },
+                { id: 'Laptops', label: 'Laptops' },
+                { id: 'Desktops', label: 'Desktops' },
+                { id: 'Accessories', label: 'Accessories' },
+                { id: 'Components', label: 'Components' },
+                { id: 'Printers', label: 'Printers' },
+              ].map((cat) => {
+                const isActive = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap ${
+                      isActive
+                        ? 'bg-[#00c569] text-white shadow-sm'
+                        : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/80 shadow-2xs'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Product Items Grid with Card 1: Add New Product */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-2 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            {/* Card 1: Add New Product Dashed Card */}
+            <div
+              onClick={() => barcodeInputRef.current?.focus()}
+              className="rounded-2xl border-2 border-dashed border-slate-300 hover:border-[#00c569] bg-white/70 hover:bg-emerald-50/30 flex flex-col items-center justify-center p-6 cursor-pointer group transition min-h-[220px] shadow-2xs"
+            >
+              <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200/60 text-[#00c569] flex items-center justify-center mb-3 group-hover:scale-110 group-hover:bg-[#00c569] group-hover:text-white transition shadow-2xs">
+                <Plus className="h-5 w-5 stroke-[2.5]" />
+              </div>
+              <span className="text-xs font-bold text-slate-600 group-hover:text-[#00c569] transition">
+                Add New Product
+              </span>
+            </div>
+
             {isLoadingProducts && products.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-xs text-slate-500">
-                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-400" />
+              <div className="col-span-full py-16 text-center text-xs text-slate-500">
+                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#00c569]" />
                 Loading inventory items...
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-xs text-slate-500">
+              <div className="col-span-full py-16 text-center text-xs text-slate-500">
                 No matching retail products found.
               </div>
             ) : (
@@ -1746,95 +1830,74 @@ export default function CounterPosTerminal() {
         </section>
 
         {/* Right Column: Checkout Cart & Tenders (40% width) */}
-        <section
-          className={`w-96 lg:w-[420px] flex flex-col h-full min-h-0 overflow-hidden shrink-0 border-l ${
-            theme === 'dark' ? 'bg-[#0f1412] border-slate-800' : 'bg-slate-50 border-slate-200'
-          }`}
-        >
-          {/* Cart / Return Mode Tabs */}
-          <div
-            className={`px-3 pt-3 border-b shrink-0 z-10 ${
-              theme === 'dark' ? 'border-slate-800 bg-[#121815]' : 'border-slate-200 bg-white'
-            }`}
-          >
-            <div className="flex gap-1 mb-3">
+        {/* Right Column: SupaPOS Order Detail Cart (matching SupaPOS screenshot) */}
+        <section className="w-80 lg:w-[380px] bg-white flex flex-col h-full min-h-0 overflow-hidden shrink-0 shadow-lg border-l border-slate-200">
+          {/* Header: Order Detail Title & Actions */}
+          <div className="p-4 border-b border-slate-200 shrink-0">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-black text-slate-800 tracking-tight">Order Detail</h3>
+              <div className="flex items-center gap-2">
+                {cart.length > 0 && (
+                  <button
+                    onClick={handleHoldCart}
+                    className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-0.5"
+                    title="Hold Cart [F5]"
+                  >
+                    <FolderInput className="h-3 w-3" /> Hold
+                  </button>
+                )}
+                {heldCarts.length > 0 && (
+                  <button
+                    onClick={handleRecallCart}
+                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5"
+                    title="Recall Cart [F6]"
+                  >
+                    <FolderOutput className="h-3 w-3" /> Recall ({heldCarts.length})
+                  </button>
+                )}
+                {cart.length > 0 && (
+                  <button
+                    onClick={handleRequestVoidCart}
+                    className="text-[10px] font-bold text-rose-500 hover:text-rose-600 flex items-center gap-0.5"
+                    title="Void Entire Cart"
+                  >
+                    <Trash2 className="h-3 w-3" /> Void
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Mode Switcher: New Sale vs Return */}
+            <div className="flex gap-1.5 mb-3">
               <button
                 onClick={() => {
                   setCartMode('sale');
                   setReturnSearchResult(null);
                   setReturnSearchError('');
                 }}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-black transition ${
+                className={`flex-1 py-1.5 rounded-xl text-[11px] font-black transition flex items-center justify-center gap-1.5 ${
                   cartMode === 'sale'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : theme === 'dark'
-                    ? 'bg-slate-800 text-slate-400 hover:text-white'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-xs'
+                    ? 'bg-[#00c569] text-white shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 <ShoppingCart className="h-3.5 w-3.5" />
-                NEW SALE
-                {cart.length > 0 && cartMode === 'sale' && (
-                  <span className="bg-black/20 rounded-full px-1.5 py-0.5 text-[10px]">
-                    {cart.reduce((s, i) => s + i.quantity, 0)}
-                  </span>
-                )}
+                Sale
               </button>
               <button
                 onClick={() => setCartMode('return')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-black transition ${
+                className={`flex-1 py-1.5 rounded-xl text-[11px] font-black transition flex items-center justify-center gap-1.5 ${
                   cartMode === 'return'
-                    ? 'bg-amber-600 text-white shadow-xs'
-                    : theme === 'dark'
-                    ? 'bg-slate-800 text-slate-400 hover:text-white'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-xs'
+                    ? 'bg-amber-600 text-white shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                RETURN / REFUND [F7]
+                Return [F7]
               </button>
             </div>
 
-            {cartMode === 'sale' && (
-              <div className="pb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs">
-                  <ShoppingCart className={`h-3.5 w-3.5 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`} />
-                  <span className={`font-black uppercase tracking-wider ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                    Current Cart ({cart.reduce((s, i) => s + i.quantity, 0)} Items)
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {cart.length > 0 && (
-                    <button
-                      onClick={handleHoldCart}
-                      className="text-[10px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-0.5"
-                      title="Hold / Park Cart [F5]"
-                    >
-                      <FolderInput className="h-3 w-3" /> Hold [F5]
-                    </button>
-                  )}
-                  {heldCarts.length > 0 && (
-                    <button
-                      onClick={handleRecallCart}
-                      className="text-[10px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-0.5"
-                      title="Recall Held Cart [F6]"
-                    >
-                      <FolderOutput className="h-3 w-3" /> Recall ({heldCarts.length}) [F6]
-                    </button>
-                  )}
-                  {cart.length > 0 && (
-                    <button
-                      onClick={handleRequestVoidCart}
-                      className="text-[10px] font-bold text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1 transition"
-                      title="Requires Supervisor Authorization"
-                    >
-                      <Trash2 className="h-3 w-3" /> Void
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
+            {/* Customer Selector (matching SupaPOS dropdown UI) */}
             {cartMode === 'sale' && (
               <div
                 onClick={() => {
@@ -1843,37 +1906,15 @@ export default function CounterPosTerminal() {
                   setTempCustomerPan(customerPan);
                   setIsCustomerPickerOpen(true);
                 }}
-                className={`mb-3 p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition ${
-                  theme === 'dark'
-                    ? 'bg-slate-900/90 border-slate-700/80 hover:border-emerald-500/60'
-                    : 'bg-emerald-50/60 border-emerald-200/80 hover:border-emerald-400 hover:bg-emerald-50'
-                }`}
+                className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 flex items-center justify-between cursor-pointer transition shadow-2xs"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="h-8 w-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 text-xs shadow-xs">
-                    <UserCheck className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold uppercase text-slate-500">Customer [F3]</span>
-                      {customerPan ? (
-                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          PAN: {customerPan}
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className={`text-xs font-bold truncate ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                      {customerName || 'Walk-in Customer'}
-                      {customerPhone ? ` • ${customerPhone}` : ''}
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <UserCheck className="h-4 w-4 text-[#00c569] shrink-0" />
+                  <span className="text-xs font-bold text-slate-700 truncate">
+                    {customerName || 'Select Customer'}
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  className="text-[11px] font-bold text-emerald-600 hover:text-emerald-500 px-2 py-1 rounded-lg hover:bg-emerald-100/50 transition shrink-0"
-                >
-                  Change
-                </button>
+                <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
               </div>
             )}
 
@@ -2023,48 +2064,56 @@ export default function CounterPosTerminal() {
                 )}
               </div>
             ) : cart.length === 0 ? (
-              /* ---- EMPTY CART ---- */
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 space-y-2">
-                <ShoppingCart className="h-10 w-10 stroke-[1.5] text-slate-400" />
-                <p className="text-xs font-bold">Cart is empty</p>
-                <p className="text-[11px] max-w-[200px]">
-                  Scan barcode [F2] or click any product tile to add items.
+              /* ---- EMPTY CART STATE ---- */
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                  <ShoppingCart className="h-7 w-7 text-slate-400" />
+                </div>
+                <h4 className="text-sm font-bold text-slate-700">Cart is empty</h4>
+                <p className="text-xs text-slate-400 mt-1 max-w-[200px]">
+                  Scan barcode [F2] or click any product to add items.
                 </p>
               </div>
             ) : (
-              /* ---- ENHANCED CART ITEMS LIST ---- */
-              cart.map((line) => (
-                <div
-                  key={line.productId}
-                  className={`group flex flex-col gap-1.5 p-2.5 rounded-xl border text-xs transition ${
-                    theme === 'dark'
-                      ? 'bg-[#141a17] border-slate-800 hover:border-slate-700'
-                      : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
+              /* ---- SUPAPOS MODERN CART LINE ITEMS ---- */
+              cart.map((line) => {
+                const categoryIcon = line.name.toLowerCase().includes('laptop') || line.name.toLowerCase().includes('macbook')
+                  ? '💻'
+                  : line.name.toLowerCase().includes('monitor')
+                  ? '🖥️'
+                  : line.name.toLowerCase().includes('printer')
+                  ? '🖨️'
+                  : line.name.toLowerCase().includes('gpu') || line.name.toLowerCase().includes('rtx')
+                  ? '🎮'
+                  : '📦';
+
+                return (
+                  <div
+                    key={line.productId}
+                    className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl border border-slate-150 hover:border-slate-300 bg-white hover:bg-slate-50/50 transition shadow-2xs"
+                  >
+                    {/* Left: Product Thumbnail */}
+                    <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                      {line.imageUrl ? (
+                        <img
+                          src={line.imageUrl}
+                          alt={line.name}
+                          className="w-full h-full object-contain mix-blend-multiply"
+                        />
+                      ) : (
+                        <span className="text-xl">{categoryIcon}</span>
+                      )}
+                    </div>
+
+                    {/* Center: Title & Price */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-mono text-[10px] text-emerald-600 font-bold truncate">
-                          {line.sku}
+                      <h5 className="text-xs font-bold text-slate-800 truncate leading-snug">
+                        {line.name}
+                      </h5>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-xs font-black font-mono text-slate-900">
+                          Rs. {formatNepaliNumber(String(line.price))}
                         </span>
-                        {line.discountPercent ? (
-                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 text-[9px] font-bold">
-                            -{line.discountPercent}%
-                          </span>
-                        ) : null}
-                        {line.warrantyMonths ? (
-                          <span className="text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded font-semibold">
-                            🛡️ {line.warrantyMonths}M
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="font-bold truncate mt-0.5 text-slate-900 dark:text-white">{line.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-slate-500 font-mono">
-                          Rs. {formatNepaliNumber(String(line.price))} each
-                        </span>
-                        {/* Serial Number Pill */}
                         {line.serialNumber ? (
                           <button
                             type="button"
@@ -2073,10 +2122,10 @@ export default function CounterPosTerminal() {
                               setSerialInputNumber(line.serialNumber || '');
                               setIsSerialModalOpen(true);
                             }}
-                            className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold hover:bg-blue-100 flex items-center gap-1"
-                            title="Click to change serial number"
+                            className="text-[9px] font-mono px-1 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold hover:bg-blue-100"
+                            title="Edit Serial Number"
                           >
-                            <span>S/N: {line.serialNumber}</span>
+                            S/N: {line.serialNumber}
                           </button>
                         ) : (
                           <button
@@ -2086,36 +2135,16 @@ export default function CounterPosTerminal() {
                               setSerialInputNumber('');
                               setIsSerialModalOpen(true);
                             }}
-                            className="text-[9px] px-1.5 py-0.5 rounded border border-dashed border-slate-300 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 font-semibold"
+                            className="text-[9px] px-1.5 py-0.2 rounded border border-dashed border-slate-300 text-slate-400 hover:text-[#00c569] hover:border-emerald-400 font-semibold"
                           >
-                            + Add S/N
+                            + S/N
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <div className="font-mono font-black text-sm text-slate-900 dark:text-white">
-                        Rs. {formatNepaliNumber(String(line.lineTotal))}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCalcDiscountTargetItem(line);
-                          setCalcDiscountPctInput(String(line.discountPercent || 0));
-                          setCalcDiscountFlatInput('0');
-                          setIsDiscountCalcOpen(true);
-                        }}
-                        className="text-[10px] text-emerald-600 hover:underline font-bold mt-0.5 flex items-center gap-0.5 justify-end"
-                      >
-                        <Percent className="h-2.5 w-2.5" /> Discount
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Quantity & Action Controls */}
-                  <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-1">
+                    {/* Right: Stepper Controls & Red Trash Icon */}
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => {
@@ -2125,113 +2154,92 @@ export default function CounterPosTerminal() {
                             updateCartQty(line.productId, line.quantity - 1);
                           }
                         }}
-                        className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                        title={line.quantity <= 1 ? 'Line Void (Requires Supervisor)' : 'Decrease quantity'}
+                        className="h-6 w-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs transition"
+                        title="Decrease"
                       >
-                        <Minus className="h-3 w-3 text-slate-600 dark:text-slate-300" />
+                        <Minus className="h-3 w-3" />
                       </button>
-                      <input
-                        type="number"
-                        min={1}
-                        max={999}
-                        value={line.quantity}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (!isNaN(val) && val >= 1) {
-                            updateCartQty(line.productId, val);
-                          }
-                        }}
-                        className="w-10 h-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-center font-mono font-bold text-xs outline-none focus:border-emerald-500"
-                      />
+                      <span className="w-5 text-center font-mono font-bold text-xs text-slate-800">
+                        {line.quantity}
+                      </span>
                       <button
                         type="button"
                         onClick={() => updateCartQty(line.productId, line.quantity + 1)}
-                        className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                        title="Increase quantity"
+                        className="h-6 w-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs transition"
+                        title="Increase"
                       >
-                        <Plus className="h-3 w-3 text-slate-600 dark:text-slate-300" />
+                        <Plus className="h-3 w-3" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRequestLineVoid(line)}
+                        className="h-6 w-6 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition ml-1"
+                        title="Remove Item (Requires Auth if configured)"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRequestLineVoid(line)}
-                      className="h-7 px-2 rounded-lg border border-rose-200 bg-rose-50/50 text-rose-600 hover:bg-rose-100 text-[11px] font-bold flex items-center gap-1 transition"
-                      title="Line Void — Requires Supervisor Authorization"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      <span>Remove</span>
-                    </button>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
-          {/* Cart Summary & Sticky Checkout Controls */}
-          <div
-            className={`p-4 border-t shrink-0 z-10 space-y-3 mt-auto ${
-              theme === 'dark' ? 'border-slate-800 bg-[#121815]' : 'border-slate-200 bg-white'
-            }`}
-          >
+          {/* Cart Summary & Sticky Checkout Controls (matching SupaPOS screenshot) */}
+          <div className="p-4 border-t border-slate-200 shrink-0 bg-white space-y-3 mt-auto">
             {cartMode === 'sale' ? (
               <>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                    <span>Subtotal:</span>
-                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                  <div className="flex justify-between text-slate-500">
+                    <span>Subtotal</span>
+                    <span className="font-mono font-bold text-slate-700">
                       NPR {formatNepaliNumber(cartGrossSubtotal.toFixed(2))}
                     </span>
                   </div>
+
                   {totalDiscountAmount > 0 && (
                     <div className="flex justify-between text-amber-600 font-semibold">
-                      <span className="flex items-center gap-1">
-                        Discount:
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCalcDiscountTargetItem(null);
-                            setIsDiscountCalcOpen(true);
-                          }}
-                          className="text-[10px] underline hover:text-amber-700"
-                        >
-                          (Edit)
-                        </button>
-                      </span>
+                      <span className="flex items-center gap-1">Discount:</span>
                       <span className="font-mono">-NPR {formatNepaliNumber(totalDiscountAmount.toFixed(2))}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-slate-500 dark:text-slate-400 text-[11px]">
-                    <span>Taxable Base:</span>
-                    <span className="font-mono">NPR {formatNepaliNumber(cartTaxableAmount.toFixed(2))}</span>
+
+                  <div className="flex justify-between text-slate-500 text-[11px]">
+                    <span>Tax (13% VAT)</span>
+                    <span className="font-mono font-bold text-slate-700">
+                      NPR {formatNepaliNumber(cartVatAmount.toFixed(2))}
+                    </span>
                   </div>
-                  <div className="flex justify-between text-slate-500 dark:text-slate-400 text-[11px]">
-                    <span>13% Nepal VAT:</span>
-                    <span className="font-mono">NPR {formatNepaliNumber(cartVatAmount.toFixed(2))}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-black text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                        Total:
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCalcDiscountTargetItem(null);
-                          setIsDiscountCalcOpen(true);
-                        }}
-                        className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold hover:bg-emerald-100 flex items-center gap-0.5"
-                        title="Discount & Profit Margin Calculator [F4]"
-                      >
-                        <Percent className="h-2.5 w-2.5" /> Margin [F4]
-                      </button>
-                    </div>
-                    <span className="font-black text-xl font-mono text-emerald-600">
+
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                    <span className="font-black text-sm text-slate-800">Total</span>
+                    {/* Bright Green SupaPOS Total Accent */}
+                    <span className="font-black text-2xl font-mono text-[#00c569]">
                       NPR {formatNepaliNumber(cartTotal.toFixed(2))}
                     </span>
                   </div>
                 </div>
 
+                {/* Payment Method Selector (matching SupaPOS screenshot) */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Payment Method
+                  </label>
+                  <select
+                    value={tenderMethod}
+                    onChange={(e) => setTenderMethod(e.target.value as any)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/70 text-xs font-bold text-slate-800 outline-none focus:border-[#00c569] transition cursor-pointer"
+                  >
+                    <option value="cash">Cash Tender</option>
+                    <option value="qr">Fonepay / Dynamic QR</option>
+                    <option value="card">Card / POS Terminal</option>
+                    <option value="split">Split Tender (Multi-Payment)</option>
+                    <option value="credit">Credit / Customer Khata</option>
+                  </select>
+                </div>
+
+                {/* SupaPOS Bright Emerald Action Button: Make Order (F12) */}
                 <button
                   type="button"
                   onClick={() => {
@@ -2244,25 +2252,26 @@ export default function CounterPosTerminal() {
                     }
                   }}
                   disabled={cart.length === 0}
-                  className={`w-full py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition shadow-md active:scale-[0.99] ${
+                  className={`w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition shadow-md active:scale-[0.99] ${
                     cart.length === 0
-                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
-                      : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      : 'bg-[#00c569] hover:bg-[#00b05e] text-white cursor-pointer shadow-emerald-500/20'
                   }`}
                 >
                   <ShoppingCart className="h-4 w-4" />
-                  <span>Proceed to Payment (F12 / Enter)</span>
+                  <span>Make Order (F12)</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </>
             ) : (
-              <p className="text-[11px] text-center text-slate-500">
+              <p className="text-[11px] text-center text-slate-500 py-2">
                 Return processing mode active. Select invoice above to refund.
               </p>
             )}
           </div>
         </section>
       </div>
+    </div>
 
       {/* 3. Tender & Checkout Modal */}
       {/* 2. Customer Selection Modal [F3] */}
