@@ -47,5 +47,6 @@ export * from './pos-enterprise';
 export * from './warehouse-enterprise';
 export * from './accounting-enterprise';
 export * from './loyalty';
+export * from './pos-eod';
 
 

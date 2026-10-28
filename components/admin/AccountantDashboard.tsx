@@ -24,6 +24,7 @@ import {
   HelpCircle,
   ArrowRight,
 } from 'lucide-react';
+import AccountantEodWorkspace from './AccountantEodWorkspace';
 
 interface ShiftItem {
   id: number;
@@ -81,6 +82,7 @@ export const AccountantDashboard: React.FC = () => {
   const [auditStream, setAuditStream] = useState<AuditLogItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'reconciliation-center' | 'overview-audit'>('reconciliation-center');
 
   // Modals
   const [approvingShift, setApprovingShift] = useState<ShiftItem | null>(null);
@@ -252,6 +254,35 @@ export const AccountantDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Primary Workspace Navigation Switcher */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveWorkspaceTab('reconciliation-center')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer ${
+            activeWorkspaceTab === 'reconciliation-center'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <Banknote className="h-4 w-4 text-emerald-400" />
+          <span>EOD Recount &amp; Reconciliation Center</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveWorkspaceTab('overview-audit')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer ${
+            activeWorkspaceTab === 'overview-audit'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <FileText className="h-4 w-4 text-slate-400" />
+          <span>Live Register Shifts &amp; Financial KPIs</span>
+        </button>
+      </div>
+
       {/* Notice Banner */}
       {notice && (
         <div
@@ -271,6 +302,10 @@ export const AccountantDashboard: React.FC = () => {
         </div>
       )}
 
+      {activeWorkspaceTab === 'reconciliation-center' ? (
+        <AccountantEodWorkspace onRefreshParent={fetchFinancialData} />
+      ) : (
+        <>
       {/* 1. TOP FINANCIAL KPI SUMMARY CARDS */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Today's Gross / Net Sales */}
@@ -543,6 +578,8 @@ export const AccountantDashboard: React.FC = () => {
           </table>
         </div>
       </div>
+      </>
+      )}
 
       {/* MODAL: APPROVE VARIANCE */}
       {approvingShift && (
