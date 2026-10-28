@@ -252,141 +252,155 @@ export function CashierShiftDetailsModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
       <div className="relative w-full max-w-6xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-900">
         {/* ================= HEADER WITH PROTECTED DARK SURFACE ================= */}
-        <div className="dark-surface px-6 py-5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-blue-500/30 border border-blue-400/40 flex-shrink-0">
-              {shift?.cashierName ? shift.cashierName.slice(0, 2).toUpperCase() : 'POS'}
+        <div className="dark-surface px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 space-y-3.5">
+          {/* Top Bar: Scope Confirmation Badge on Left & Quick Actions Toolbar on Right */}
+          <div className="flex items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+            {/* Left: Scope Confirmation Badge */}
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-400/30 flex items-center gap-1.5 shadow-xs shrink-0">
+                <User className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                Single Cashier Shift Audit
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono hidden md:inline truncate">
+                (Individual cashier register session — not aggregated store-wide EOD)
+              </span>
             </div>
-            <div>
-              {/* Scope Confirmation Badge: Explicitly clarifies this is for an individual cashier's shift */}
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/25 text-blue-300 border border-blue-400/40 flex items-center gap-1.5 shadow-2xs">
-                  <User className="w-3 h-3 text-blue-300" />
-                  Single Cashier Shift Audit
-                </span>
-                <span className="text-[11px] !text-slate-400 font-mono">
-                  (Individual cashier register session — not aggregated store-wide EOD)
-                </span>
-              </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-black !text-white tracking-tight">
-                  {shift?.cashierName || 'Cashier Shift Details'}
-                </h1>
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold !text-slate-200 bg-slate-800 border border-slate-700">
-                  {shift?.cashierCode || 'EMP-104'}
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-blue-950/90 text-blue-300 border border-blue-500/40">
-                  {shift?.shiftNumber || `SH-${shiftId}`}
-                </span>
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-purple-300 bg-purple-950/70 border border-purple-500/30">
-                  {shift?.registerCode || 'REG-01'}
-                </span>
-
-                {/* Status Badges */}
-                {isZeroSales && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase bg-slate-800 !text-slate-200 border border-slate-700 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    No Sales (Zero-Activity)
-                  </span>
-                )}
-
-                {shift && !isZeroSales && (
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase flex items-center gap-1.5 ${
-                      shift.status === 'OPEN'
-                        ? 'bg-amber-950 text-amber-300 border border-amber-500/40'
-                        : shift.status === 'SUBMITTED'
-                        ? 'bg-indigo-950 text-indigo-300 border border-indigo-500/40'
-                        : 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
-                    }`}
+            {/* Right: Actions Toolbar - Guaranteed Single Row with No Wrapping */}
+            <div className="flex items-center gap-2 shrink-0">
+              {shift?.status === 'OPEN' && (
+                <>
+                  <button
+                    onClick={() => setIsCashMoveModalOpen(true)}
+                    className="dark-surface-btn px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    title="Perform Safe Drop, Paid-In, or Paid-Out"
                   >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        shift.status === 'OPEN' ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
-                      }`}
-                    />
-                    {shift.status === 'CLOSED' ? 'CLOSED & AUDITED' : shift.status}
-                  </span>
-                )}
-              </div>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <span>Cash Movement</span>
+                  </button>
 
-              {/* Metadata row with AD/BS toggle */}
-              <div className="flex items-center gap-3 text-xs !text-slate-300 mt-1.5 flex-wrap font-mono">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-blue-400" />
-                  Opened: {formatDate(shift?.openedAt)}
-                </span>
-                <span className="text-slate-600">•</span>
-                <span>
-                  {shift?.closedAt ? `Closed: ${formatDate(shift?.closedAt)}` : 'Status: Live Shift'}
-                </span>
-                <span className="text-slate-600">•</span>
-                <span className="!text-slate-200 font-bold">
-                  Duration: {getDuration(shift?.openedAt, shift?.closedAt)}
-                </span>
+                  <button
+                    onClick={() => setIsEodWizardOpen(true)}
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 !text-white text-xs font-black shadow-md shadow-blue-600/30 transition-all flex items-center gap-1.5 cursor-pointer border border-blue-400/40"
+                    title="Close Register and perform End-of-Day reconciliation"
+                  >
+                    <Lock className="w-3.5 h-3.5 !text-white shrink-0" />
+                    <span>Close Register (EOD)</span>
+                  </button>
+                </>
+              )}
 
-                {/* AD/BS Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setDateMode((prev) => (prev === 'AD' ? 'BS' : 'AD'))}
-                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-blue-300 font-bold text-[10px] border border-slate-700 transition-all ml-1 cursor-pointer"
-                  title="Toggle between Gregorian AD and Nepali Bikram Sambat BS"
-                >
-                  {dateMode === 'AD' ? 'Switch to BS (वि.सं.)' : 'Switch to AD'}
-                </button>
-              </div>
+              <button
+                onClick={() => setIsPrintSlipOpen(true)}
+                className="dark-surface-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                title="Print Nepal Retail Shift X/Z Report"
+              >
+                <Printer className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <span>Print Slip</span>
+              </button>
+
+              <div className="w-px h-5 bg-slate-700/80 mx-0.5 shrink-0" />
+
+              <button
+                onClick={fetchShiftDetails}
+                disabled={loading}
+                className="dark-surface-btn p-2 rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                title="Refresh shift data"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'text-slate-300'}`} />
+              </button>
+
+              <button
+                onClick={onClose}
+                className="dark-surface-btn dark-surface-btn-danger p-2 rounded-xl transition-all cursor-pointer shadow-sm"
+                title="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 self-end md:self-center flex-wrap">
-            {/* Quick Actions for active shift */}
-            {shift?.status === 'OPEN' && (
-              <>
-                <button
-                  onClick={() => setIsCashMoveModalOpen(true)}
-                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 !text-slate-200 text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-                  title="Perform Safe Drop, Paid-In, or Paid-Out"
-                >
-                  <ArrowUpRight className="w-3.5 h-3.5 text-purple-400" />
-                  Cash Movement
-                </button>
+          {/* Bottom Row: Cashier Profile & Live Shift Details */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-base shadow-lg shadow-blue-500/30 border border-blue-400/40 shrink-0">
+                {shift?.cashierName ? shift.cashierName.slice(0, 2).toUpperCase() : 'POS'}
+              </div>
 
-                <button
-                  onClick={() => setIsEodWizardOpen(true)}
-                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-blue-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  Close Register (EOD)
-                </button>
-              </>
-            )}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-xl font-black !text-white tracking-tight">
+                    {shift?.cashierName || 'Cashier Shift Details'}
+                  </h1>
+                  <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-slate-300 bg-slate-800 border border-slate-700">
+                    {shift?.cashierCode || 'EMP-104'}
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-blue-950/90 text-blue-300 border border-blue-500/40">
+                    {shift?.shiftNumber || `SH-${shiftId}`}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-purple-300 bg-purple-950/70 border border-purple-500/30">
+                    {shift?.registerCode || 'REG-01'}
+                  </span>
 
-            <button
-              onClick={() => setIsPrintSlipOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 !text-slate-200 text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              title="Print Nepal Retail Shift X/Z Report"
-            >
-              <Printer className="w-3.5 h-3.5 text-blue-400" />
-              Print Slip
-            </button>
+                  {/* Status Badges */}
+                  {isZeroSales && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                      No Sales (Zero-Activity)
+                    </span>
+                  )}
 
-            <button
-              onClick={fetchShiftDetails}
-              disabled={loading}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 !text-slate-300 border border-slate-700 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
-              title="Refresh shift data"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : ''}`} />
-            </button>
+                  {shift && !isZeroSales && (
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase flex items-center gap-1.5 ${
+                        shift.status === 'OPEN'
+                          ? 'bg-amber-950 text-amber-300 border border-amber-500/40'
+                          : shift.status === 'SUBMITTED'
+                          ? 'bg-indigo-950 text-indigo-300 border border-indigo-500/40'
+                          : 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          shift.status === 'OPEN' ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
+                        }`}
+                      />
+                      {shift.status === 'CLOSED' ? 'CLOSED & AUDITED' : shift.status}
+                    </span>
+                  )}
+                </div>
 
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition-all cursor-pointer shadow-sm"
-            >
-              <X className="w-5 h-5" />
-            </button>
+                {/* Metadata row with AD/BS toggle */}
+                <div className="flex items-center gap-2.5 text-xs text-slate-300 mt-1 flex-wrap font-mono">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                    Opened: <span className="text-white font-medium">{formatDate(shift?.openedAt)}</span>
+                  </span>
+                  <span className="text-slate-600">•</span>
+                  <span>
+                    {shift?.closedAt ? (
+                      <>Closed: <span className="text-white font-medium">{formatDate(shift?.closedAt)}</span></>
+                    ) : (
+                      <span className="text-emerald-400 font-semibold">Status: Live Shift</span>
+                    )}
+                  </span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-300">
+                    Duration: <span className="text-amber-300 font-bold">{getDuration(shift?.openedAt, shift?.closedAt)}</span>
+                  </span>
+
+                  {/* AD/BS Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setDateMode((prev) => (prev === 'AD' ? 'BS' : 'AD'))}
+                    className="dark-surface-btn px-2 py-0.5 rounded text-blue-300 font-bold text-[10px] transition-all ml-1 cursor-pointer"
+                    title="Toggle between Gregorian AD and Nepali Bikram Sambat BS"
+                  >
+                    {dateMode === 'AD' ? 'Switch to BS (वि.सं.)' : 'Switch to AD'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

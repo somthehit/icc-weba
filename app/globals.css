@@ -604,6 +604,55 @@
   color: #64748b !important;
 }
 
+/* Dark surface button overrides to preserve high contrast, deep slate background and vivid icons */
+.accounting-portal .dark-surface .dark-surface-btn,
+.pos-portal .dark-surface .dark-surface-btn {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+.accounting-portal .dark-surface .dark-surface-btn:hover,
+.pos-portal .dark-surface .dark-surface-btn:hover {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+.accounting-portal .dark-surface .dark-surface-btn-danger,
+.pos-portal .dark-surface .dark-surface-btn-danger {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #94a3b8 !important;
+}
+
+.accounting-portal .dark-surface .dark-surface-btn-danger:hover,
+.pos-portal .dark-surface .dark-surface-btn-danger:hover {
+  background-color: #881337 !important;
+  border-color: #e11d48 !important;
+  color: #fecdd3 !important;
+}
+
+.accounting-portal .dark-surface .dark-surface-btn svg,
+.pos-portal .dark-surface .dark-surface-btn svg {
+  color: currentColor !important;
+}
+
+.accounting-portal .dark-surface .dark-surface-btn svg.text-purple-400,
+.pos-portal .dark-surface .dark-surface-btn svg.text-purple-400 {
+  color: #c084fc !important;
+}
+
+.accounting-portal .dark-surface .dark-surface-btn svg.text-blue-400,
+.pos-portal .dark-surface .dark-surface-btn svg.text-blue-400 {
+  color: #60a5fa !important;
+}
+
+.accounting-portal .dark-surface .dark-surface-btn svg.text-emerald-400,
+.pos-portal .dark-surface .dark-surface-btn svg.text-emerald-400 {
+  color: #34d399 !important;
+}
+
 /* High-contrast status and payment method badges for light theme */
 .accounting-portal .badge-cash,
 .pos-portal .badge-cash {
