@@ -36,23 +36,29 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Check `staff` table first
+    const upperCode = cleanCode.toUpperCase();
     const [supervisorStaff] = await db
       .select()
       .from(staff)
       .where(
         or(
-          eq(staff.staffCode, cleanCode.toUpperCase()),
-          eq(staff.email, cleanCode.toLowerCase())
+          eq(staff.staffCode, upperCode),
+          eq(staff.email, cleanCode.toLowerCase()),
+          upperCode === 'ADMIN' ? eq(staff.role, 'admin') : undefined,
+          ['SUP', 'SUPERVISOR', 'MANAGER'].includes(upperCode)
+            ? or(eq(staff.role, 'supervisor'), eq(staff.role, 'store_manager'))
+            : undefined
         )
       )
       .limit(1);
 
     if (supervisorStaff) {
-      if (!['admin', 'manager', 'supervisor'].includes(supervisorStaff.role)) {
+      const allowedRoles = ['admin', 'manager', 'supervisor', 'store_manager'] as const;
+      if (!allowedRoles.includes(supervisorStaff.role as any)) {
         return NextResponse.json(
           {
             success: false,
-            message: `User "${supervisorStaff.name}" has role "${supervisorStaff.role}". Only Admin or Duty Supervisor can unlock terminals.`,
+            message: `User "${supervisorStaff.name}" has role "${supervisorStaff.role}". Only Admin or Duty Supervisor can authorize line voids.`,
           },
           { status: 403 }
         );
@@ -62,7 +68,7 @@ export async function POST(request: NextRequest) {
 
       if (cleanPin) {
         const pinCheck = await verifyStaffPin(supervisorStaff.id, cleanPin, {
-          requiredRoles: ['admin', 'manager', 'supervisor'],
+          requiredRoles: ['admin', 'manager', 'supervisor', 'store_manager'],
         });
         if (!pinCheck.success) {
           return NextResponse.json(
