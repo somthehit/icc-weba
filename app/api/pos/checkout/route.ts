@@ -11,12 +11,14 @@ import {
   accounts,
   journalEntries,
   journalLines,
+  users,
 } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { posCache } from '@/lib/redis/client';
 import { terminalBroadcaster } from '@/lib/pos/broadcaster';
 import { posQueue } from '@/lib/pos/backgroundQueue';
 import { PosProfiler } from '@/lib/pos/perf';
+import { LoyaltyService } from '@/lib/loyalty/loyaltyService';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +56,8 @@ interface PosCheckoutRequest {
   customerPhone?: string;
   customerPan?: string;
   customerLoyaltyId?: string;
+  redeemCoins?: number;
+  offerCode?: string;
   cashierName?: string;
   cashierId?: string | null;
   registerCode?: string;
@@ -100,6 +104,8 @@ export async function POST(request: NextRequest) {
       customerPhone = '',
       customerPan = '',
       customerLoyaltyId,
+      redeemCoins = 0,
+      offerCode,
       cashierName = 'Cashier 1',
       cashierId = null,
       registerCode = 'REG-01',
@@ -115,7 +121,85 @@ export async function POST(request: NextRequest) {
     }
 
     const subtotal = items.reduce((acc, item) => acc + (item.unitPrice || item.price || 0) * item.quantity, 0);
-    const finalTotal = Math.max(0, subtotal - discountAmount);
+
+    // Resolve or Auto-Enroll Customer in Loyalty Program
+    let customerUserId: string | null = null;
+    let customerLoyaltyProfile: any = null;
+
+    if (customerLoyaltyId) {
+      customerLoyaltyProfile = await LoyaltyService.getCustomerProfile(customerLoyaltyId);
+      if (customerLoyaltyProfile) {
+        customerUserId = customerLoyaltyProfile.customerId;
+      }
+    }
+
+    if (!customerUserId && customerPhone && customerPhone.trim().length >= 7) {
+      const cleanPhone = customerPhone.trim();
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.phone, cleanPhone))
+        .limit(1);
+
+      if (existingUser) {
+        customerUserId = existingUser.id;
+      } else {
+        const [newUser] = await db
+          .insert(users)
+          .values({
+            name: customerName || `Customer ${cleanPhone.slice(-4)}`,
+            phone: cleanPhone,
+            email: `pos-${cleanPhone}-${Date.now()}@icc.com.np`,
+            role: 'customer',
+            isActive: true,
+          })
+          .returning();
+        customerUserId = newUser.id;
+      }
+      customerLoyaltyProfile = await LoyaltyService.getOrCreateCustomerMembership(customerUserId, {
+        name: customerName,
+        phone: cleanPhone,
+      });
+    }
+
+    // Loyalty Coin Redemption & Promotional Offer Calculation
+    let verifiedCoinsToRedeem = 0;
+    let coinDiscountNpr = 0;
+    let offerDiscountNpr = 0;
+    let appliedOfferCode = '';
+
+    if (customerLoyaltyProfile) {
+      if (offerCode) {
+        const eligibleOffers = await LoyaltyService.getEligibleOffers(
+          customerLoyaltyProfile.customerId,
+          customerLoyaltyProfile.currentLevelId,
+          subtotal
+        );
+        const matched = eligibleOffers.find(
+          (o) => o.code.toUpperCase() === String(offerCode).trim().toUpperCase()
+        );
+        if (matched) {
+          offerDiscountNpr = matched.calculatedDiscount;
+          appliedOfferCode = matched.code;
+        }
+      }
+
+      if (redeemCoins && Number(redeemCoins) > 0) {
+        const netBeforeCoins = Math.max(0, subtotal - discountAmount - offerDiscountNpr);
+        const quote = await LoyaltyService.validateAndQuoteRedemption(
+          customerLoyaltyProfile.customerId,
+          Number(redeemCoins),
+          netBeforeCoins
+        );
+        if (quote.isValid && quote.coinsAllowed > 0) {
+          verifiedCoinsToRedeem = quote.coinsAllowed;
+          coinDiscountNpr = quote.discountNpr;
+        }
+      }
+    }
+
+    const totalLoyaltyDiscount = coinDiscountNpr + offerDiscountNpr;
+    const finalTotal = Math.max(0, subtotal - discountAmount - totalLoyaltyDiscount);
 
     // Validate Split Payment Allocations
     if (paymentMethod === 'split') {
@@ -233,18 +317,22 @@ export async function POST(request: NextRequest) {
         .insert(orders)
         .values({
           orderNumber,
-          userId: cashierId ? String(cashierId) : null,
+          userId: customerUserId || (cashierId ? String(cashierId) : null),
           status: 'delivered',
           subtotal: String(subtotal.toFixed(2)),
           vatAmount: String(vatPortion.toFixed(2)),
           deliveryFee: '0.00',
-          discountAmount: String(discountAmount.toFixed(2)),
+          discountAmount: String((discountAmount + totalLoyaltyDiscount).toFixed(2)),
           totalAmount: String(finalTotal.toFixed(2)),
           paymentMethod: dbPaymentMethod,
           paymentStatus: paymentMethod === 'credit' ? 'pending' : 'paid',
           customerNote: `POS Counter Sale | Cashier: ${cashierName} | Register: ${registerCode} | Method: ${paymentMethod.toUpperCase()} | Tendered: NPR ${amountTendered} | Change: NPR ${changeAmount} ${
             customerPhone ? `| Phone: ${customerPhone}` : ''
-          } ${customerPan ? `| PAN: ${customerPan}` : ''}`,
+          } ${customerPan ? `| PAN: ${customerPan}` : ''} ${
+            customerLoyaltyProfile
+              ? `| Loyalty: ${customerLoyaltyProfile.membershipNumber} (${customerLoyaltyProfile.levelName}) | Redeemed: ${verifiedCoinsToRedeem} coins (NPR ${coinDiscountNpr}) | Offer: ${appliedOfferCode || 'None'}`
+              : ''
+          }`,
           shippingAddressSnapshot: {
             fullName: customerName,
             phone: customerPhone || '9800000000',
@@ -501,6 +589,26 @@ export async function POST(request: NextRequest) {
       }).catch(() => {});
     }
 
+    // 4. Record Loyalty Points and Tier Updates
+    let loyaltyCommitResult: any = null;
+    if (customerUserId) {
+      try {
+        loyaltyCommitResult = await LoyaltyService.recordCheckoutLoyaltyTransaction({
+          orderId: result.order.id,
+          orderNumber: result.order.orderNumber,
+          customerId: customerUserId,
+          eligibleSpend: finalTotal,
+          coinsToRedeem: verifiedCoinsToRedeem,
+          offerCode: appliedOfferCode || undefined,
+          cashierId: cashierId ? String(cashierId) : null,
+          cashierName,
+          idempotencyKey: `loyalty-${idempotencyKey || result.order.orderNumber}`,
+        });
+      } catch (loyaltyErr) {
+        console.error('POS Loyalty commit warning:', loyaltyErr);
+      }
+    }
+
     const receiptResponse = {
       success: true,
       message: 'Sale finalized and receipt generated.',
@@ -514,7 +622,20 @@ export async function POST(request: NextRequest) {
           lineTotal: it.lineTotal ?? (it.unitPrice * it.quantity),
         })),
         subtotal,
-        discountAmount,
+        discountAmount: discountAmount + totalLoyaltyDiscount,
+        manualDiscount: discountAmount,
+        coinDiscount: coinDiscountNpr,
+        offerDiscount: offerDiscountNpr,
+        coinsRedeemed: verifiedCoinsToRedeem,
+        coinsEarned: loyaltyCommitResult?.pointsEarned || 0,
+        bonusCoinsEarned: loyaltyCommitResult?.bonusPoints || 0,
+        totalCoinsEarned: (loyaltyCommitResult?.pointsEarned || 0) + (loyaltyCommitResult?.bonusPoints || 0),
+        memberLevel: customerLoyaltyProfile?.levelName || null,
+        memberBadgeColor: customerLoyaltyProfile?.badgeColor || null,
+        membershipNumber: customerLoyaltyProfile?.membershipNumber || null,
+        newAvailableCoins: loyaltyCommitResult?.availableCoinsAfter ?? (customerLoyaltyProfile?.availableCoins ?? 0),
+        levelUpgraded: loyaltyCommitResult?.levelUpgraded || false,
+        newLevel: loyaltyCommitResult?.newLevel || null,
         totalAmount: finalTotal,
         vatAmount: result.vatPortion,
         taxableAmount: result.taxableAmount,

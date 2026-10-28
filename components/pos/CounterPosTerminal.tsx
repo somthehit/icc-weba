@@ -64,6 +64,7 @@ import CashierProductsView from './CashierProductsView';
 import CashierCustomersView from './CashierCustomersView';
 import CashierReportView from './CashierReportView';
 import CashierSettingsView from './CashierSettingsView';
+import LoyaltyRedemptionModal, { LoyaltyProfile } from './LoyaltyRedemptionModal';
 import { formatNpr, formatNepaliNumber } from '@/lib/nepal/money';
 import { posIndexedDb, CatalogProduct } from '@/lib/pos/indexedDbCatalog';
 import { catalogSearchIndex } from '@/lib/pos/searchIndex';
@@ -315,6 +316,16 @@ export default function CounterPosTerminal() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [visibleCount, setVisibleCount] = useState(48); // Virtualized initial slice
 
+  // Loyalty & Shopping Coins State
+  const [customerLoyaltyProfile, setCustomerLoyaltyProfile] = useState<LoyaltyProfile | null>(null);
+  const [coinsToRedeem, setCoinsToRedeem] = useState<number>(0);
+  const [coinDiscountNpr, setCoinDiscountNpr] = useState<number>(0);
+  const [appliedOfferCode, setAppliedOfferCode] = useState<string>('');
+  const [offerDiscountNpr, setOfferDiscountNpr] = useState<number>(0);
+  const [eligibleOffers, setEligibleOffers] = useState<any[]>([]);
+  const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
+  const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(false);
+
   // Accurate Nepal IRD 13% VAT & Subtotal calculations
   const cartGrossSubtotal = useMemo(() => {
     return cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -325,8 +336,8 @@ export default function CounterPosTerminal() {
   }, [cart]);
 
   const totalDiscountAmount = useMemo(() => {
-    return lineDiscountsTotal + orderDiscountAmount;
-  }, [lineDiscountsTotal, orderDiscountAmount]);
+    return lineDiscountsTotal + orderDiscountAmount + coinDiscountNpr + offerDiscountNpr;
+  }, [lineDiscountsTotal, orderDiscountAmount, coinDiscountNpr, offerDiscountNpr]);
 
   const cartTotal = useMemo(() => {
     return Math.max(0, cartGrossSubtotal - totalDiscountAmount);
@@ -470,6 +481,43 @@ export default function CounterPosTerminal() {
   const [isSubmittingSale, setIsSubmittingSale] = useState(false);
   const [completedReceipt, setCompletedReceipt] = useState<ReceiptData | null>(null);
   const [qrSecondsLeft, setQrSecondsLeft] = useState(300);
+
+  const loadCustomerLoyalty = async (phoneOrId: string) => {
+    if (!phoneOrId || phoneOrId === 'Walk-in Customer') {
+      setCustomerLoyaltyProfile(null);
+      setCoinsToRedeem(0);
+      setCoinDiscountNpr(0);
+      setAppliedOfferCode('');
+      setOfferDiscountNpr(0);
+      setEligibleOffers([]);
+      return;
+    }
+    setIsLoadingLoyalty(true);
+    try {
+      const res = await fetch(`/api/pos/loyalty/customer?id=${encodeURIComponent(phoneOrId)}&subtotal=${cartGrossSubtotal}`);
+      const data = await res.json();
+      if (data.success && data.profile) {
+        setCustomerLoyaltyProfile(data.profile);
+        setEligibleOffers(data.eligibleOffers || []);
+      } else {
+        const resSearch = await fetch(`/api/pos/loyalty/customer?search=${encodeURIComponent(phoneOrId)}&subtotal=${cartGrossSubtotal}`);
+        const dataSearch = await resSearch.json();
+        if (dataSearch.success && dataSearch.members && dataSearch.members.length > 0) {
+          const match = dataSearch.members[0];
+          setCustomerLoyaltyProfile(match);
+          const resOffers = await fetch(`/api/pos/loyalty/customer?id=${encodeURIComponent(match.customerId)}&subtotal=${cartGrossSubtotal}`);
+          const dataOffers = await resOffers.json();
+          if (dataOffers.success) setEligibleOffers(dataOffers.eligibleOffers || []);
+        } else {
+          setCustomerLoyaltyProfile(null);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load loyalty profile:', e);
+    } finally {
+      setIsLoadingLoyalty(false);
+    }
+  };
 
   // Dynamic Bank & Wallet QR States
   const [availableBankQrs, setAvailableBankQrs] = useState<any[]>([]);
@@ -1106,6 +1154,9 @@ export default function CounterPosTerminal() {
           customerName,
           customerPhone,
           customerPan,
+          customerLoyaltyId: customerLoyaltyProfile?.customerId,
+          redeemCoins: coinsToRedeem,
+          offerCode: appliedOfferCode || undefined,
           cashierName: activeCashier?.name || 'Cashier 1',
           cashierId: activeCashier?.id ? parseInt(activeCashier.id, 10) : null,
           registerCode: terminalCode,
@@ -1127,12 +1178,20 @@ export default function CounterPosTerminal() {
       setCart([]);
       setOrderDiscountAmount(0);
       setOrderDiscountPercent(0);
+      setCoinsToRedeem(0);
+      setCoinDiscountNpr(0);
+      setAppliedOfferCode('');
+      setOfferDiscountNpr(0);
       setSplitCashAmount('0');
       setSplitCardAmount('0');
       setSplitQrAmount('0');
       setCardAuthCode('');
       setBankTransferRef('');
       setIsCheckoutOpen(false);
+      // Refresh customer loyalty balance after sale
+      if (customerLoyaltyProfile) {
+        loadCustomerLoyalty(customerLoyaltyProfile.customerId);
+      }
     } catch (err: any) {
       alert(`Checkout Error: ${err.message}`);
     } finally {
@@ -1861,24 +1920,58 @@ export default function CounterPosTerminal() {
               </button>
             </div>
 
-            {/* Customer Selector (matching SupaPOS dropdown UI) */}
+            {/* Customer Selector & Loyalty Membership Indicator */}
             {cartMode === 'sale' && (
-              <div
-                onClick={() => {
-                  setTempCustomerName(customerName);
-                  setTempCustomerPhone(customerPhone);
-                  setTempCustomerPan(customerPan);
-                  setIsCustomerPickerOpen(true);
-                }}
-                className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 flex items-center justify-between cursor-pointer transition shadow-2xs"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <UserCheck className="h-4 w-4 text-[#00c569] shrink-0" />
-                  <span className="text-xs font-bold text-slate-700 truncate">
-                    {customerName || 'Select Customer'}
-                  </span>
+              <div className="space-y-2 mb-3">
+                <div
+                  onClick={() => {
+                    setTempCustomerName(customerName);
+                    setTempCustomerPhone(customerPhone);
+                    setTempCustomerPan(customerPan);
+                    setIsCustomerPickerOpen(true);
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 flex items-center justify-between cursor-pointer transition shadow-2xs"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <UserCheck className="h-4 w-4 text-[#00c569] shrink-0" />
+                    <span className="text-xs font-bold text-slate-700 truncate">
+                      {customerName || 'Select Customer'}
+                    </span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
                 </div>
-                <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+
+                {/* Loyalty Tier & Coins Banner */}
+                {customerLoyaltyProfile && (
+                  <div className="p-2.5 rounded-xl bg-linear-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between shadow-2xs animate-in fade-in">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-black uppercase px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          {customerLoyaltyProfile.icon} {customerLoyaltyProfile.levelName}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {customerLoyaltyProfile.membershipNumber}
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-black text-amber-400 flex items-center gap-1 mt-0.5">
+                        🪙 {customerLoyaltyProfile.availableCoins.toLocaleString('en-IN')} Coins
+                        {coinDiscountNpr > 0 && (
+                          <span className="text-emerald-400 font-mono text-[10px]">
+                            (-NPR {coinDiscountNpr} applied)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsLoyaltyModalOpen(true)}
+                      className="px-2.5 py-1 rounded-lg bg-[#00c569] hover:bg-emerald-500 text-white text-[10px] font-black transition shadow-xs shrink-0"
+                    >
+                      {coinsToRedeem > 0 || appliedOfferCode ? 'Edit Rewards' : 'Redeem Coins'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -2163,9 +2256,25 @@ export default function CounterPosTerminal() {
                   </div>
 
                   {totalDiscountAmount > 0 && (
-                    <div className="flex justify-between text-amber-600 font-semibold">
-                      <span className="flex items-center gap-1">Discount:</span>
-                      <span className="font-mono">-NPR {formatNepaliNumber(totalDiscountAmount.toFixed(2))}</span>
+                    <div className="space-y-1">
+                      {orderDiscountAmount > 0 && (
+                        <div className="flex justify-between text-amber-600 font-semibold">
+                          <span>Manual Discount:</span>
+                          <span className="font-mono">-NPR {formatNepaliNumber(orderDiscountAmount.toFixed(2))}</span>
+                        </div>
+                      )}
+                      {coinDiscountNpr > 0 && (
+                        <div className="flex justify-between text-emerald-600 font-semibold">
+                          <span>Coin Redemption ({coinsToRedeem} pts):</span>
+                          <span className="font-mono">-NPR {formatNepaliNumber(coinDiscountNpr.toFixed(2))}</span>
+                        </div>
+                      )}
+                      {offerDiscountNpr > 0 && (
+                        <div className="flex justify-between text-emerald-600 font-semibold">
+                          <span>Promo Offer ({appliedOfferCode}):</span>
+                          <span className="font-mono">-NPR {formatNepaliNumber(offerDiscountNpr.toFixed(2))}</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -2266,6 +2375,7 @@ export default function CounterPosTerminal() {
           setCustomerName(c.name);
           setCustomerPhone(c.phone || '');
           setCustomerPan(c.pan || '');
+          loadCustomerLoyalty(c.phone || c.name);
         }}
         onSwitchToSales={() => setActiveSidebarTab('sales')}
       />
@@ -2393,9 +2503,12 @@ export default function CounterPosTerminal() {
               <button
                 type="button"
                 onClick={() => {
-                  setCustomerName(tempCustomerName.trim() || 'Walk-in Customer');
-                  setCustomerPhone(tempCustomerPhone.trim());
+                  const targetName = tempCustomerName.trim() || 'Walk-in Customer';
+                  const targetPhone = tempCustomerPhone.trim();
+                  setCustomerName(targetName);
+                  setCustomerPhone(targetPhone);
                   setCustomerPan(tempCustomerPan.trim());
+                  loadCustomerLoyalty(targetPhone || targetName);
                   setIsCustomerPickerOpen(false);
                 }}
                 className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md transition"
@@ -3110,6 +3223,43 @@ export default function CounterPosTerminal() {
                   </div>
                 </div>
 
+                {/* Loyalty & Rewards Breakdown on Receipt */}
+                {(completedReceipt as any).memberLevel && (
+                  <div className="py-2 border-b border-dashed border-slate-300 text-[10px] space-y-0.5 mb-2">
+                    <div className="flex justify-between font-bold">
+                      <span>Loyalty Member:</span>
+                      <span>{(completedReceipt as any).memberLevel} ({(completedReceipt as any).membershipNumber})</span>
+                    </div>
+                    {(completedReceipt as any).coinsRedeemed > 0 && (
+                      <div className="flex justify-between text-slate-700">
+                        <span>Coins Redeemed:</span>
+                        <span>-{(completedReceipt as any).coinsRedeemed} pts (Rs. {(completedReceipt as any).coinDiscount})</span>
+                      </div>
+                    )}
+                    {(completedReceipt as any).offerDiscount > 0 && (
+                      <div className="flex justify-between text-slate-700">
+                        <span>Promo Offer:</span>
+                        <span>-Rs. {(completedReceipt as any).offerDiscount}</span>
+                      </div>
+                    )}
+                    {(completedReceipt as any).totalCoinsEarned > 0 && (
+                      <div className="flex justify-between font-bold text-emerald-700">
+                        <span>Coins Earned Today:</span>
+                        <span>+{(completedReceipt as any).totalCoinsEarned} Coins</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-bold">
+                      <span>Available Balance:</span>
+                      <span>{(completedReceipt as any).newAvailableCoins} Coins</span>
+                    </div>
+                    {(completedReceipt as any).levelUpgraded && (
+                      <div className="text-center font-black text-emerald-700 text-[11px] pt-1 uppercase">
+                        🎉 Tier Upgrade: {(completedReceipt as any).newLevel}!
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Customer Policy Footer */}
                 <div className="text-center text-[9px] text-slate-500 space-y-0.5 mb-2">
                   <p className="font-bold text-slate-700">Thank you for shopping at Intel Computer Center!</p>
@@ -3523,6 +3673,23 @@ export default function CounterPosTerminal() {
           </div>
         </div>
       )}
+
+      {/* 12. Loyalty Redemption & Offers Modal */}
+      <LoyaltyRedemptionModal
+        isOpen={isLoyaltyModalOpen}
+        profile={customerLoyaltyProfile}
+        orderSubtotal={cartGrossSubtotal}
+        currentCoinsToRedeem={coinsToRedeem}
+        currentOfferCode={appliedOfferCode}
+        eligibleOffers={eligibleOffers}
+        onApply={(data) => {
+          setCoinsToRedeem(data.coinsToRedeem);
+          setCoinDiscountNpr(data.coinDiscountNpr);
+          setAppliedOfferCode(data.offerCode);
+          setOfferDiscountNpr(data.offerDiscountNpr);
+        }}
+        onClose={() => setIsLoyaltyModalOpen(false)}
+      />
     </div>
   );
 }

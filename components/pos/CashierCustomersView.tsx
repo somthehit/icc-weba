@@ -28,6 +28,12 @@ interface CustomerItem {
   lifetimeSpend: number;
   lastOrderAt?: string | null;
   isVip?: boolean;
+  membershipNumber?: string;
+  membershipLevel?: string;
+  badgeColor?: string;
+  icon?: string;
+  availableCoins?: number;
+  qualifyingSpend?: number;
 }
 
 interface CashierCustomersViewProps {
@@ -126,22 +132,22 @@ export default function CashierCustomersView({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#f8faf9] dark:bg-[#0c120f] overflow-hidden p-6 space-y-4">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50/70 overflow-hidden p-6 space-y-4">
       {/* 1. Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#141a17] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm shrink-0">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:text-purple-300">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-300">
               Customer Ledger &amp; Khata
             </span>
-            <span className="text-xs font-bold text-slate-400">
+            <span className="text-xs font-bold text-slate-500">
               {customers.length} registered buyers
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-800 dark:text-white mt-1 tracking-tight">
+          <h1 className="text-2xl font-black text-slate-900 mt-1 tracking-tight">
             Customer Directory
           </h1>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-slate-600 font-medium">
             Search customer records, view purchase history &amp; credit status, and attach them to active checkout.
           </p>
         </div>
@@ -150,7 +156,7 @@ export default function CashierCustomersView({
           <button
             type="button"
             onClick={() => setIsRegisterOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#00c569] hover:bg-emerald-500 text-white text-xs font-black shadow-md transition"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#00c569] hover:bg-emerald-600 text-white text-xs font-black shadow-md shadow-emerald-600/20 transition"
           >
             <UserPlus className="h-4 w-4" />
             <span>New Customer</span>
@@ -166,7 +172,7 @@ export default function CashierCustomersView({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by customer name, 10-digit mobile, or email..."
-            className="w-full pl-10 pr-8 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141a17] text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition shadow-2xs"
+            className="w-full pl-10 pr-8 py-2.5 rounded-2xl border border-slate-300 bg-white text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition shadow-2xs"
           />
           <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-3" />
           {search && (
@@ -183,7 +189,7 @@ export default function CashierCustomersView({
         <button
           type="button"
           onClick={() => fetchCustomers(search)}
-          className="p-2.5 rounded-2xl bg-white dark:bg-[#141a17] border border-slate-200 dark:border-slate-800 text-slate-600 hover:bg-slate-50 transition"
+          className="p-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition shadow-2xs"
           title="Refresh"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -191,82 +197,103 @@ export default function CashierCustomersView({
       </div>
 
       {/* 3. Walk-in Customer Quick Selector */}
-      <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-between shrink-0">
+      <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between shrink-0 shadow-2xs">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm">
+          <div className="h-10 w-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
             W
           </div>
           <div>
-            <h4 className="text-xs font-black text-slate-900 dark:text-white">Walk-in Customer</h4>
-            <p className="text-[11px] text-slate-500">Standard retail cash memo (No tax PAN or account required)</p>
+            <h4 className="text-xs font-black text-slate-900">Walk-In Customer</h4>
+            <p className="text-[11px] text-slate-600 font-medium">Standard retail cash memo (No tax PAN or account required)</p>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={() => handleAttachCustomer({ name: 'Walk-in Customer', phone: '', pan: '' })}
-          className="px-3 py-1.5 rounded-xl bg-[#00c569] hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs"
+          onClick={() => handleAttachCustomer({ name: 'Walk-in Customer', phone: '' })}
+          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
         >
-          <ShoppingBag className="h-3.5 w-3.5" />
-          <span>Use Walk-in</span>
+          <span>Use Walk-In</span>
+          <ArrowRight className="h-3.5 w-3.5" />
         </button>
       </div>
 
-      {/* 4. Customers List Grid */}
+      {/* 4. Customer Cards Grid */}
       <div className="flex-1 min-h-0 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-1">
-        {loading && customers.length === 0 ? (
-          <div className="col-span-full py-20 text-center text-xs text-slate-400">
-            <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-500" />
-            Loading customer records...
-          </div>
-        ) : customers.length === 0 ? (
-          <div className="col-span-full py-20 text-center text-xs text-slate-400">
+        {customers.length === 0 ? (
+          <div className="col-span-full py-20 text-center text-xs text-slate-500 font-medium bg-white rounded-3xl border border-dashed border-slate-200">
             No customer accounts found. Click &quot;New Customer&quot; above to create one.
           </div>
         ) : (
           customers.map((cust) => (
             <div
               key={cust.id}
-              className="p-4 rounded-3xl bg-white dark:bg-[#141a17] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-md hover:border-emerald-500 transition flex flex-col justify-between space-y-3"
+              className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-emerald-500 transition flex flex-col justify-between space-y-3"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                    <h4 className="text-sm font-black text-slate-900 truncate">
                       {cust.name}
                     </h4>
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
-                      <Phone className="h-3 w-3 text-emerald-600" />
+                    <span className="text-xs text-slate-600 flex items-center gap-1.5 mt-0.5 font-mono font-bold">
+                      <Phone className="h-3.5 w-3.5 text-emerald-600" />
                       {cust.phone || 'No phone'}
                     </span>
                   </div>
 
-                  {cust.isVip && (
-                    <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 text-[9px] font-black uppercase tracking-wider border border-purple-200 shrink-0">
-                      VIP Client
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                    {cust.membershipLevel && (
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border shrink-0 ${
+                          cust.badgeColor === 'amber'
+                            ? 'bg-amber-100 text-amber-900 border-amber-300'
+                            : cust.badgeColor === 'slate-silver'
+                            ? 'bg-slate-800 text-white border-slate-900'
+                            : cust.badgeColor === 'emerald'
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-600 shadow-2xs'
+                            : 'bg-slate-100 text-slate-800 border-slate-300'
+                        }`}
+                      >
+                        {cust.icon || '⭐'} {cust.membershipLevel}
+                      </span>
+                    )}
+                    {cust.isVip && (
+                      <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 text-[9px] font-black uppercase tracking-wider border border-purple-300 shrink-0">
+                        VIP
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px]">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-semibold">Orders</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{cust.orderCount} Bills</span>
+                {cust.membershipNumber && (
+                  <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono">
+                    <span className="text-slate-500 font-bold">ID: {cust.membershipNumber}</span>
+                    <span className="font-black text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      🪙 {(cust.availableCoins || 0).toLocaleString('en-IN')} Coins
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-semibold">Total Spend</span>
-                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                )}
+
+                <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 text-[11px]">
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <span className="text-[10px] text-slate-500 block font-bold uppercase tracking-wider">Orders</span>
+                    <span className="font-black text-slate-900 text-xs">{cust.orderCount} Bills</span>
+                  </div>
+                  <div className="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100">
+                    <span className="text-[10px] text-emerald-800 block font-bold uppercase tracking-wider">Total Spend</span>
+                    <span className="font-mono font-black text-emerald-800 text-xs">
                       Rs. {formatNepaliNumber(String(cust.lifetimeSpend))}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-end">
                 <button
                   type="button"
                   onClick={() => handleAttachCustomer({ name: cust.name, phone: cust.phone, pan: cust.pan })}
-                  className="w-full py-2 rounded-xl bg-slate-900 hover:bg-[#00c569] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs"
+                  className="w-full py-2.5 rounded-xl bg-[#00c569] hover:bg-emerald-600 text-white text-xs font-black transition flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/20"
                 >
                   <ShoppingBag className="h-3.5 w-3.5" />
                   <span>Attach to Sale</span>
@@ -280,19 +307,19 @@ export default function CashierCustomersView({
       {/* 5. Register New Customer Modal */}
       {isRegisterOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
           onClick={() => setIsRegisterOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-[#141a17] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4"
+            className="w-full max-w-md rounded-3xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                   <UserPlus className="h-4 w-4" />
                 </div>
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                   Register New Customer
                 </h3>
               </div>
@@ -313,7 +340,7 @@ export default function CashierCustomersView({
 
             <form onSubmit={handleRegisterSubmit} className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
                   Customer / Business Name *
                 </label>
                 <input
@@ -322,12 +349,12 @@ export default function CashierCustomersView({
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Ramesh Shrestha / Himalayan Tech"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
                   Mobile Number (Nepal 10 Digits)
                 </label>
                 <input
@@ -336,12 +363,12 @@ export default function CashierCustomersView({
                   onChange={(e) => setNewPhone(e.target.value)}
                   placeholder="98XXXXXXXX"
                   maxLength={10}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
                   Buyer PAN (For IRD Nepal VAT Bill)
                 </label>
                 <input
@@ -350,12 +377,12 @@ export default function CashierCustomersView({
                   onChange={(e) => setNewPan(e.target.value)}
                   placeholder="9-digit PAN number"
                   maxLength={9}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
                   Email Address (Optional)
                 </label>
                 <input
@@ -363,22 +390,22 @@ export default function CashierCustomersView({
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="customer@domain.com"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsRegisterOpen(false)}
-                  className="flex-1 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                  className="flex-1 py-2.5 rounded-2xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingNew}
-                  className="flex-1 py-2.5 rounded-2xl bg-[#00c569] hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black shadow-md transition flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 rounded-2xl bg-[#00c569] hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-black shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
                 >
                   {submittingNew ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                   <span>Save &amp; Attach</span>

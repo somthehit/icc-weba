@@ -60,22 +60,22 @@ export default function CashierSettingsView({
   // Submit PIN Change
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPinError('');
     setPinSuccess('');
+    setPinError('');
 
-    if (!newPin || !/^\d{4,6}$/.test(newPin)) {
-      setPinError('New PIN must be 4 to 6 numeric digits.');
+    if (newPin.length < 4 || newPin.length > 6) {
+      setPinError('New PIN must be between 4 and 6 digits.');
       return;
     }
 
     if (newPin !== confirmPin) {
-      setPinError('New PIN and confirmation do not match.');
+      setPinError('New PIN and confirmation PIN do not match.');
       return;
     }
 
     setPinLoading(true);
     try {
-      const res = await fetch('/api/pos/cashier/settings', {
+      const res = await fetch('/api/pos/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -89,10 +89,10 @@ export default function CashierSettingsView({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to update cashier PIN.');
+        throw new Error(data.error || 'Failed to update PIN.');
       }
 
-      setPinSuccess(data.message || 'Cashier PIN updated successfully!');
+      setPinSuccess(data.message || 'Quick PIN updated successfully!');
       setCurrentPin('');
       setNewPin('');
       setConfirmPin('');
@@ -106,27 +106,22 @@ export default function CashierSettingsView({
   // Submit Password Change
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError('');
     setPasswordSuccess('');
+    setPasswordError('');
 
-    if (!currentPassword) {
-      setPasswordError('Please enter your current password.');
-      return;
-    }
-
-    if (!newPassword || newPassword.length < 6) {
+    if (newPassword.length < 6) {
       setPasswordError('New password must be at least 6 characters.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('New password and confirmation do not match.');
+      setPasswordError('New password and confirmation password do not match.');
       return;
     }
 
     setPasswordLoading(true);
     try {
-      const res = await fetch('/api/pos/cashier/settings', {
+      const res = await fetch('/api/pos/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -155,36 +150,36 @@ export default function CashierSettingsView({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#f8faf9] dark:bg-[#0c120f] overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50/70 overflow-y-auto p-6 space-y-6">
       {/* 1. Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#141a17] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
               Cashier Security Portal
             </span>
-            <span className="text-xs font-bold text-slate-400">
+            <span className="text-xs font-bold text-slate-500">
               Terminal: {terminalCode}
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-800 dark:text-white mt-1 tracking-tight">
+          <h1 className="text-2xl font-black text-slate-900 mt-1 tracking-tight">
             Account &amp; POS Settings
           </h1>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-slate-600 font-medium">
             Update your 4-digit quick unlock PIN, change login password, and configure counter preferences.
           </p>
         </div>
 
         {/* Profile Badge */}
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
           <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
             {activeCashier?.name?.charAt(0) || 'C'}
           </div>
           <div>
-            <h4 className="text-xs font-black text-slate-900 dark:text-white">
+            <h4 className="text-xs font-black text-slate-900">
               {activeCashier?.name || 'Cashier User'}
             </h4>
-            <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 block">
+            <span className="text-[10px] font-mono font-black text-emerald-700 block">
               Staff ID: {activeCashier?.staffCode || 'CASHIER'}
             </span>
           </div>
@@ -194,16 +189,16 @@ export default function CashierSettingsView({
       {/* 2. Credentials Forms Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form 1: Change Fast PIN */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#141a17] border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-4">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="h-9 w-9 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
+        <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+            <div className="h-9 w-9 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
               <KeyRound className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                 Change 4-Digit Quick PIN
               </h3>
-              <p className="text-[11px] text-slate-500">Used for fast till unlock and supervisor sign-offs</p>
+              <p className="text-[11px] text-slate-500 font-medium">Used for fast till unlock and supervisor sign-offs</p>
             </div>
           </div>
 
@@ -223,7 +218,7 @@ export default function CashierSettingsView({
 
           <form onSubmit={handlePinSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                 Current PIN (Optional if not set)
               </label>
               <input
@@ -232,12 +227,12 @@ export default function CashierSettingsView({
                 value={currentPin}
                 onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, ''))}
                 placeholder="••••"
-                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2.5 text-xs font-mono font-bold tracking-widest text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-mono font-black tracking-widest text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                 New Fast PIN (4 to 6 Digits) *
               </label>
               <input
@@ -247,12 +242,12 @@ export default function CashierSettingsView({
                 value={newPin}
                 onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
                 placeholder="Enter 4-6 digit new PIN"
-                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2.5 text-xs font-mono font-bold tracking-widest text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-mono font-black tracking-widest text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                 Confirm New PIN *
               </label>
               <input
@@ -262,14 +257,14 @@ export default function CashierSettingsView({
                 value={confirmPin}
                 onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
                 placeholder="Re-enter new PIN"
-                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2.5 text-xs font-mono font-bold tracking-widest text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-mono font-black tracking-widest text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
 
             <button
               type="submit"
               disabled={pinLoading}
-              className="w-full py-2.5 rounded-2xl bg-[#00c569] hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black shadow-md transition flex items-center justify-center gap-1.5"
+              className="w-full py-3 rounded-2xl bg-[#00c569] hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-black shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
             >
               {pinLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
               <span>Update Quick PIN</span>
@@ -278,16 +273,16 @@ export default function CashierSettingsView({
         </div>
 
         {/* Form 2: Change Cashier Password */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#141a17] border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-4">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="h-9 w-9 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
+        <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+            <div className="h-9 w-9 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                 Change Login Password
               </h3>
-              <p className="text-[11px] text-slate-500">Update terminal login and system password</p>
+              <p className="text-[11px] text-slate-500 font-medium">Update terminal login and system password</p>
             </div>
           </div>
 
@@ -307,7 +302,7 @@ export default function CashierSettingsView({
 
           <form onSubmit={handlePasswordSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                 Current Password *
               </label>
               <div className="relative">
@@ -317,7 +312,7 @@ export default function CashierSettingsView({
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2.5 pr-10 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 pr-10 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
                 <button
                   type="button"
@@ -330,17 +325,18 @@ export default function CashierSettingsView({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                 New Password (Min 6 Characters) *
               </label>
               <div className="relative">
                 <input
                   type={showNewPass ? 'text' : 'password'}
                   required
+                  minLength={6}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2.5 pr-10 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 pr-10 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
                 <button
                   type="button"
@@ -353,7 +349,7 @@ export default function CashierSettingsView({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                 Confirm New Password *
               </label>
               <input
@@ -362,14 +358,14 @@ export default function CashierSettingsView({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter new password"
-                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3.5 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
 
             <button
               type="submit"
               disabled={passwordLoading}
-              className="w-full py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-black shadow-md transition flex items-center justify-center gap-1.5"
+              className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-black shadow-md transition flex items-center justify-center gap-1.5"
             >
               {passwordLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
               <span>Change Password</span>
@@ -379,26 +375,28 @@ export default function CashierSettingsView({
       </div>
 
       {/* 3. POS Terminal Hardware & Display Preferences */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#141a17] border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-4">
-        <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+        <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
           Counter Hardware &amp; UI Preferences
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {/* Double Slip Toggle */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Printer className="h-5 w-5 text-emerald-600" />
+              <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+                <Printer className="h-5 w-5" />
+              </div>
               <div>
-                <h4 className="text-xs font-black text-slate-900 dark:text-white">Double Thermal Slip</h4>
-                <p className="text-[10px] text-slate-400">Customer Copy + Office Audit Copy</p>
+                <h4 className="text-xs font-black text-slate-900">Double Thermal Slip</h4>
+                <p className="text-[10px] text-slate-500 font-medium">Customer Copy + Office Audit Copy</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setDoubleSlip(!doubleSlip)}
               className={`w-11 h-6 rounded-full transition p-1 flex items-center ${
-                doubleSlip ? 'bg-[#00c569] justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'
+                doubleSlip ? 'bg-[#00c569] justify-end' : 'bg-slate-300 justify-start'
               }`}
             >
               <div className="w-4 h-4 rounded-full bg-white shadow-xs" />
@@ -406,19 +404,21 @@ export default function CashierSettingsView({
           </div>
 
           {/* Sound FX */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Volume2 className="h-5 w-5 text-blue-600" />
+              <div className="p-2 rounded-xl bg-blue-100 text-blue-800">
+                <Volume2 className="h-5 w-5" />
+              </div>
               <div>
-                <h4 className="text-xs font-black text-slate-900 dark:text-white">Barcode Sound Effects</h4>
-                <p className="text-[10px] text-slate-400">Audio beep on successful item add</p>
+                <h4 className="text-xs font-black text-slate-900">Barcode Sound Effects</h4>
+                <p className="text-[10px] text-slate-500 font-medium">Audio beep on successful item add</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setSoundFeedback(!soundFeedback)}
               className={`w-11 h-6 rounded-full transition p-1 flex items-center ${
-                soundFeedback ? 'bg-[#00c569] justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'
+                soundFeedback ? 'bg-[#00c569] justify-end' : 'bg-slate-300 justify-start'
               }`}
             >
               <div className="w-4 h-4 rounded-full bg-white shadow-xs" />
@@ -426,20 +426,22 @@ export default function CashierSettingsView({
           </div>
 
           {/* Theme Switcher */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {theme === 'dark' ? <Moon className="h-5 w-5 text-purple-400" /> : <Sun className="h-5 w-5 text-amber-500" />}
+              <div className="p-2 rounded-xl bg-amber-100 text-amber-800">
+                {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              </div>
               <div>
-                <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                <h4 className="text-xs font-black text-slate-900">
                   {theme === 'dark' ? 'Dark Terminal Theme' : 'Light Counter Theme'}
                 </h4>
-                <p className="text-[10px] text-slate-400">Toggle high-contrast display</p>
+                <p className="text-[10px] text-slate-500 font-medium">Current active display mode</p>
               </div>
             </div>
             <button
               type="button"
               onClick={onToggleTheme}
-              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-300 transition"
+              className="px-3.5 py-1.5 rounded-xl bg-slate-200 text-xs font-black text-slate-800 hover:bg-slate-300 transition"
             >
               Toggle
             </button>
@@ -450,10 +452,10 @@ export default function CashierSettingsView({
           <button
             type="button"
             onClick={onOpenShortcuts}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800 border border-slate-200 transition"
           >
-            <Keyboard className="h-4 w-4" />
-            <span>View POS Keyboard Shortcuts (F1–F12)</span>
+            <Keyboard className="h-4 w-4 text-slate-600" />
+            <span>View All Keyboard Shortcuts (F1 - F12)</span>
           </button>
         </div>
       </div>

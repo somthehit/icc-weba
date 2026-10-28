@@ -48,6 +48,7 @@ export type AdminModule =
   | 'content'
   | 'seo'
   | 'customers'
+  | 'loyalty'
   | 'inquiries'
   | 'reviews'
   | 'reports'

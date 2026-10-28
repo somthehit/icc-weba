@@ -7,6 +7,7 @@ import { users } from '@/db/schema';
 import { eq, or, and, sql } from 'drizzle-orm';
 import { verifyStaffPin } from '@/services/staffAuthService';
 import bcrypt from 'bcryptjs';
+import { LoyaltyService } from '@/lib/loyalty/loyaltyService';
 
 // Helper to verify supervisor PIN
 async function verifySupervisorCredentials(supervisorId: string | number, pin: string) {
@@ -151,6 +152,22 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // 4. Reverse Loyalty Points & Restore Redeemed Coins if customer attached
+    let loyaltyReversal: any = null;
+    if (existingOrder.userId) {
+      try {
+        loyaltyReversal = await LoyaltyService.recordReturnReversal({
+          originalOrderNumber: existingOrder.orderNumber,
+          customerId: existingOrder.userId,
+          refundAmount: parsedRefundAmount,
+          supervisorName,
+          cashierName,
+        });
+      } catch (loyaltyErr) {
+        console.error('POS return loyalty reversal warning:', loyaltyErr);
+      }
+    }
+
     const returnSlip = {
       returnSlipNumber,
       orderNumber: existingOrder.orderNumber,
@@ -164,6 +181,7 @@ export async function POST(request: NextRequest) {
       authorizedBy: supervisorName,
       cashierName,
       registerCode,
+      loyaltyReversal: loyaltyReversal || undefined,
     };
 
     return NextResponse.json({

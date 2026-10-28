@@ -38,6 +38,11 @@ export const SYSTEM_MODULES = [
     label: 'Staff & User Management',
     desc: 'Managing accounts, roles & audit log',
   },
+  {
+    key: 'loyalty',
+    label: 'Customer Loyalty & Memberships',
+    desc: 'Tiers, points ledger, offers, redemptions & overrides',
+  },
 ] as const;
 
 export type ModuleKey = (typeof SYSTEM_MODULES)[number]['key'];

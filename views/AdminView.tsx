@@ -57,7 +57,9 @@ import {
   type StockAuditReason,
 } from '@/components/admin/shared';
 
+import { LoyaltyAdminModule } from '@/components/admin/LoyaltyAdminModule';
 import {
+  Award,
   BarChart3,
   Boxes,
   DollarSign,
@@ -499,6 +501,21 @@ export const AdminView: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveModule('loyalty')}
+            className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
+              activeModule === 'loyalty'
+                ? 'bg-emerald-600 text-white font-semibold shadow-sm'
+                : 'text-[#B4BACC] hover:bg-[#181F30] hover:text-white'
+            }`}
+          >
+            <Award className="w-4 h-4 flex-shrink-0 opacity-90 text-amber-400" />
+            <span className="flex-1">Loyalty & Rewards</span>
+            <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+              VIP
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveModule('inquiries')}
             className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-[9px] text-[13.5px] font-medium transition-all text-left w-full ${
               activeModule === 'inquiries'
@@ -764,6 +781,7 @@ export const AdminView: React.FC = () => {
           {activeModule === 'seo' && <SeoModule logAuditAction={logAuditAction} />}
 
           {activeModule === 'customers' && <CustomersModule />}
+          {activeModule === 'loyalty' && <LoyaltyAdminModule />}
 
           {activeModule === 'inquiries' && <InquiriesModule />}
 

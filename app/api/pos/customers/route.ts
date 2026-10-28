@@ -1,9 +1,11 @@
+// app/api/pos/customers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { users, orders } from '@/db/schema';
+import { users, orders, customerMemberships, loyaltyLevels } from '@/db/schema';
 import { eq, or, ilike, desc, sql, and } from 'drizzle-orm';
+import { LoyaltyService } from '@/lib/loyalty/loyaltyService';
 
-// GET: Search or list POS customers
+// GET: Search or list POS customers with loyalty tier & points
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -17,7 +19,8 @@ export async function GET(request: NextRequest) {
         or(
           ilike(users.name, `%${search}%`),
           ilike(users.phone, `%${search}%`),
-          ilike(users.email, `%${search}%`)
+          ilike(users.email, `%${search}%`),
+          ilike(customerMemberships.membershipNumber, `%${search}%`)
         )!
       );
     }
@@ -29,14 +32,32 @@ export async function GET(request: NextRequest) {
         email: users.email,
         phone: users.phone,
         createdAt: users.createdAt,
-        orderCount: sql<number>`count(${orders.id})::int`,
+        orderCount: sql<number>`count(distinct ${orders.id})::int`,
         lifetimeSpend: sql<string>`coalesce(sum(${orders.totalAmount}), 0)`,
         lastOrderAt: sql<Date | null>`max(${orders.createdAt})`,
+        membershipNumber: customerMemberships.membershipNumber,
+        levelId: customerMemberships.currentLevelId,
+        levelName: loyaltyLevels.name,
+        badgeColor: loyaltyLevels.badgeColor,
+        icon: loyaltyLevels.icon,
+        availableCoins: customerMemberships.availableCoins,
+        qualifyingSpend: customerMemberships.qualifyingSpend,
       })
       .from(users)
       .leftJoin(orders, eq(orders.userId, users.id))
+      .leftJoin(customerMemberships, eq(customerMemberships.customerId, users.id))
+      .leftJoin(loyaltyLevels, eq(customerMemberships.currentLevelId, loyaltyLevels.id))
       .where(and(...conditions))
-      .groupBy(users.id)
+      .groupBy(
+        users.id,
+        customerMemberships.membershipNumber,
+        customerMemberships.currentLevelId,
+        loyaltyLevels.name,
+        loyaltyLevels.badgeColor,
+        loyaltyLevels.icon,
+        customerMemberships.availableCoins,
+        customerMemberships.qualifyingSpend
+      )
       .orderBy(desc(sql`coalesce(sum(${orders.totalAmount}), 0)`))
       .limit(limit);
 
@@ -48,8 +69,13 @@ export async function GET(request: NextRequest) {
       orderCount: r.orderCount,
       lifetimeSpend: Number(r.lifetimeSpend),
       lastOrderAt: r.lastOrderAt,
-      // For POS Khata tracking: VIP status if spend > 25,000 NPR
-      isVip: Number(r.lifetimeSpend) >= 25000,
+      isVip: r.levelId === 'happy_customer' || Number(r.lifetimeSpend) >= 25000,
+      membershipNumber: r.membershipNumber || `MEM-${r.id.slice(0, 8)}`,
+      membershipLevel: r.levelName || 'Silver',
+      badgeColor: r.badgeColor || 'slate',
+      icon: r.icon || '🥈',
+      availableCoins: Number(r.availableCoins || 0),
+      qualifyingSpend: Number(r.qualifyingSpend || 0),
     }));
 
     return NextResponse.json({
@@ -63,7 +89,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Add new customer directly from POS
+// POST: Add new customer directly from POS and auto-enroll into Silver membership
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -86,15 +112,24 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       if (existing) {
+        const loyaltyProfile = await LoyaltyService.getOrCreateCustomerMembership(existing.id, {
+          name: existing.name,
+          phone: existing.phone || '',
+        });
+
         return NextResponse.json({
           success: true,
-          message: 'Existing customer attached.',
+          message: 'Existing customer attached with loyalty profile.',
           customer: {
             id: existing.id,
             name: existing.name,
             phone: existing.phone,
             email: existing.email,
             pan: pan || '',
+            membershipNumber: loyaltyProfile.membershipNumber,
+            membershipLevel: loyaltyProfile.levelName,
+            badgeColor: loyaltyProfile.badgeColor,
+            availableCoins: loyaltyProfile.availableCoins,
           },
         });
       }
@@ -112,15 +147,26 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
+    // Auto-enroll in Silver loyalty tier
+    const loyaltyProfile = await LoyaltyService.getOrCreateCustomerMembership(newCustomer.id, {
+      name: newCustomer.name,
+      phone: newCustomer.phone || '',
+      email: newCustomer.email,
+    });
+
     return NextResponse.json({
       success: true,
-      message: 'New customer profile registered.',
+      message: 'New customer profile registered with Silver loyalty membership.',
       customer: {
         id: newCustomer.id,
         name: newCustomer.name,
         phone: newCustomer.phone || '',
         email: newCustomer.email,
         pan: pan || '',
+        membershipNumber: loyaltyProfile.membershipNumber,
+        membershipLevel: loyaltyProfile.levelName,
+        badgeColor: loyaltyProfile.badgeColor,
+        availableCoins: loyaltyProfile.availableCoins,
       },
     });
   } catch (error: any) {
