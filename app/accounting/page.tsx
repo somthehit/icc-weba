@@ -13,7 +13,7 @@ export default function AccountingPage() {
   return (
     <StoreProvider>
       <SeoProvider>
-        <div className="accounting-portal min-h-screen bg-slate-50">
+        <div className="accounting-portal h-screen overflow-hidden bg-slate-50">
           <AccountingDashboardView />
         </div>
       </SeoProvider>

@@ -849,4 +849,34 @@
   color: #ffffff !important;
 }
 
+/* Custom Accounting Hub & POS Sleek Scrollbars */
+.custom-accounting-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.custom-accounting-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-accounting-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-accounting-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.custom-accounting-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* Eliminate scroll chaining between sidebar and main stage */
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
 

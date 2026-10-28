@@ -646,7 +646,7 @@ export const AccountingDashboardView: React.FC = () => {
   const CurrentTabIcon = tabMeta[activeTab]?.icon || TrendingUp;
 
   return (
-    <div className="accounting-portal min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="accounting-portal h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white overflow-hidden">
       {/* Toast Notification */}
       {notice && (
         <div
@@ -672,8 +672,8 @@ export const AccountingDashboardView: React.FC = () => {
         </div>
       )}
 
-      {/* Main Layout: Left Sidebar + Main Stage */}
-      <div className="flex-1 flex">
+      {/* Main Layout: Left Sidebar + Main Stage (Both Scroll Independently) */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Mobile Backdrop Overlay */}
         {isMobileMenuOpen && (
           <div
@@ -682,16 +682,16 @@ export const AccountingDashboardView: React.FC = () => {
           />
         )}
 
-        {/* ================= LEFT SIDEBAR NAVIGATION ================= */}
+        {/* ================= LEFT SIDEBAR NAVIGATION (STICKY + INDIVIDUAL SCROLL) ================= */}
         <aside
           className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 shadow-sm flex flex-col justify-between flex-shrink-0 transition-transform duration-300 lg:transition-none ${
             isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
-          } lg:translate-x-0 lg:sticky lg:top-0 lg:bottom-auto lg:self-start lg:h-screen lg:z-30`}
+          } lg:translate-x-0 lg:static lg:h-full lg:z-30`}
         >
           {/* Top Header and Nav Links */}
-          <div className="flex flex-col flex-1 min-h-0">
-            {/* Brand Header */}
-            <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            {/* Brand Header (Pinned) */}
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-800 text-white shadow-lg shadow-blue-500/20 border border-blue-400/30">
                   <Calculator className="w-5 h-5" />
@@ -711,17 +711,17 @@ export const AccountingDashboardView: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                className="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Nav Menu Items */}
-            <div className="px-3 py-4 space-y-5 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-slate-800">
+            {/* Nav Menu Items (Individually Scrollable with Smooth Sleek Scrollbar) */}
+            <div className="px-3 py-4 space-y-5 overflow-y-auto overscroll-contain flex-1 min-h-0 custom-accounting-scrollbar">
               {/* Section 1: Executive */}
               <div>
-                <div className="px-3 text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase mb-2">
+                <div className="px-3 text-[10px] font-bold font-mono tracking-wider text-slate-500 uppercase mb-2">
                   Executive Suite
                 </div>
                 <button
@@ -729,14 +729,14 @@ export const AccountingDashboardView: React.FC = () => {
                     setActiveTab('overview');
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === 'overview'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <TrendingUp className={`w-4 h-4 ${activeTab === 'overview' ? 'text-white' : 'text-blue-400'}`} />
+                    <TrendingUp className={`w-4 h-4 ${activeTab === 'overview' ? 'text-white' : 'text-blue-600'}`} />
                     <span>Executive Overview</span>
                   </div>
                   {activeTab === 'overview' && <ChevronRight className="w-3.5 h-3.5 text-blue-200" />}
@@ -745,7 +745,7 @@ export const AccountingDashboardView: React.FC = () => {
 
               {/* Section 2: Cash & Operations */}
               <div>
-                <div className="px-3 text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase mb-2">
+                <div className="px-3 text-[10px] font-bold font-mono tracking-wider text-slate-500 uppercase mb-2">
                   Cash & Cashier Control
                 </div>
                 <div className="space-y-1">
@@ -754,14 +754,14 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('shifts');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'shifts'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Banknote className={`w-4 h-4 ${activeTab === 'shifts' ? 'text-white' : 'text-emerald-400'}`} />
+                      <Banknote className={`w-4 h-4 ${activeTab === 'shifts' ? 'text-white' : 'text-emerald-600'}`} />
                       <span>Cashier Blind Close</span>
                     </div>
                     {overviewData?.kpis?.openShifts > 0 ? (
@@ -776,14 +776,14 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('cashiers');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'cashiers'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Users className={`w-4 h-4 ${activeTab === 'cashiers' ? 'text-white' : 'text-cyan-400'}`} />
+                      <Users className={`w-4 h-4 ${activeTab === 'cashiers' ? 'text-white' : 'text-cyan-600'}`} />
                       <span>Cashier Staff & PINs</span>
                     </div>
                   </button>
@@ -793,17 +793,17 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('eod');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'eod'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Lock className={`w-4 h-4 ${activeTab === 'eod' ? 'text-white' : 'text-amber-400'}`} />
+                      <Lock className={`w-4 h-4 ${activeTab === 'eod' ? 'text-white' : 'text-amber-600'}`} />
                       <span>EOD & Z-Report Gate</span>
                     </div>
-                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded font-bold">
                       Argon2id
                     </span>
                   </button>
@@ -812,7 +812,7 @@ export const AccountingDashboardView: React.FC = () => {
 
               {/* Section 3: Procurement & Vendor AP */}
               <div>
-                <div className="px-3 text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase mb-2">
+                <div className="px-3 text-[10px] font-bold font-mono tracking-wider text-slate-500 uppercase mb-2">
                   Procurement & Payables
                 </div>
                 <div className="space-y-1">
@@ -821,14 +821,14 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('3way-match');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === '3way-match'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Boxes className={`w-4 h-4 ${activeTab === '3way-match' ? 'text-white' : 'text-indigo-400'}`} />
+                      <Boxes className={`w-4 h-4 ${activeTab === '3way-match' ? 'text-white' : 'text-indigo-600'}`} />
                       <span>3-Way Match (PO/GRN/Bill)</span>
                     </div>
                   </button>
@@ -838,17 +838,17 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('supplier-payments');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'supplier-payments'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Landmark className={`w-4 h-4 ${activeTab === 'supplier-payments' ? 'text-white' : 'text-purple-400'}`} />
+                      <Landmark className={`w-4 h-4 ${activeTab === 'supplier-payments' ? 'text-white' : 'text-purple-600'}`} />
                       <span>Supplier Payables & TDS</span>
                     </div>
-                    <span className="text-[10px] font-mono text-purple-300 bg-purple-950/60 border border-purple-500/30 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-mono text-purple-800 bg-purple-100 border border-purple-300 px-1.5 py-0.5 rounded font-bold">
                       1.5% TDS
                     </span>
                   </button>
@@ -857,7 +857,7 @@ export const AccountingDashboardView: React.FC = () => {
 
               {/* Section 4: Taxation & Statutory Books */}
               <div>
-                <div className="px-3 text-[10px] font-bold font-mono tracking-wider text-slate-400 uppercase mb-2">
+                <div className="px-3 text-[10px] font-bold font-mono tracking-wider text-slate-500 uppercase mb-2">
                   Tax & Financial Statements
                 </div>
                 <div className="space-y-1">
@@ -866,17 +866,17 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('vat-registers');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'vat-registers'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Receipt className={`w-4 h-4 ${activeTab === 'vat-registers' ? 'text-white' : 'text-purple-400'}`} />
+                      <Receipt className={`w-4 h-4 ${activeTab === 'vat-registers' ? 'text-white' : 'text-purple-600'}`} />
                       <span>IRD Nepal VAT Registers</span>
                     </div>
-                    <span className="text-[10px] font-mono text-purple-300 bg-purple-950/60 border border-purple-500/30 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-mono text-purple-800 bg-purple-100 border border-purple-300 px-1.5 py-0.5 rounded font-bold">
                       Annex 8 & 13
                     </span>
                   </button>
@@ -886,14 +886,14 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('statements');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'statements'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Scale className={`w-4 h-4 ${activeTab === 'statements' ? 'text-white' : 'text-blue-400'}`} />
+                      <Scale className={`w-4 h-4 ${activeTab === 'statements' ? 'text-white' : 'text-blue-600'}`} />
                       <span>Financial Statements (P&L)</span>
                     </div>
                   </button>
@@ -903,14 +903,14 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('bank-reconciliation');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'bank-reconciliation'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Wallet className={`w-4 h-4 ${activeTab === 'bank-reconciliation' ? 'text-white' : 'text-emerald-400'}`} />
+                      <Wallet className={`w-4 h-4 ${activeTab === 'bank-reconciliation' ? 'text-white' : 'text-emerald-600'}`} />
                       <span>Bank & Wallet Match</span>
                     </div>
                   </button>
@@ -920,14 +920,14 @@ export const AccountingDashboardView: React.FC = () => {
                       setActiveTab('ledger');
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'ledger'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 border border-blue-400/30'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Layers className={`w-4 h-4 ${activeTab === 'ledger' ? 'text-white' : 'text-cyan-400'}`} />
+                      <Layers className={`w-4 h-4 ${activeTab === 'ledger' ? 'text-white' : 'text-cyan-600'}`} />
                       <span>General Ledger & COA</span>
                     </div>
                   </button>
@@ -936,8 +936,8 @@ export const AccountingDashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Sidebar Footer */}
-          <div className="p-3 border-t border-slate-200 bg-slate-50">
+          {/* Sidebar Footer (Pinned) */}
+          <div className="p-3 border-t border-slate-200 bg-slate-50 shrink-0">
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs">
@@ -959,7 +959,7 @@ export const AccountingDashboardView: React.FC = () => {
                   type="button"
                   onClick={handleLogout}
                   title="Switch Officer / Sign Out"
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition"
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
@@ -968,8 +968,8 @@ export const AccountingDashboardView: React.FC = () => {
           </div>
         </aside>
 
-        {/* ================= MAIN CONTENT STAGE ================= */}
-        <main className="flex-1 min-w-0 bg-slate-50 p-4 md:p-6 lg:p-8 space-y-6">
+        {/* ================= MAIN CONTENT STAGE (INDIVIDUALLY SCROLLABLE) ================= */}
+        <main className="flex-1 min-w-0 h-full overflow-y-auto overscroll-contain bg-slate-50 p-4 md:p-6 lg:p-8 space-y-6 custom-accounting-scrollbar">
           {/* Top Stage Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
             <div className="flex items-center gap-3">
