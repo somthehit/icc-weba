@@ -299,6 +299,27 @@ export default function CounterPosTerminal() {
   // State Machine
   const [terminalState, setTerminalState] = useState<PosState>('LOCKED_TERMINAL');
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('sales');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Initialize and persist sidebar collapse preference
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pos_sidebar_collapsed');
+      if (saved !== null) {
+        setIsSidebarCollapsed(saved === 'true');
+      }
+    }
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pos_sidebar_collapsed', String(next));
+      }
+      return next;
+    });
+  }, []);
 
   // Staff & Shift
   const [dutySupervisor, setDutySupervisor] = useState<StaffProfile | null>(null);
@@ -1447,22 +1468,37 @@ export default function CounterPosTerminal() {
   return (
     <div className="pos-portal flex h-screen max-h-screen w-full overflow-hidden font-sans select-none bg-[#f4f7f6] text-slate-900">
       {/* 1. SupaPOS Left Dark Emerald Navigation Sidebar */}
-      <aside className="w-56 lg:w-60 shrink-0 bg-[#064e3b] text-white flex flex-col justify-between p-4 z-30 select-none shadow-xl border-r border-emerald-950">
+      <aside
+        className={`${
+          isSidebarCollapsed ? 'w-20' : 'w-56 lg:w-60'
+        } shrink-0 bg-[#064e3b] text-white flex flex-col justify-between p-3.5 z-30 select-none shadow-xl border-r border-emerald-950 transition-all duration-300 ease-in-out`}
+      >
         <div>
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 px-2 py-3 mb-6">
-            <div className="h-10 w-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shadow-inner">
+          <div
+            className={`flex items-center ${
+              isSidebarCollapsed ? 'justify-center px-0 py-2.5 mb-6' : 'gap-3 px-2 py-3 mb-6'
+            } transition-all`}
+          >
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              title={isSidebarCollapsed ? 'Click to expand sidebar' : 'Click to collapse sidebar'}
+              className="h-10 w-10 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shadow-inner shrink-0 cursor-pointer transition-transform active:scale-95"
+            >
               <Layers className="h-6 w-6 stroke-[2.5]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-lg tracking-tight text-white">SupaPOS</span>
-                <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
-                  PRO
-                </span>
+            </button>
+            {!isSidebarCollapsed && (
+              <div className="overflow-hidden whitespace-nowrap transition-opacity duration-200">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-black text-lg tracking-tight text-white">SupaPOS</span>
+                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                    PRO
+                  </span>
+                </div>
+                <p className="text-[11px] font-semibold text-emerald-200/70">ICC Electronics</p>
               </div>
-              <p className="text-[11px] font-semibold text-emerald-200/70">ICC Electronics</p>
-            </div>
+            )}
           </div>
 
           {/* Navigation Links */}
@@ -1481,15 +1517,25 @@ export default function CounterPosTerminal() {
                   key={item.id}
                   type="button"
                   onClick={() => setActiveSidebarTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition select-none ${
+                  className={`w-full flex items-center ${
+                    isSidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-3.5 py-3'
+                  } rounded-2xl text-xs font-bold transition-all select-none group relative ${
                     isActive
                       ? 'bg-[#00c569] text-white shadow-md font-black'
                       : 'text-white hover:bg-emerald-800/60 hover:text-emerald-100'
                   }`}
                   title={item.label}
                 >
-                  <item.icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-emerald-300'}`} />
-                  <span>{item.label}</span>
+                  <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-emerald-300'}`} />
+                  {!isSidebarCollapsed && (
+                    <span className="overflow-hidden whitespace-nowrap">{item.label}</span>
+                  )}
+                  {/* Tooltip on hover when collapsed */}
+                  {isSidebarCollapsed && (
+                    <span className="absolute left-full ml-3.5 px-2.5 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-bold shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap border border-slate-700">
+                      {item.label}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -1497,22 +1543,38 @@ export default function CounterPosTerminal() {
         </div>
 
         {/* Bottom Help & Support Card */}
-        <div className="bg-[#033d2f] rounded-2xl p-3.5 border border-emerald-800/60 text-white space-y-2.5 shadow-sm">
-          <div className="space-y-0.5">
-            <h5 className="text-xs font-black text-white">Need help?</h5>
-            <p className="text-[11px] text-emerald-200/90 leading-relaxed font-medium">
-              Contact our support team for assistance
-            </p>
+        {isSidebarCollapsed ? (
+          <div className="flex justify-center group relative">
+            <button
+              type="button"
+              onClick={() => setShowShortcutsModal(true)}
+              className="h-10 w-10 rounded-2xl bg-[#033d2f] hover:bg-emerald-800 border border-emerald-800/60 text-emerald-300 hover:text-white flex items-center justify-center transition shadow-sm"
+              title="Need Help & Shortcuts"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </button>
+            <span className="absolute left-full ml-3.5 px-2.5 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-bold shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap border border-slate-700">
+              Need Help & Shortcuts
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowShortcutsModal(true)}
-            className="w-full py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-900 text-xs font-black transition flex items-center justify-center gap-1.5 shadow-sm"
-          >
-            <HelpCircle className="h-4 w-4 text-emerald-700" />
-            <span>Contact Support</span>
-          </button>
-        </div>
+        ) : (
+          <div className="bg-[#033d2f] rounded-2xl p-3.5 border border-emerald-800/60 text-white space-y-2.5 shadow-sm overflow-hidden transition-all">
+            <div className="space-y-0.5">
+              <h5 className="text-xs font-black text-white">Need help?</h5>
+              <p className="text-[11px] text-emerald-200/90 leading-relaxed font-medium">
+                Contact our support team for assistance
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowShortcutsModal(true)}
+              className="w-full py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-900 text-xs font-black transition flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <HelpCircle className="h-4 w-4 text-emerald-700" />
+              <span>Contact Support</span>
+            </button>
+          </div>
+        )}
       </aside>
 
       {/* 2. Main Content Area */}
@@ -1523,10 +1585,16 @@ export default function CounterPosTerminal() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
-              title="Menu"
+              onClick={toggleSidebar}
+              className={`h-10 w-10 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95 shrink-0 ${
+                isSidebarCollapsed
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                  : 'border-orange-500/80 bg-white hover:bg-orange-50/60 text-slate-700 hover:text-slate-900'
+              }`}
+              title={isSidebarCollapsed ? "Expand sidebar menu" : "Collapse sidebar menu"}
+              aria-label={isSidebarCollapsed ? "Expand sidebar menu" : "Collapse sidebar menu"}
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5 stroke-[2.5]" />
             </button>
             <div>
               <h2 className="text-sm font-black text-slate-800 tracking-tight">
