@@ -571,6 +571,7 @@ export default function CounterPosTerminal() {
   // Dynamic Bank & Wallet QR States
   const [availableBankQrs, setAvailableBankQrs] = useState<any[]>([]);
   const [selectedBankQr, setSelectedBankQr] = useState<any | null>(null);
+  const [selectedWallet, setSelectedWallet] = useState<'fonepay' | 'esewa' | 'khalti'>('fonepay');
   const [generatedQrDataUrl, setGeneratedQrDataUrl] = useState<string>('');
   const [qrRefNumber, setQrRefNumber] = useState('');
   const [isLoadingQrs, setIsLoadingQrs] = useState(false);
@@ -676,19 +677,24 @@ export default function CounterPosTerminal() {
     }
   }, [isCheckoutOpen]);
 
-  // Generate dynamic QR code data URL whenever selected bank QR or cartTotal changes
+  // Generate dynamic QR code data URL whenever selected bank QR, selectedWallet, or cartTotal changes
   useEffect(() => {
-    if (!selectedBankQr) return;
-    if (selectedBankQr.qrImageUrl) {
+    if (selectedBankQr?.qrImageUrl) {
       setGeneratedQrDataUrl(selectedBankQr.qrImageUrl);
       return;
     }
-    const template =
-      selectedBankQr.qrPayloadTemplate ||
-      `fonepay://pay?merchant=${selectedBankQr.merchantCode || 'ICC'}&amount={amount}&remarks={orderId}`;
-    const payload = template
-      .replace('{amount}', String(cartTotal))
-      .replace('{orderId}', `POS-${terminalCode}-${Date.now().toString().slice(-4)}`);
+
+    const orderId = `POS-${terminalCode}-${Date.now().toString().slice(-4)}`;
+    let payload = '';
+
+    if (selectedBankQr?.qrPayloadTemplate) {
+      payload = selectedBankQr.qrPayloadTemplate
+        .replace('{amount}', String(cartTotal))
+        .replace('{orderId}', orderId);
+    } else {
+      const scheme = selectedWallet === 'esewa' ? 'esewa' : selectedWallet === 'khalti' ? 'khalti' : 'fonepay';
+      payload = `${scheme}://pay?merchant=INTEL_COMPUTER_CENTER&amount=${cartTotal}&remarks=${orderId}`;
+    }
 
     QRCode.toDataURL(payload, {
       width: 240,
@@ -697,7 +703,7 @@ export default function CounterPosTerminal() {
     })
       .then(setGeneratedQrDataUrl)
       .catch((err) => console.warn('QR generation error:', err));
-  }, [selectedBankQr, cartTotal, terminalCode]);
+  }, [selectedBankQr, selectedWallet, cartTotal, terminalCode]);
 
   const checkTerminalSession = async () => {
     try {
@@ -2924,54 +2930,65 @@ export default function CounterPosTerminal() {
         </div>
       )}
 
-      {/* 3. Redesigned Payment Option Modal (Matching Reference Screenshot 3) */}
+      {/* 3. Redesigned Payment Option Modal (White Background & Clear Legible UX) */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div
-            className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-4 my-auto ${
-              theme === 'dark' ? 'bg-[#121815] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
-            }`}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 overflow-hidden">
+          <div className="w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-2xl flex flex-col max-h-[92vh] overflow-hidden text-slate-900 my-auto animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
-              <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white">
-                Select Payment Option
-              </h3>
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between shrink-0 bg-white">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Billing &amp; Settlement
+                </span>
+                <h3 className="text-lg font-black text-slate-900 tracking-tight mt-1">
+                  Select Payment Option
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsCheckoutOpen(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                title="Close"
               >
-                <X className="h-5 w-5 text-slate-500" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleProcessSale} className="space-y-3.5">
+            <form onSubmit={handleProcessSale} className="flex-1 overflow-y-auto p-5 space-y-3.5">
               {/* Option 1: Cash */}
               <div
                 onClick={() => setTenderMethod('cash')}
-                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition ${
                   tenderMethod === 'cash'
-                    ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-600/30'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20 shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                    tenderMethod === 'cash' ? 'border-emerald-600 bg-white' : 'border-slate-400'
-                  }`}>
-                    {tenderMethod === 'cash' && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition ${
+                        tenderMethod === 'cash'
+                          ? 'border-emerald-600 bg-white'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    >
+                      {tenderMethod === 'cash' && (
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-black text-sm text-slate-900">Cash Payment</div>
+                      <div className="text-xs text-slate-500 font-medium">Complete payment using physical currency notes</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 dark:text-white">Cash</div>
-                    <div className="text-[11px] text-slate-500">Complete payment using cash</div>
-                  </div>
+                  <Banknote className="h-5 w-5 text-emerald-600 shrink-0" />
                 </div>
 
                 {tenderMethod === 'cash' && (
-                  <div className="mt-3 pl-7 space-y-2.5">
+                  <div className="mt-3.5 pl-8 space-y-3 border-t border-emerald-200/60 pt-3">
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                      <label className="block text-[11px] font-black uppercase text-slate-700 mb-1 tracking-wider">
                         Amount Tendered (NPR)
                       </label>
                       <input
@@ -2980,29 +2997,55 @@ export default function CounterPosTerminal() {
                         min={cartTotal}
                         value={tenderAmount}
                         onChange={(e) => setTenderAmount(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-base font-mono font-bold outline-none focus:border-emerald-500"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xl font-mono font-black text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
                       />
                     </div>
 
                     {/* Dynamic Cash Note Presets */}
-                    <div className="flex gap-1.5 flex-wrap">
-                      {dynamicCashPresets.map((amt, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleNoteClick(amt, idx)}
-                          className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-                        >
-                          Rs. {amt}
-                        </button>
-                      ))}
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                        Quick Cash Notes
+                      </span>
+                      <div className="flex gap-2 flex-wrap">
+                        {dynamicCashPresets.map((amt, idx) => {
+                          const isSelected = parseFloat(tenderAmount) === amt;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNoteClick(amt, idx);
+                              }}
+                              className={`px-3 py-1.5 rounded-xl border text-xs font-black font-mono transition shadow-2xs ${
+                                isSelected
+                                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                                  : 'bg-white border-slate-300 text-slate-800 hover:border-emerald-400 hover:bg-emerald-50'
+                              }`}
+                            >
+                              Rs. {formatNepaliNumber(String(amt))}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {parseFloat(tenderAmount) >= cartTotal && (
-                      <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                        <span className="text-xs text-emerald-800 dark:text-emerald-300 font-bold">Change Due:</span>
-                        <span className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-300">
-                          NPR {formatNepaliNumber((parseFloat(tenderAmount) - cartTotal).toFixed(2))}
+                    {/* Change Due Card */}
+                    {parseFloat(tenderAmount || '0') >= cartTotal ? (
+                      <div className="flex justify-between items-center bg-emerald-100/70 p-3 rounded-2xl border border-emerald-300 text-emerald-950 shadow-2xs">
+                        <div>
+                          <span className="block text-xs font-black text-emerald-900">Change Due to Customer</span>
+                          <span className="text-[10px] text-emerald-700 font-semibold">Return exact denomination</span>
+                        </div>
+                        <span className="text-lg font-black font-mono text-emerald-800">
+                          Rs. {formatNepaliNumber((parseFloat(tenderAmount) - cartTotal).toFixed(2))}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center bg-amber-50 p-3 rounded-2xl border border-amber-300 text-amber-950 shadow-2xs">
+                        <span className="text-xs font-bold text-amber-900">Pending Amount:</span>
+                        <span className="text-sm font-black font-mono text-amber-700">
+                          Rs. {formatNepaliNumber((cartTotal - parseFloat(tenderAmount || '0')).toFixed(2))}
                         </span>
                       </div>
                     )}
@@ -3010,69 +3053,105 @@ export default function CounterPosTerminal() {
                 )}
               </div>
 
-              {/* Option 2: E-Wallet / Dynamic QR (Matching Screenshot 3 Grid) */}
+              {/* Option 2: E-Wallet / Dynamic QR */}
               <div
                 onClick={() => setTenderMethod('qr')}
-                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition ${
                   tenderMethod === 'qr'
-                    ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-600/30'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20 shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                    tenderMethod === 'qr' ? 'border-emerald-600 bg-white' : 'border-slate-400'
-                  }`}>
-                    {tenderMethod === 'qr' && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition ${
+                        tenderMethod === 'qr'
+                          ? 'border-emerald-600 bg-white'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    >
+                      {tenderMethod === 'qr' && (
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-black text-sm text-slate-900">E-Wallet / Dynamic QR</div>
+                      <div className="text-xs text-slate-500 font-medium">Generate QR code and pay using Fonepay, eSewa, or Khalti</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 dark:text-white">E-Wallet / Dynamic QR</div>
-                    <div className="text-[11px] text-slate-500">Generate QR code and pay using e-money</div>
-                  </div>
+                  <QrCode className="h-5 w-5 text-emerald-600 shrink-0" />
                 </div>
 
                 {tenderMethod === 'qr' && (
-                  <div className="mt-3 pl-7 space-y-3">
-                    {/* Nepal E-Wallet Sub-Grid */}
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { name: 'Fonepay', color: 'text-red-600 border-red-200' },
-                        { name: 'eSewa', color: 'text-green-600 border-green-200' },
-                        { name: 'Khalti', color: 'text-purple-600 border-purple-200' },
-                      ].map((wallet, idx) => (
-                        <div
-                          key={idx}
-                          className={`p-2.5 rounded-xl border text-center font-bold text-xs bg-white dark:bg-slate-900 ${wallet.color}`}
-                        >
-                          <QrCode className="h-4 w-4 mx-auto mb-1" />
-                          <span>{wallet.name}</span>
-                        </div>
-                      ))}
+                  <div className="mt-3.5 pl-8 space-y-3.5 border-t border-emerald-200/60 pt-3">
+                    {/* Nepal E-Wallet Branded Selector Tabs */}
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                        Select E-Wallet Provider
+                      </span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'fonepay', name: 'Fonepay', badge: 'Fonepay QR', bgActive: 'bg-red-50 border-red-500 text-red-700 ring-2 ring-red-500/20', dot: 'bg-red-600' },
+                          { id: 'esewa', name: 'eSewa', badge: 'eSewa Pay', bgActive: 'bg-emerald-50 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20', dot: 'bg-emerald-600' },
+                          { id: 'khalti', name: 'Khalti', badge: 'Khalti Wallet', bgActive: 'bg-purple-50 border-purple-500 text-purple-800 ring-2 ring-purple-500/20', dot: 'bg-purple-600' },
+                        ].map((wallet) => {
+                          const isActive = selectedWallet === wallet.id;
+                          return (
+                            <button
+                              key={wallet.id}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedWallet(wallet.id as any);
+                              }}
+                              className={`p-2.5 rounded-xl border text-center font-black text-xs transition flex flex-col items-center justify-center gap-1 shadow-2xs ${
+                                isActive
+                                  ? wallet.bgActive
+                                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <span className={`h-2 w-2 rounded-full ${wallet.dot}`} />
+                                <span>{wallet.name}</span>
+                              </div>
+                              <span className="text-[9px] font-semibold text-slate-500">
+                                {wallet.badge}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {/* Centered Dynamic QR Image */}
-                    <div className="w-44 h-44 mx-auto bg-white p-2 rounded-2xl flex items-center justify-center shadow-md border border-slate-200">
-                      {generatedQrDataUrl ? (
-                        <img
-                          src={generatedQrDataUrl}
-                          alt={selectedBankQr?.bankName || 'QR Code'}
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <QrCode className="w-32 h-32 text-slate-900 animate-pulse" />
-                      )}
+                    {/* Centered Dynamic QR Image Box */}
+                    <div className="w-52 mx-auto bg-white p-3 rounded-2xl flex flex-col items-center justify-center shadow-md border border-slate-200 text-center space-y-1.5">
+                      <div className="w-40 h-40 flex items-center justify-center">
+                        {generatedQrDataUrl ? (
+                          <img
+                            src={generatedQrDataUrl}
+                            alt={`${selectedWallet} QR Code`}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <QrCode className="w-28 h-28 text-slate-400 animate-pulse" />
+                        )}
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-700">
+                        Scan to Pay <span className="font-mono font-black text-emerald-700">Rs. {formatNepaliNumber(String(cartTotal))}</span>
+                      </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                      <label className="block text-[11px] font-black uppercase text-slate-700 mb-1 tracking-wider">
                         Bank Reference / Trace # (From Confirmation SMS)
                       </label>
                       <input
                         type="text"
                         value={qrRefNumber}
                         onChange={(e) => setQrRefNumber(e.target.value)}
-                        placeholder="e.g. 984029104"
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                        placeholder="e.g. 984029104 or TXN-78912"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                       />
                     </div>
                   </div>
@@ -3082,44 +3161,61 @@ export default function CounterPosTerminal() {
               {/* Option 3: Electronic Data Capture (EDC) / Card */}
               <div
                 onClick={() => setTenderMethod('card')}
-                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition ${
                   tenderMethod === 'card'
-                    ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-600/30'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20 shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                    tenderMethod === 'card' ? 'border-emerald-600 bg-white' : 'border-slate-400'
-                  }`}>
-                    {tenderMethod === 'card' && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition ${
+                        tenderMethod === 'card'
+                          ? 'border-emerald-600 bg-white'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    >
+                      {tenderMethod === 'card' && (
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-black text-sm text-slate-900">Card / EDC POS Terminal</div>
+                      <div className="text-xs text-slate-500 font-medium">Use physical POS terminal swipe, dip, or contactless tap</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 dark:text-white">Electronic Data Capture (EDC) / Card</div>
-                    <div className="text-[11px] text-slate-500">Use POS terminal swipe or chip insertion</div>
-                  </div>
+                  <CreditCard className="h-5 w-5 text-emerald-600 shrink-0" />
                 </div>
 
                 {tenderMethod === 'card' && (
-                  <div className="mt-3 pl-7 space-y-2.5">
-                    <div className="flex gap-2">
-                      {(['visa', 'mastercard', 'sct', 'unionpay'] as const).map((b) => (
-                        <button
-                          key={b}
-                          type="button"
-                          onClick={() => setCardBrand(b)}
-                          className={`flex-1 py-1.5 rounded-lg border text-[11px] font-bold uppercase transition ${
-                            cardBrand === b
-                              ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40'
-                              : 'border-slate-200 dark:border-slate-700'
-                          }`}
-                        >
-                          {b}
-                        </button>
-                      ))}
+                  <div className="mt-3.5 pl-8 space-y-3 border-t border-emerald-200/60 pt-3">
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                        Card Network
+                      </span>
+                      <div className="flex gap-2">
+                        {(['visa', 'mastercard', 'sct', 'unionpay'] as const).map((b) => (
+                          <button
+                            key={b}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCardBrand(b);
+                            }}
+                            className={`flex-1 py-2 rounded-xl border text-xs font-black uppercase transition shadow-2xs ${
+                              cardBrand === b
+                                ? 'border-2 border-emerald-600 bg-emerald-50 text-emerald-800'
+                                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            {b}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                      <label className="block text-[11px] font-black uppercase text-slate-700 mb-1 tracking-wider">
                         EDC Approval Code / RRN (From POS Slip)
                       </label>
                       <input
@@ -3127,7 +3223,7 @@ export default function CounterPosTerminal() {
                         value={cardAuthCode}
                         onChange={(e) => setCardAuthCode(e.target.value)}
                         placeholder="e.g. APP-049182"
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                       />
                     </div>
                   </div>
@@ -3137,22 +3233,31 @@ export default function CounterPosTerminal() {
               {/* Option 4: Split Payment (Multi-Tender) */}
               <div
                 onClick={() => setTenderMethod('split')}
-                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition ${
                   tenderMethod === 'split'
-                    ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-600/30'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    ? 'border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20 shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                    tenderMethod === 'split' ? 'border-emerald-600 bg-white' : 'border-slate-400'
-                  }`}>
-                    {tenderMethod === 'split' && <div className="h-2 w-2 rounded-full bg-emerald-600" />}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition ${
+                        tenderMethod === 'split'
+                          ? 'border-emerald-600 bg-white'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    >
+                      {tenderMethod === 'split' && (
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-black text-sm text-slate-900">Split Payment (Multi-Tender)</div>
+                      <div className="text-xs text-slate-500 font-medium">Divide payment across Cash, Card, and QR</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 dark:text-white">Split Payment (Multi-Tender)</div>
-                    <div className="text-[11px] text-slate-500">Divide payment across Cash, Card, and QR</div>
-                  </div>
+                  <Percent className="h-5 w-5 text-emerald-600 shrink-0" />
                 </div>
 
                 {tenderMethod === 'split' && (() => {
@@ -3163,10 +3268,10 @@ export default function CounterPosTerminal() {
                   const remaining = cartTotal - allocated;
 
                   return (
-                    <div className="mt-3 pl-7 space-y-2.5">
+                    <div className="mt-3.5 pl-8 space-y-3 border-t border-emerald-200/60 pt-3">
                       <div className="grid grid-cols-3 gap-2">
                         <div>
-                          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                          <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                             Cash (NPR)
                           </label>
                           <input
@@ -3174,11 +3279,11 @@ export default function CounterPosTerminal() {
                             min="0"
                             value={splitCashAmount}
                             onChange={(e) => setSplitCashAmount(e.target.value)}
-                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                            className="w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                          <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                             Card (NPR)
                           </label>
                           <input
@@ -3186,11 +3291,11 @@ export default function CounterPosTerminal() {
                             min="0"
                             value={splitCardAmount}
                             onChange={(e) => setSplitCardAmount(e.target.value)}
-                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                            className="w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                          <label className="block text-[10px] font-black uppercase text-slate-600 mb-1">
                             QR / Wallet (NPR)
                           </label>
                           <input
@@ -3198,43 +3303,53 @@ export default function CounterPosTerminal() {
                             min="0"
                             value={splitQrAmount}
                             onChange={(e) => setSplitQrAmount(e.target.value)}
-                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono font-bold outline-none focus:border-emerald-500"
+                            className="w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-emerald-500"
                           />
                         </div>
                       </div>
 
-                      <div className={`p-2 rounded-xl border flex justify-between text-xs font-bold ${
+                      <div className={`p-2.5 rounded-xl border flex justify-between items-center text-xs font-bold ${
                         remaining === 0
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                          : 'bg-amber-50 text-amber-800 border-amber-300'
+                          ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                          : 'bg-amber-50 text-amber-900 border-amber-300'
                       }`}>
                         <span>Remaining to Allocate:</span>
-                        <span className="font-mono">NPR {formatNepaliNumber(remaining.toFixed(2))}</span>
+                        <span className="font-mono text-sm font-black">
+                          Rs. {formatNepaliNumber(remaining.toFixed(2))}
+                        </span>
                       </div>
                     </div>
                   );
                 })()}
               </div>
+            </form>
 
-              {/* Total Payment & Emerald Submit Button (Matching Reference Screenshot 3) */}
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Total Payment</span>
-                  <span className="font-black text-xl font-mono text-slate-900 dark:text-white">
-                    NPR {formatNepaliNumber(String(cartTotal))}
+            {/* Modal Sticky Footer */}
+            <div className="p-5 border-t border-slate-200 bg-white shrink-0 space-y-3">
+              <div className="flex justify-between items-baseline">
+                <div>
+                  <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Total Payable
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-400">
+                    Inclusive of 13% Nepal VAT
                   </span>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmittingSale}
-                  className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm flex items-center justify-center gap-2 transition disabled:opacity-50 shadow-md active:scale-[0.99] cursor-pointer"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>{isSubmittingSale ? 'Processing...' : 'Finalize Sale & Print Double Slip'}</span>
-                </button>
+                <span className="font-black text-2xl font-mono text-slate-900">
+                  Rs. {formatNepaliNumber(String(cartTotal))}
+                </span>
               </div>
-            </form>
+
+              <button
+                type="button"
+                onClick={handleProcessSale}
+                disabled={isSubmittingSale}
+                className="w-full py-3.5 rounded-2xl bg-[#00c569] hover:bg-emerald-600 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition active:scale-[0.99] cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-5 w-5" />
+                <span>{isSubmittingSale ? 'Processing...' : 'Finalize Sale & Print Double Slip'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
