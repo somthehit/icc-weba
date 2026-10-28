@@ -112,23 +112,23 @@ export function DenominationGrid({
 
   return (
     <div className="space-y-4">
-      {/* Running Total & Status Bar */}
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+      {/* Running Total & Status Bar with Protected Dark Surface */}
+      <div className="dark-surface p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
         <div>
-          <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Banknote className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="text-[11px] font-mono !text-slate-300 uppercase tracking-wider flex items-center gap-1.5 font-bold">
+            <Banknote className="w-4 h-4 text-emerald-400" />
             Live Physical Cash Count
           </div>
-          <div className="text-2xl font-black font-mono text-white tracking-tight mt-0.5">
+          <div className="text-2xl sm:text-3xl font-black font-mono !text-white tracking-tight mt-1">
             {formatNpr(grandTotal)}
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
           {targetFloat !== undefined && (
-            <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 text-slate-300 flex items-center gap-2">
+            <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 flex items-center gap-2 shadow-sm">
               <span className="text-slate-400">Target Float:</span>
-              <strong className="text-white">{formatNpr(targetFloat)}</strong>
+              <strong className="!text-white font-bold">{formatNpr(targetFloat)}</strong>
               {diffFromTarget !== null && Math.abs(diffFromTarget) > 0.01 && (
                 <span
                   className={`font-bold ${
@@ -142,9 +142,9 @@ export function DenominationGrid({
           )}
 
           {expectedTotal !== null && (
-            <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 text-slate-300 flex items-center gap-2">
+            <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 flex items-center gap-2 shadow-sm">
               <span className="text-slate-400">Expected:</span>
-              <strong className="text-white">{formatNpr(expectedTotal)}</strong>
+              <strong className="!text-white font-bold">{formatNpr(expectedTotal)}</strong>
               {diffFromExpected !== null && (
                 <span
                   className={`px-2 py-0.5 rounded text-[11px] font-bold ${
@@ -167,8 +167,8 @@ export function DenominationGrid({
         </div>
       </div>
 
-      {/* Grid of Denominations */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+      {/* Grid of Denominations - High Contrast Modern UI */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {DENOMINATION_VALUES.map((item, idx) => {
           const qty = Number(values[item.key] || 0);
           const rowSubtotal = qty * item.value;
@@ -176,43 +176,44 @@ export function DenominationGrid({
           return (
             <div
               key={item.key}
-              className={`p-3 rounded-2xl border transition-all ${
+              className={`p-3.5 rounded-2xl border-2 transition-all ${
                 qty > 0
-                  ? 'bg-slate-900/90 border-blue-500/40 shadow-md shadow-blue-500/5'
-                  : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
+                  ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-sm'
+                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 shadow-2xs'
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <div
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-xs ${
                       item.isCoin
-                        ? 'bg-amber-950/80 text-amber-300 border border-amber-500/30'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
                         : item.value >= 500
-                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
-                        : 'bg-blue-950/80 text-blue-300 border border-blue-500/30'
+                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                        : 'bg-blue-100 text-blue-900 border border-blue-300'
                     }`}
                   >
-                    {item.isCoin ? <Coins className="w-4 h-4" /> : item.value}
+                    {item.isCoin ? <Coins className="w-4 h-4 text-amber-700" /> : item.value}
                   </div>
-                  <div>
-                    <span className="font-bold text-xs text-white block">
-                      {item.isCoin ? 'Coins' : `NPR ${item.value}`}
+                  <div className="min-w-0">
+                    <span className="font-black text-xs text-slate-900 block truncate">
+                      {item.isCoin ? 'Coins' : `NPR ${item.value.toLocaleString('en-IN')}`}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      Subtotal: <strong className="text-emerald-400">{formatNpr(rowSubtotal, { showFraction: false })}</strong>
+                    <span className="text-[11px] text-slate-500 font-mono font-medium block">
+                      Subtotal: <strong className="text-emerald-700 font-bold">{formatNpr(rowSubtotal, { showFraction: false })}</strong>
                     </span>
                   </div>
                 </div>
 
                 {/* Counter Stepper / Direct Input */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {!readOnly && (
                     <button
                       type="button"
                       onClick={() => handleDecrement(item.key)}
                       disabled={qty <= 0}
-                      className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all border border-slate-700 active:scale-95"
+                      className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all border border-slate-300 active:scale-95 font-bold cursor-pointer"
+                      title="Decrease quantity"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
@@ -228,14 +229,15 @@ export function DenominationGrid({
                     placeholder="0"
                     onChange={(e) => handleQtyChange(item.key, parseInt(e.target.value, 10) || 0)}
                     onKeyDown={(e) => handleKeyDown(e, idx)}
-                    className="w-16 h-8 text-center bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-lg text-white font-mono font-bold text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-16 h-8 text-center bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-slate-900 font-mono font-black text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
 
                   {!readOnly && (
                     <button
                       type="button"
                       onClick={() => handleIncrement(item.key)}
-                      className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all border border-slate-700 active:scale-95"
+                      className="w-8 h-8 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 flex items-center justify-center transition-all border border-blue-300 active:scale-95 font-bold cursor-pointer"
+                      title="Increase quantity"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>

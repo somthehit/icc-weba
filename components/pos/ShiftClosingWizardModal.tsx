@@ -219,26 +219,27 @@ export function ShiftClosingWizardModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-900">
         {/* Header with Steps Stepper */}
-        <div className="px-6 py-5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="dark-surface px-6 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-500/40">
+              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30">
                 EOD GATEWAY
               </span>
-              <h2 className="text-lg font-bold text-white tracking-tight">
+              <h2 className="text-lg font-black !text-white tracking-tight">
                 Close Register & Reconcile Tenders
               </h2>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Shift: <code className="text-blue-400 font-mono">{shift.shiftNumber}</code> • Terminal:{' '}
-              {shift.registerCode} • Cashier: {shift.cashierName}
+            <p className="text-xs !text-slate-300 font-mono mt-0.5">
+              Shift: <code className="text-blue-300 font-bold bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-500/40">{shift.shiftNumber}</code> • Terminal:{' '}
+              <span className="text-purple-300 font-bold">{shift.registerCode}</span> • Cashier:{' '}
+              <span className="!text-white font-medium">{shift.cashierName}</span>
             </p>
           </div>
 
           {/* Stepper Indicator */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {[
               { num: 1, label: 'Blind Cash' },
               { num: 2, label: 'Non-Cash Tenders' },
@@ -250,50 +251,52 @@ export function ShiftClosingWizardModal({
                 onClick={() => {
                   if (st.num < currentStep) setCurrentStep(st.num as any);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
                   currentStep === st.num
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    ? 'bg-blue-600 !text-white shadow-md shadow-blue-600/30 border border-blue-400/40'
                     : currentStep > st.num
-                    ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
-                    : 'bg-slate-950 text-slate-500 border border-slate-800'
+                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-900/60'
+                    : 'bg-slate-900/90 text-slate-400 border border-slate-800 hover:text-slate-200'
                 }`}
               >
-                <span>{st.num}</span>
+                <span className="w-4 h-4 rounded-full bg-black/40 flex items-center justify-center text-[10px]">{st.num}</span>
                 <span className="hidden md:inline">{st.label}</span>
               </div>
             ))}
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white ml-2"
+              type="button"
+              className="dark-surface-btn dark-surface-btn-danger p-2 rounded-xl border transition-all cursor-pointer shadow-sm hover:shadow ml-1"
+              title="Close modal"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-slate-50/50">
           {error && (
-            <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-rose-400 flex-shrink-0" />
+            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold flex items-center gap-3 shadow-2xs">
+              <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Fast/Zero-Duration Warning */}
           {isShortDuration && (
-            <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between gap-3">
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                 <div>
-                  <div className="font-bold">Minimum Shift Duration Guard Active</div>
-                  <div className="text-[11px] opacity-80 mt-0.5">
+                  <div className="font-black text-amber-950">Minimum Shift Duration Guard Active</div>
+                  <div className="text-[11px] text-amber-800 mt-0.5 font-medium">
                     Shift has only been open for <strong>{durationMinutes}m</strong> (&lt; 5 minutes). Closing early requires Supervisor PIN override and explanation.
                   </div>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-lg bg-amber-900/60 text-amber-300 font-mono text-[10px] font-bold">
+              <span className="px-2.5 py-1 rounded-lg bg-amber-200/80 text-amber-950 font-mono text-[10px] font-bold border border-amber-300">
                 GUARD &lt; 5m
               </span>
             </div>
@@ -302,18 +305,18 @@ export function ShiftClosingWizardModal({
           {/* ================= STEP 1: BLIND CASH DENOMINATION ENTRY ================= */}
           {currentStep === 1 && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <div>
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Banknote className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <Banknote className="w-4 h-4 text-emerald-600" />
                     Step 1: Enter Blind Cash Count in Till
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-600 mt-0.5 font-medium">
                     Count all physical currency notes and coins. Expected till balance is strictly hidden from cashier until count submission.
                   </p>
                 </div>
-                <div className="px-3 py-1 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-400">
-                  🔒 Expected Cash: <span className="font-bold text-amber-400">Hidden</span>
+                <div className="px-3 py-1 rounded-xl bg-white border border-slate-200 font-mono text-xs text-slate-600 shadow-2xs">
+                  🔒 Expected Cash: <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">Hidden</span>
                 </div>
               </div>
 
@@ -327,42 +330,42 @@ export function ShiftClosingWizardModal({
           {/* ================= STEP 2: NON-CASH TENDER ENTRY (SLIPS & GATEWAY) ================= */}
           {currentStep === 2 && (
             <div className="space-y-4">
-              <div className="border-b border-slate-800 pb-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-purple-400" />
+              <div className="border-b border-slate-200 pb-3">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-purple-600" />
                   Step 2: Enter Non-Cash Tender Totals from Terminal Slips & Reports
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 mt-0.5 font-medium">
                   Verify POS Card settlement slips and merchant wallet totals (Fonepay, eSewa, Khalti). Record batch and voucher references.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { key: 'card', label: 'POS Card Settlement Slip (Visa/Mastercard)', icon: CreditCard, color: 'text-blue-400', systemVal: report?.tenders?.card || 0 },
-                  { key: 'fonepay', label: 'Fonepay QR Merchant Report', icon: QrCode, color: 'text-purple-400', systemVal: report?.tenders?.fonepayQr || 0 },
-                  { key: 'esewa', label: 'eSewa Merchant Statement', icon: Banknote, color: 'text-emerald-400', systemVal: report?.tenders?.esewa || 0 },
-                  { key: 'khalti', label: 'Khalti Merchant Statement', icon: Banknote, color: 'text-purple-400', systemVal: report?.tenders?.khalti || 0 },
+                  { key: 'card', label: 'POS Card Settlement Slip (Visa/Mastercard)', icon: CreditCard, color: 'text-blue-600', systemVal: report?.tenders?.card || 0 },
+                  { key: 'fonepay', label: 'Fonepay QR Merchant Report', icon: QrCode, color: 'text-purple-600', systemVal: report?.tenders?.fonepayQr || 0 },
+                  { key: 'esewa', label: 'eSewa Merchant Statement', icon: Banknote, color: 'text-emerald-600', systemVal: report?.tenders?.esewa || 0 },
+                  { key: 'khalti', label: 'Khalti Merchant Statement', icon: Banknote, color: 'text-purple-600', systemVal: report?.tenders?.khalti || 0 },
                 ].map((t) => {
                   const state = tenderSettlements[t.key] || { entered: '0', ref: '', batch: '' };
                   const enteredNum = parseFloat(state.entered) || 0;
                   const variance = enteredNum - t.systemVal;
 
                   return (
-                    <div key={t.key} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                    <div key={t.key} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs font-bold text-white">
+                        <div className="flex items-center gap-2 text-xs font-black text-slate-900">
                           <t.icon className={`w-4 h-4 ${t.color}`} />
                           {t.label}
                         </div>
-                        <span className="text-[11px] font-mono text-slate-400">
-                          System: <strong className="text-white">{formatNpr(t.systemVal)}</strong>
+                        <span className="text-[11px] font-mono text-slate-500 font-medium">
+                          System: <strong className="text-slate-900">{formatNpr(t.systemVal)}</strong>
                         </span>
                       </div>
 
                       <div className="grid grid-cols-3 gap-2">
                         <div className="col-span-1 space-y-1">
-                          <label className="text-[10px] text-slate-500 font-mono">Amount (NPR)</label>
+                          <label className="text-[10px] text-slate-500 font-mono font-bold uppercase">Amount (NPR)</label>
                           <input
                             type="number"
                             value={state.entered}
@@ -373,12 +376,12 @@ export function ShiftClosingWizardModal({
                                 [t.key]: { ...prev[t.key], entered: val },
                               }));
                             }}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono font-bold focus:outline-none focus:border-blue-500"
+                            className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
                           />
                         </div>
 
                         <div className="col-span-1 space-y-1">
-                          <label className="text-[10px] text-slate-500 font-mono">Batch #</label>
+                          <label className="text-[10px] text-slate-500 font-mono font-bold uppercase">Batch #</label>
                           <input
                             type="text"
                             value={state.batch}
@@ -390,12 +393,12 @@ export function ShiftClosingWizardModal({
                               }));
                             }}
                             placeholder="Batch No."
-                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 font-mono focus:outline-none focus:border-blue-500"
+                            className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
                           />
                         </div>
 
                         <div className="col-span-1 space-y-1">
-                          <label className="text-[10px] text-slate-500 font-mono">Ref Slip / Voucher</label>
+                          <label className="text-[10px] text-slate-500 font-mono font-bold uppercase">Ref Slip</label>
                           <input
                             type="text"
                             value={state.ref}
@@ -407,20 +410,20 @@ export function ShiftClosingWizardModal({
                               }));
                             }}
                             placeholder="Slip Ref"
-                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 font-mono focus:outline-none focus:border-blue-500"
+                            className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
                           />
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-900">
-                        <span className="text-slate-500">Tender Variance:</span>
+                      <div className="flex items-center justify-between text-[11px] font-mono pt-2 border-t border-slate-100">
+                        <span className="text-slate-500 font-medium">Tender Variance:</span>
                         <span
-                          className={`font-bold ${
+                          className={`font-black ${
                             Math.abs(variance) < 0.01
-                              ? 'text-emerald-400'
+                              ? 'text-emerald-700'
                               : variance < 0
-                              ? 'text-rose-400'
-                              : 'text-amber-400'
+                              ? 'text-rose-600'
+                              : 'text-amber-600'
                           }`}
                         >
                           {Math.abs(variance) < 0.01 ? '0.00 (Balanced)' : `${variance > 0 ? '+' : ''}${variance.toFixed(2)} NPR`}
@@ -436,49 +439,49 @@ export function ShiftClosingWizardModal({
           {/* ================= STEP 3: RETURNS, VOIDS & SALES WATERFALL ================= */}
           {currentStep === 3 && (
             <div className="space-y-5">
-              <div className="border-b border-slate-800 pb-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Receipt className="w-4 h-4 text-blue-400" />
+              <div className="border-b border-slate-200 pb-3">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-blue-600" />
                   Step 3: Review Shift Returns, Voids & Sales Waterfall
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 mt-0.5 font-medium">
                   Verify that all returns, voids, and discounts tally strictly with the total tenders collected.
                 </p>
               </div>
 
               {/* Sales Waterfall Graphic */}
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                <div className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider font-mono">
                   Official Retail Sales Waterfall
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-mono">
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-slate-400 block text-[10px]">Gross Sales</span>
-                    <strong className="text-white text-sm block mt-0.5">{formatNpr(grossSales)}</strong>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
+                    <span className="text-slate-500 block text-[10px] font-bold">Gross Sales</span>
+                    <strong className="text-slate-900 text-sm block mt-0.5">{formatNpr(grossSales)}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-slate-400 block text-[10px]">(-) Discounts</span>
-                    <strong className="text-emerald-400 text-sm block mt-0.5">-{formatNpr(totalDiscounts)}</strong>
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 shadow-2xs">
+                    <span className="text-emerald-700 block text-[10px] font-bold">(-) Discounts</span>
+                    <strong className="text-emerald-800 text-sm block mt-0.5">-{formatNpr(totalDiscounts)}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-slate-400 block text-[10px]">(-) Returns / Refunds</span>
-                    <strong className="text-rose-400 text-sm block mt-0.5">-{formatNpr(totalReturns)}</strong>
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 shadow-2xs">
+                    <span className="text-rose-700 block text-[10px] font-bold">(-) Returns / Refunds</span>
+                    <strong className="text-rose-800 text-sm block mt-0.5">-{formatNpr(totalReturns)}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-slate-400 block text-[10px]">(-) Line Voids</span>
-                    <strong className="text-amber-400 text-sm block mt-0.5">-{formatNpr(totalVoids)}</strong>
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 shadow-2xs">
+                    <span className="text-amber-700 block text-[10px] font-bold">(-) Line Voids</span>
+                    <strong className="text-amber-800 text-sm block mt-0.5">-{formatNpr(totalVoids)}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 col-span-2 sm:col-span-1">
-                    <span className="text-blue-300 block text-[10px]">(=) Net Sales</span>
-                    <strong className="text-white text-sm block mt-0.5">{formatNpr(netSales)}</strong>
+                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-300 shadow-2xs col-span-2 sm:col-span-1">
+                    <span className="text-blue-700 block text-[10px] font-bold">(=) Net Sales</span>
+                    <strong className="text-blue-900 text-sm block mt-0.5">{formatNpr(netSales)}</strong>
                   </div>
                 </div>
 
                 {/* Tally check alert */}
                 {hasTallyMismatch && (
-                  <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-center justify-between shadow-2xs font-medium">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                      <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                       <span>
                         Tender Tally Mismatch: Total entered tenders (<strong>{formatNpr(totalTendersSum)}</strong>) does not equal Net Sales (<strong>{formatNpr(netSales)}</strong>). Difference: <strong>NPR {tallyDiff.toFixed(2)}</strong>.
                       </span>
@@ -488,14 +491,14 @@ export function ShiftClosingWizardModal({
               </div>
 
               {/* Returns & Voids List */}
-              <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60">
-                <div className="px-4 py-2.5 bg-slate-950 border-b border-slate-800 text-xs font-bold text-slate-300 flex items-center justify-between">
+              <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
+                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs font-black text-slate-800 flex items-center justify-between">
                   <span>Logged Returns & Voids in Shift</span>
-                  <span className="font-mono text-slate-500 text-[11px]">
+                  <span className="font-mono text-slate-500 text-[11px] font-bold">
                     {transactions.filter((tx) => (tx.paymentBreakdown?.status || '').includes('void') || (tx.paymentBreakdown?.status || '').includes('return')).length} Records
                   </span>
                 </div>
-                <div className="p-4 text-xs text-slate-400 text-center">
+                <div className="p-4 text-xs text-slate-600 font-medium text-center">
                   All returns and voids have been verified against original invoice records. Cash refunds reduce expected cash; non-cash refunds reduce wallet tender totals.
                 </div>
               </div>
@@ -505,21 +508,21 @@ export function ShiftClosingWizardModal({
           {/* ================= STEP 4: REVEAL DISCREPANCY & SUPERVISOR APPROVAL ================= */}
           {currentStep === 4 && (
             <div className="space-y-5">
-              <div className="border-b border-slate-800 pb-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <div className="border-b border-slate-200 pb-3">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   Step 4: Shift Reconciliation Reveal & Supervisor Authorization
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 mt-0.5 font-medium">
                   Expected cash and variances are now revealed. Review variances and authenticate with Supervisor PIN.
                 </p>
               </div>
 
               {/* Reveal Variance Card */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[11px] font-mono text-slate-400 block">Expected Cash in Till</span>
-                  <div className="text-xl font-black font-mono text-white">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1">
+                  <span className="text-[11px] font-mono text-slate-500 font-bold uppercase block">Expected Cash in Till</span>
+                  <div className="text-xl font-black font-mono text-slate-900">
                     {formatNpr(previewExpectedCash)}
                   </div>
                   <span className="text-[10px] text-slate-500 font-mono block">
@@ -527,26 +530,26 @@ export function ShiftClosingWizardModal({
                   </span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[11px] font-mono text-slate-400 block">Counted Cash (Step 1)</span>
-                  <div className="text-xl font-black font-mono text-amber-400">
+                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 shadow-2xs space-y-1">
+                  <span className="text-[11px] font-mono text-amber-800 font-bold uppercase block">Counted Cash (Step 1)</span>
+                  <div className="text-xl font-black font-mono text-amber-900">
                     {formatNpr(countedCash)}
                   </div>
-                  <span className="text-[10px] text-slate-500 font-mono block">
+                  <span className="text-[10px] text-amber-700 font-mono block">
                     Submitted Physical Notes Total
                   </span>
                 </div>
 
                 <div
-                  className={`p-4 rounded-2xl border space-y-1 ${
+                  className={`p-4 rounded-2xl border shadow-2xs space-y-1 ${
                     absVariance < 0.01
-                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
                       : previewVariance < 0
-                      ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
-                      : 'bg-amber-950/40 border-amber-500/40 text-amber-300'
+                      ? 'bg-rose-50 border-rose-300 text-rose-900'
+                      : 'bg-amber-50 border-amber-300 text-amber-900'
                   }`}
                 >
-                  <span className="text-[11px] font-mono opacity-80 block">Cash Variance</span>
+                  <span className="text-[11px] font-mono font-bold uppercase opacity-80 block">Cash Variance</span>
                   <div className="text-xl font-black font-mono">
                     {previewVariance > 0 ? `+${formatNpr(previewVariance)}` : formatNpr(previewVariance)}
                   </div>
@@ -562,14 +565,14 @@ export function ShiftClosingWizardModal({
 
               {/* Recount Trigger Option if Discrepancy Exists */}
               {absVariance > 0.01 && (
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <RotateCcw className="w-4 h-4 text-blue-400" />
+                      <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <RotateCcw className="w-4 h-4 text-blue-600" />
                         Optional Recount (History is preserved)
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
                         Cashier may perform a recount if money was miscounted. Count history is preserved as Attempt #{recountAttempt + 1}.
                       </p>
                     </div>
@@ -577,26 +580,26 @@ export function ShiftClosingWizardModal({
                     <button
                       type="button"
                       onClick={() => setIsRecountMode(!isRecountMode)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700"
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 border border-slate-200 transition cursor-pointer"
                     >
                       {isRecountMode ? 'Cancel Recount' : 'Perform Recount'}
                     </button>
                   </div>
 
                   {isRecountMode && (
-                    <div className="pt-3 border-t border-slate-800 space-y-3">
+                    <div className="pt-3 border-t border-slate-100 space-y-3">
                       <input
                         type="text"
                         value={recountReason}
                         onChange={(e) => setRecountReason(e.target.value)}
                         placeholder="Reason for recount (e.g. checked drawer corners for missing notes)"
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                       <button
                         type="button"
                         onClick={handleRecount}
                         disabled={loading}
-                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs"
+                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 cursor-pointer"
                       >
                         Submit Recount Attempt #{recountAttempt + 1}
                       </button>
@@ -607,15 +610,15 @@ export function ShiftClosingWizardModal({
 
               {/* Mandatory Supervisor PIN / Reason Inputs */}
               {(exceedsTolerance || isShortDuration) && (
-                <div className="p-4 rounded-2xl bg-rose-950/30 border border-rose-500/40 space-y-3">
-                  <div className="flex items-center gap-2 text-rose-300 font-bold text-xs">
-                    <ShieldCheck className="w-4 h-4 text-rose-400" />
+                <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-3 shadow-2xs">
+                  <div className="flex items-center gap-2 text-rose-800 font-black text-xs uppercase tracking-wider">
+                    <ShieldCheck className="w-4 h-4 text-rose-600" />
                     Supervisor Authorization & Variance Sign-Off Required
                   </div>
 
                   {isShortDuration && (
                     <div className="space-y-1">
-                      <label className="text-[11px] text-slate-300 font-medium">
+                      <label className="text-[11px] text-slate-700 font-bold">
                         Justification for Minimum Duration Override (&lt; 5 mins)
                       </label>
                       <input
@@ -623,14 +626,14 @@ export function ShiftClosingWizardModal({
                         value={minDurationReason}
                         onChange={(e) => setMinDurationReason(e.target.value)}
                         placeholder="e.g. Hardware terminal test or early shift reassignment"
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                       />
                     </div>
                   )}
 
                   {exceedsTolerance && (
                     <div className="space-y-1">
-                      <label className="text-[11px] text-slate-300 font-medium">
+                      <label className="text-[11px] text-slate-700 font-bold">
                         Reason for Variance (Exceeds NPR 50 tolerance)
                       </label>
                       <input
@@ -638,24 +641,24 @@ export function ShiftClosingWizardModal({
                         value={varianceReason}
                         onChange={(e) => setVarianceReason(e.target.value)}
                         placeholder="e.g. Small coin shortage or customer change dispute resolved"
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                       />
                     </div>
                   )}
 
                   <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-medium">
+                    <label className="text-[11px] text-slate-700 font-bold">
                       Supervisor PIN (Maker-Checker Authorization)
                     </label>
                     <div className="relative">
-                      <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="password"
                         maxLength={6}
                         value={supervisorPin}
                         onChange={(e) => setSupervisorPin(e.target.value)}
                         placeholder="Enter Supervisor PIN (e.g. 1234 or 9999)"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-rose-500/40 rounded-xl text-xs text-white font-mono"
+                        className="w-full pl-9 pr-3 py-2.5 bg-white border border-rose-300 rounded-xl text-xs text-slate-900 font-mono font-bold placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
                       />
                     </div>
                   </div>
@@ -666,13 +669,13 @@ export function ShiftClosingWizardModal({
         </div>
 
         {/* Modal Wizard Navigation Footer */}
-        <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between">
           <div>
             {currentStep > 1 && (
               <button
                 type="button"
                 onClick={() => setCurrentStep((prev) => (prev - 1) as any)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Previous Step
@@ -684,7 +687,7 @@ export function ShiftClosingWizardModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-semibold"
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
             >
               Cancel
             </button>
@@ -693,7 +696,7 @@ export function ShiftClosingWizardModal({
               <button
                 type="button"
                 onClick={() => setCurrentStep((prev) => (prev + 1) as any)}
-                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 flex items-center gap-1.5 transition-all"
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md shadow-blue-600/30 flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 Continue to Step {currentStep + 1}
                 <ArrowRight className="w-4 h-4" />
@@ -703,7 +706,7 @@ export function ShiftClosingWizardModal({
                 type="button"
                 onClick={handleFinalSubmit}
                 disabled={loading}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md shadow-emerald-600/30 flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />

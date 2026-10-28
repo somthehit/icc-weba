@@ -134,18 +134,18 @@ export function ShiftOpeningWizardModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex items-center justify-between">
+      <div className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-900">
+        {/* Header with protected dark-surface */}
+        <div className="dark-surface px-6 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
-              <Banknote className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center font-bold shadow-sm shrink-0">
+              <Banknote className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">
+              <h2 className="text-lg font-black !text-white tracking-tight">
                 Beginning of Day (BOD) — Open Register Shift
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs !text-slate-300 mt-0.5">
                 Count opening float denominations, verify drawer handover, and authenticate with Supervisor PIN.
               </p>
             </div>
@@ -153,32 +153,34 @@ export function ShiftOpeningWizardModal({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-all"
+            type="button"
+            className="dark-surface-btn dark-surface-btn-danger p-2 rounded-xl border transition-all cursor-pointer shadow-sm hover:shadow"
+            title="Close modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-slate-50/50">
           {error && (
-            <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs flex items-center gap-3">
-              <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold flex items-center gap-3 shadow-2xs">
+              <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Step 1: Terminal & Cashier Selection */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-              <label className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
-                <Monitor className="w-3.5 h-3.5 text-blue-400" />
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5">
+              <label className="text-[11px] font-mono font-bold uppercase text-slate-600 flex items-center gap-1.5">
+                <Monitor className="w-3.5 h-3.5 text-blue-600" />
                 POS Terminal / Till
               </label>
               <select
                 value={registerCode}
                 onChange={(e) => setRegisterCode(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               >
                 <option value="TERM-01 (Main Counter)">TERM-01 (Main Counter)</option>
                 <option value="TERM-02 (Register A)">TERM-02 (Register A)</option>
@@ -186,9 +188,9 @@ export function ShiftOpeningWizardModal({
               </select>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-              <label className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5">
+              <label className="text-[11px] font-mono font-bold uppercase text-slate-600 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-emerald-600" />
                 Active Cashier
               </label>
               <div className="flex items-center gap-2">
@@ -196,7 +198,7 @@ export function ShiftOpeningWizardModal({
                   type="text"
                   value={cashierName}
                   onChange={(e) => setCashierName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white font-medium focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
                 <input
                   type="text"
@@ -204,21 +206,21 @@ export function ShiftOpeningWizardModal({
                   onChange={(e) => setCashierCode(e.target.value)}
                   title="Cashier Staff Code"
                   placeholder="Code"
-                  className="w-24 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1.5 text-xs text-blue-400 font-mono text-center focus:outline-none"
+                  className="w-24 bg-blue-50 border border-blue-300 rounded-xl px-2 py-1.5 text-xs text-blue-800 font-mono font-bold text-center focus:outline-none"
                 />
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-              <label className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-purple-400" />
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1.5">
+              <label className="text-[11px] font-mono font-bold uppercase text-slate-600 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-purple-600" />
                 Standard Float Policy
               </label>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-white px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 flex-1">
+                <span className="text-xs font-mono font-black text-slate-900 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 flex-1">
                   {formatNpr(standardFloat)}
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">Store Standard</span>
+                <span className="text-[10px] text-slate-500 font-mono font-medium">Store Policy</span>
               </div>
             </div>
           </div>
@@ -226,25 +228,25 @@ export function ShiftOpeningWizardModal({
           {/* Handover Check Telemetry Card */}
           {prevShiftClosingCash !== null && (
             <div
-              className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+              className={`p-4 rounded-2xl border shadow-2xs flex items-center justify-between gap-4 ${
                 handoverDiff === 0
-                  ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
-                  : 'bg-amber-950/30 border-amber-500/40 text-amber-200'
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                  : 'bg-amber-50 border-amber-300 text-amber-900'
               }`}
             >
               <div className="flex items-center gap-3">
                 {handoverDiff === 0 ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                 )}
                 <div>
-                  <div className="font-bold text-xs">
+                  <div className="font-black text-xs">
                     {handoverDiff === 0
                       ? 'Drawer Handover Perfectly Matched'
                       : 'Handover Cash Difference Detected'}
                   </div>
-                  <div className="text-[11px] opacity-80 mt-0.5">
+                  <div className="text-[11px] opacity-80 mt-0.5 font-medium">
                     Previous shift (<code>{prevShiftNumber}</code>) closed with{' '}
                     <strong>{formatNpr(prevShiftClosingCash)}</strong> in drawer. Counted now:{' '}
                     <strong>{formatNpr(grandTotal)}</strong>.
@@ -253,10 +255,10 @@ export function ShiftOpeningWizardModal({
               </div>
 
               <div className="text-right font-mono">
-                <div className="text-[10px] uppercase tracking-wider opacity-70">Handover Variance</div>
+                <div className="text-[10px] uppercase tracking-wider opacity-70 font-bold">Handover Variance</div>
                 <div
-                  className={`text-sm font-bold ${
-                    handoverDiff === 0 ? 'text-emerald-400' : 'text-amber-400'
+                  className={`text-sm font-black ${
+                    handoverDiff === 0 ? 'text-emerald-700' : 'text-amber-700'
                   }`}
                 >
                   {handoverDiff !== null && handoverDiff > 0 ? `+${handoverDiff}` : handoverDiff} NPR
@@ -268,8 +270,8 @@ export function ShiftOpeningWizardModal({
           {/* Step 2: Denomination Entry Grid */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-300 font-mono uppercase tracking-wider flex items-center gap-2">
-                <Banknote className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-xs font-black text-slate-700 font-mono uppercase tracking-wider flex items-center gap-2">
+                <Banknote className="w-4 h-4 text-emerald-600" />
                 Count Physical Cash in Register Drawer
               </h3>
               <span className="text-[11px] text-slate-500 font-mono">
@@ -285,9 +287,9 @@ export function ShiftOpeningWizardModal({
           </div>
 
           {/* Step 3: Opening Justification & Supervisor Authorization */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">
+              <label className="text-xs font-bold text-slate-700">
                 Opening Notes / Reason for Float Difference (if any)
               </label>
               <textarea
@@ -295,51 +297,51 @@ export function ShiftOpeningWizardModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Standard morning float received from safe vault. All denominations intact."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs font-medium"
               />
             </div>
 
-            <div className="p-4 rounded-2xl bg-blue-950/30 border border-blue-500/30 space-y-2.5">
-              <div className="flex items-center gap-2 text-blue-300 font-bold text-xs">
-                <ShieldCheck className="w-4 h-4 text-blue-400" />
+            <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2.5 shadow-2xs">
+              <div className="flex items-center gap-2 text-blue-900 font-black text-xs uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-blue-600" />
                 Maker-Checker: Supervisor Verification PIN
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-600 font-medium">
                 A store manager or supervisor must confirm the physical cash float count before sales can begin.
               </p>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
                   maxLength={6}
                   value={supervisorPin}
                   onChange={(e) => setSupervisorPin(e.target.value)}
                   placeholder="Enter Supervisor PIN (e.g. 1234 or 9999)"
-                  className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-blue-500/40 rounded-xl text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-blue-300 rounded-xl text-xs text-slate-900 font-mono font-bold placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
                 />
               </div>
             </div>
           </div>
 
           {/* Footer Action */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-            <div className="text-xs font-mono text-slate-400">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+            <div className="text-xs font-mono text-slate-600 font-medium">
               Initial Float:{' '}
-              <strong className="text-white text-sm">{formatNpr(grandTotal)}</strong>
+              <strong className="text-slate-900 text-sm font-black">{formatNpr(grandTotal)}</strong>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 flex items-center gap-2 transition-all disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md shadow-emerald-600/30 flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
