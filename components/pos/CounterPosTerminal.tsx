@@ -1489,7 +1489,11 @@ export default function CounterPosTerminal() {
               <Layers className="h-6 w-6 stroke-[2.5]" />
             </button>
             {!isSidebarCollapsed && (
-              <div className="overflow-hidden whitespace-nowrap transition-opacity duration-200">
+              <div
+                onClick={toggleSidebar}
+                title="Click to collapse sidebar"
+                className="overflow-hidden whitespace-nowrap transition-opacity duration-200 cursor-pointer select-none"
+              >
                 <div className="flex items-center gap-1.5">
                   <span className="font-black text-lg tracking-tight text-white">SupaPOS</span>
                   <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
@@ -1581,21 +1585,8 @@ export default function CounterPosTerminal() {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#f4f7f6]">
         {/* SupaPOS Top Header */}
         <header className="h-16 px-6 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 z-20 shadow-2xs">
-          {/* Left: Menu & Greeting */}
+          {/* Left: Greeting */}
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className={`h-10 w-10 rounded-xl border-2 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95 shrink-0 ${
-                isSidebarCollapsed
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                  : 'border-orange-500/80 bg-white hover:bg-orange-50/60 text-slate-700 hover:text-slate-900'
-              }`}
-              title={isSidebarCollapsed ? "Expand sidebar menu" : "Collapse sidebar menu"}
-              aria-label={isSidebarCollapsed ? "Expand sidebar menu" : "Collapse sidebar menu"}
-            >
-              <Menu className="h-5 w-5 stroke-[2.5]" />
-            </button>
             <div>
               <h2 className="text-sm font-black text-slate-800 tracking-tight">
                 Welcome back!
