@@ -250,31 +250,42 @@ export function CashierShiftDetailsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-6xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        {/* ================= HEADER ================= */}
-        <div className="px-6 py-5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="relative w-full max-w-6xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-900">
+        {/* ================= HEADER WITH PROTECTED DARK SURFACE ================= */}
+        <div className="dark-surface px-6 py-5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-500/20 border border-blue-400/30 flex-shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-blue-500/30 border border-blue-400/40 flex-shrink-0">
               {shift?.cashierName ? shift.cashierName.slice(0, 2).toUpperCase() : 'POS'}
             </div>
             <div>
+              {/* Scope Confirmation Badge: Explicitly clarifies this is for an individual cashier's shift */}
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/25 text-blue-300 border border-blue-400/40 flex items-center gap-1.5 shadow-2xs">
+                  <User className="w-3 h-3 text-blue-300" />
+                  Single Cashier Shift Audit
+                </span>
+                <span className="text-[11px] !text-slate-400 font-mono">
+                  (Individual cashier register session — not aggregated store-wide EOD)
+                </span>
+              </div>
+
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-white tracking-tight">
+                <h1 className="text-xl font-black !text-white tracking-tight">
                   {shift?.cashierName || 'Cashier Shift Details'}
                 </h1>
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono text-slate-300 bg-slate-800 border border-slate-700">
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold !text-slate-200 bg-slate-800 border border-slate-700">
                   {shift?.cashierCode || 'EMP-104'}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-950/80 text-blue-300 border border-blue-500/40">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-blue-950/90 text-blue-300 border border-blue-500/40">
                   {shift?.shiftNumber || `SH-${shiftId}`}
                 </span>
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono text-purple-400 bg-purple-950/60 border border-purple-500/30">
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-purple-300 bg-purple-950/70 border border-purple-500/30">
                   {shift?.registerCode || 'REG-01'}
                 </span>
 
                 {/* Status Badges */}
                 {isZeroSales && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase bg-slate-800 !text-slate-200 border border-slate-700 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                     No Sales (Zero-Activity)
                   </span>
@@ -282,7 +293,7 @@ export function CashierShiftDetailsModal({
 
                 {shift && !isZeroSales && (
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase flex items-center gap-1.5 ${
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase flex items-center gap-1.5 ${
                       shift.status === 'OPEN'
                         ? 'bg-amber-950 text-amber-300 border border-amber-500/40'
                         : shift.status === 'SUBMITTED'
@@ -301,17 +312,17 @@ export function CashierShiftDetailsModal({
               </div>
 
               {/* Metadata row with AD/BS toggle */}
-              <div className="flex items-center gap-3 text-xs text-slate-400 mt-1.5 flex-wrap font-mono">
+              <div className="flex items-center gap-3 text-xs !text-slate-300 mt-1.5 flex-wrap font-mono">
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+                  <Clock className="w-3.5 h-3.5 text-blue-400" />
                   Opened: {formatDate(shift?.openedAt)}
                 </span>
-                <span>•</span>
+                <span className="text-slate-600">•</span>
                 <span>
                   {shift?.closedAt ? `Closed: ${formatDate(shift?.closedAt)}` : 'Status: Live Shift'}
                 </span>
-                <span>•</span>
-                <span className="text-slate-300">
+                <span className="text-slate-600">•</span>
+                <span className="!text-slate-200 font-bold">
                   Duration: {getDuration(shift?.openedAt, shift?.closedAt)}
                 </span>
 
@@ -319,7 +330,7 @@ export function CashierShiftDetailsModal({
                 <button
                   type="button"
                   onClick={() => setDateMode((prev) => (prev === 'AD' ? 'BS' : 'AD'))}
-                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold text-[10px] border border-slate-700 transition-all ml-1"
+                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-blue-300 font-bold text-[10px] border border-slate-700 transition-all ml-1 cursor-pointer"
                   title="Toggle between Gregorian AD and Nepali Bikram Sambat BS"
                 >
                   {dateMode === 'AD' ? 'Switch to BS (वि.सं.)' : 'Switch to AD'}
@@ -335,7 +346,7 @@ export function CashierShiftDetailsModal({
               <>
                 <button
                   onClick={() => setIsCashMoveModalOpen(true)}
-                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1.5"
+                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 !text-slate-200 text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
                   title="Perform Safe Drop, Paid-In, or Paid-Out"
                 >
                   <ArrowUpRight className="w-3.5 h-3.5 text-purple-400" />
@@ -344,7 +355,7 @@ export function CashierShiftDetailsModal({
 
                 <button
                   onClick={() => setIsEodWizardOpen(true)}
-                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition-all flex items-center gap-1.5"
+                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-blue-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Lock className="w-3.5 h-3.5" />
                   Close Register (EOD)
@@ -354,7 +365,7 @@ export function CashierShiftDetailsModal({
 
             <button
               onClick={() => setIsPrintSlipOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 !text-slate-200 text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
               title="Print Nepal Retail Shift X/Z Report"
             >
               <Printer className="w-3.5 h-3.5 text-blue-400" />
@@ -364,7 +375,7 @@ export function CashierShiftDetailsModal({
             <button
               onClick={fetchShiftDetails}
               disabled={loading}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all disabled:opacity-50"
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 !text-slate-300 border border-slate-700 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
               title="Refresh shift data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : ''}`} />
@@ -372,7 +383,7 @@ export function CashierShiftDetailsModal({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition-all"
+              className="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition-all cursor-pointer shadow-sm"
             >
               <X className="w-5 h-5" />
             </button>
@@ -427,71 +438,79 @@ export function CashierShiftDetailsModal({
               {/* TOP 6 KPI CARDS */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {/* Gross Sales */}
-                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between hover:border-slate-300 transition">
+                  <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
                     <span>Gross Sales</span>
-                    <Receipt className="w-4 h-4 text-blue-400" />
+                    <div className="p-1 rounded-lg bg-blue-50 text-blue-600">
+                      <Receipt className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                  <div className="mt-2 font-mono font-black text-lg text-slate-900">
                     {formatNpr(metrics?.grossSales || shift?.totalSales || 0)}
                   </div>
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5 font-medium">
                     {data.transactions.length} Invoices
                   </div>
                 </div>
 
                 {/* Expected Cash */}
-                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between hover:border-slate-300 transition">
+                  <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
                     <span>Expected Cash</span>
-                    <Banknote className="w-4 h-4 text-emerald-400" />
+                    <div className="p-1 rounded-lg bg-emerald-50 text-emerald-600">
+                      <Banknote className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                  <div className="mt-2 font-mono font-black text-lg text-slate-900">
                     {cashRec?.expectedCashInTill !== null && cashRec?.expectedCashInTill !== undefined ? (
                       formatNpr(cashRec.expectedCashInTill)
                     ) : (
-                      <span className="text-amber-400 text-xs flex items-center gap-1 font-semibold">
+                      <span className="text-amber-700 text-xs flex items-center gap-1 font-bold">
                         <Lock className="w-3.5 h-3.5" />
                         Blind Count
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5 font-medium">
                     Opening + Net Cash
                   </div>
                 </div>
 
                 {/* Counted Cash */}
-                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between hover:border-slate-300 transition">
+                  <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
                     <span>Counted Cash</span>
-                    <DollarSign className="w-4 h-4 text-amber-400" />
+                    <div className="p-1 rounded-lg bg-amber-50 text-amber-600">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                  <div className="mt-2 font-mono font-black text-lg text-slate-900">
                     {shift?.closingCash !== null && shift?.closingCash !== undefined
                       ? formatNpr(shift.closingCash)
                       : '—'}
                   </div>
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5 font-medium">
                     {shift?.status === 'OPEN' ? 'In Progress' : 'Blind Count Total'}
                   </div>
                 </div>
 
                 {/* Cash Variance with NPR symbol, sign, and color */}
-                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between hover:border-slate-300 transition">
+                  <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
                     <span>Cash Variance</span>
-                    <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                    <div className="p-1 rounded-lg bg-indigo-50 text-indigo-600">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div className="mt-2 font-mono font-bold text-lg">
+                  <div className="mt-2 font-mono font-black text-lg">
                     {cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined ? (
                       <span
                         className={
                           Math.abs(cashRec.varianceAmount) < 0.01
-                            ? 'text-emerald-400'
+                            ? 'text-emerald-700'
                             : cashRec.varianceAmount < 0
-                            ? 'text-rose-400'
-                            : 'text-amber-400'
+                            ? 'text-rose-700'
+                            : 'text-amber-800'
                         }
                       >
                         {cashRec.varianceAmount > 0
@@ -501,31 +520,33 @@ export function CashierShiftDetailsModal({
                           : 'NPR 0.00'}
                       </span>
                     ) : (
-                      <span className="text-slate-500">—</span>
+                      <span className="text-slate-400">—</span>
                     )}
                   </div>
-                  <div className="text-[11px] font-mono mt-0.5">
+                  <div className="text-[11px] font-mono mt-0.5 font-bold">
                     {cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined ? (
                       Math.abs(cashRec.varianceAmount) < 0.01 ? (
-                        <span className="text-emerald-400 font-semibold">Exact Match</span>
+                        <span className="text-emerald-700">Exact Match</span>
                       ) : cashRec.varianceAmount < 0 ? (
-                        <span className="text-rose-400 font-semibold">Shortage</span>
+                        <span className="text-rose-700">Shortage</span>
                       ) : (
-                        <span className="text-amber-400 font-semibold">Overage</span>
+                        <span className="text-amber-800">Overage</span>
                       )
                     ) : (
-                      <span className="text-slate-500">Uncounted</span>
+                      <span className="text-slate-400">Uncounted</span>
                     )}
                   </div>
                 </div>
 
-                {/* Digital / QR Tenders */}
-                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                {/* Digital & QR Tenders */}
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between hover:border-slate-300 transition">
+                  <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
                     <span>Digital & QR</span>
-                    <QrCode className="w-4 h-4 text-purple-400" />
+                    <div className="p-1 rounded-lg bg-purple-50 text-purple-600">
+                      <QrCode className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                  <div className="mt-2 font-mono font-black text-lg text-slate-900">
                     {formatNpr(
                       Number(report?.tenders?.fonepayQr || 0) +
                         Number(report?.tenders?.card || 0) +
@@ -533,35 +554,37 @@ export function CashierShiftDetailsModal({
                         Number(report?.tenders?.khalti || 0)
                     )}
                   </div>
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5 font-medium">
                     Fonepay / Card / eSewa
                   </div>
                 </div>
 
                 {/* 13% VAT portion */}
-                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between hover:border-slate-300 transition">
+                  <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
                     <span>13% IRD VAT</span>
-                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <div className="p-1 rounded-lg bg-amber-50 text-amber-600">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div className="mt-2 font-mono font-bold text-lg text-white">
+                  <div className="mt-2 font-mono font-black text-lg text-slate-900">
                     {formatNpr(metrics?.vatCollected || 0)}
                   </div>
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5 font-medium">
                     Annex 13 Audit
                   </div>
                 </div>
               </div>
 
               {/* TABS SELECTOR (4 Complete Tabs) */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3 gap-2 flex-wrap">
-                <div className="flex items-center gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3 gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200">
                   <button
                     onClick={() => setActiveTab('transactions')}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'transactions'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                     }`}
                   >
                     <Receipt className="w-3.5 h-3.5" />
@@ -570,10 +593,10 @@ export function CashierShiftDetailsModal({
 
                   <button
                     onClick={() => setActiveTab('denominations')}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'denominations'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                     }`}
                   >
                     <Banknote className="w-3.5 h-3.5" />
@@ -582,10 +605,10 @@ export function CashierShiftDetailsModal({
 
                   <button
                     onClick={() => setActiveTab('report')}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'report'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -594,10 +617,10 @@ export function CashierShiftDetailsModal({
 
                   <button
                     onClick={() => setActiveTab('logs')}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'logs'
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                     }`}
                   >
                     <ShieldCheck className="w-3.5 h-3.5" />
@@ -610,20 +633,20 @@ export function CashierShiftDetailsModal({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleExportCsv}
-                      className="px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-all flex items-center gap-1.5"
+                      className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
-                      <Download className="w-3 h-3 text-emerald-400" />
+                      <Download className="w-3.5 h-3.5 text-emerald-600" />
                       Export CSV
                     </button>
                     <button
                       onClick={expandAll}
-                      className="px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-all"
+                      className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs"
                     >
                       Expand All
                     </button>
                     <button
                       onClick={collapseAll}
-                      className="px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-all"
+                      className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs"
                     >
                       Collapse All
                     </button>
@@ -636,47 +659,47 @@ export function CashierShiftDetailsModal({
                 <div className="space-y-4">
                   {/* Retail Sales Waterfall Card */}
                   {waterfall && (
-                    <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-300 font-mono uppercase tracking-wider">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-700 font-mono uppercase tracking-wider">
                         <span>Retail Sales Waterfall & Tally Check</span>
                         {waterfall.hasTallyMismatch ? (
-                          <span className="text-rose-400 flex items-center gap-1 font-semibold">
-                            <AlertTriangle className="w-3.5 h-3.5" />
+                          <span className="bg-rose-100 text-rose-800 border border-rose-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-bold text-xs">
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
                             Mismatch: NPR {waterfall.tallyDiscrepancy.toFixed(2)}
                           </span>
                         ) : (
-                          <span className="text-emerald-400 flex items-center gap-1 font-semibold">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-bold text-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                             Tenders Perfectly Tally with Net Sales
                           </span>
                         )}
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-mono">
-                        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 block">Gross Sales</span>
-                          <strong className="text-white text-sm block mt-0.5">{formatNpr(waterfall.grossSales)}</strong>
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                          <span className="text-[10px] text-slate-500 font-bold uppercase block">Gross Sales</span>
+                          <strong className="text-slate-900 text-sm block mt-0.5">{formatNpr(waterfall.grossSales)}</strong>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 block">(-) Discounts</span>
-                          <strong className="text-emerald-400 text-sm block mt-0.5">-{formatNpr(waterfall.discounts)}</strong>
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                          <span className="text-[10px] text-slate-500 font-bold uppercase block">(-) Discounts</span>
+                          <strong className="text-slate-700 text-sm block mt-0.5">-{formatNpr(waterfall.discounts)}</strong>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 block">(-) Returns</span>
-                          <strong className="text-rose-400 text-sm block mt-0.5">-{formatNpr(waterfall.returns)}</strong>
+                        <div className="p-2.5 rounded-xl bg-rose-50/70 border border-rose-200 shadow-2xs">
+                          <span className="text-[10px] text-rose-700 font-bold uppercase block">(-) Returns</span>
+                          <strong className="text-rose-700 text-sm block mt-0.5">-{formatNpr(waterfall.returns)}</strong>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 block">(-) Line Voids</span>
-                          <strong className="text-amber-400 text-sm block mt-0.5">-{formatNpr(waterfall.voids)}</strong>
+                        <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200 shadow-2xs">
+                          <span className="text-[10px] text-amber-800 font-bold uppercase block">(-) Line Voids</span>
+                          <strong className="text-amber-800 text-sm block mt-0.5">-{formatNpr(waterfall.voids)}</strong>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30 col-span-2 sm:col-span-1">
-                          <span className="text-blue-300 block text-[10px]">(=) Net Sales</span>
-                          <strong className="text-white text-sm block mt-0.5">{formatNpr(waterfall.netSales)}</strong>
+                        <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 shadow-2xs col-span-2 sm:col-span-1">
+                          <span className="text-emerald-800 font-bold block text-[10px] uppercase">(=) Net Sales</span>
+                          <strong className="text-emerald-950 text-sm block mt-0.5">{formatNpr(waterfall.netSales)}</strong>
                         </div>
                       </div>
 
                       {waterfall.hasTallyMismatch && (
-                        <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs flex items-center justify-between">
+                        <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-center justify-between font-semibold">
                           <span>
                             Sum of all tenders (Cash + Card + QR + Credit: <strong>{formatNpr(waterfall.tendersTotal)}</strong>) does not match Net Sales (<strong>{formatNpr(waterfall.netSales)}</strong>).
                           </span>
@@ -694,12 +717,12 @@ export function CashierShiftDetailsModal({
                         value={txSearch}
                         onChange={(e) => setTxSearch(e.target.value)}
                         placeholder="Search by Invoice #, Customer, phone, SKU, or Serial number..."
-                        className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
                       />
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs text-slate-400 font-medium">Filter:</span>
+                      <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Filter:</span>
                       {[
                         { id: 'all', label: 'All' },
                         { id: 'cash', label: 'Cash' },
@@ -714,10 +737,10 @@ export function CashierShiftDetailsModal({
                         <button
                           key={item.id}
                           onClick={() => setPaymentFilter(item.id)}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                             paymentFilter === item.id
-                              ? 'bg-blue-600 text-white shadow-sm'
-                              : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
+                              ? 'bg-blue-600 text-white shadow-xs font-black'
+                              : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'
                           }`}
                         >
                           {item.label}
@@ -727,10 +750,10 @@ export function CashierShiftDetailsModal({
                   </div>
 
                   {/* Transactions Table */}
-                  <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60 shadow-xl">
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-950 text-slate-400 font-mono text-[11px] uppercase border-b border-slate-800">
+                        <thead className="bg-slate-100 text-slate-700 font-mono text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
                           <tr>
                             <th className="p-3 w-8"></th>
                             <th className="p-3">Invoice #</th>
@@ -744,10 +767,10 @@ export function CashierShiftDetailsModal({
                             <th className="p-3 text-center">CBMS</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                        <tbody className="divide-y divide-slate-100 text-slate-700">
                           {filteredTransactions.length === 0 ? (
                             <tr>
-                              <td colSpan={10} className="p-8 text-center text-slate-500 font-mono">
+                              <td colSpan={10} className="p-8 text-center text-slate-400 font-mono">
                                 No transactions found matching current filters.
                               </td>
                             </tr>
@@ -766,26 +789,26 @@ export function CashierShiftDetailsModal({
                                     onClick={() => toggleExpand(tx.id)}
                                     className={`cursor-pointer transition-colors ${
                                       isExpanded
-                                        ? 'bg-blue-950/20 text-white'
-                                        : 'hover:bg-slate-800/40 text-slate-300'
+                                        ? 'bg-blue-50/60 text-slate-900 font-medium'
+                                        : 'hover:bg-slate-50 text-slate-700'
                                     }`}
                                   >
-                                    <td className="p-3 text-center text-slate-500">
+                                    <td className="p-3 text-center text-slate-400">
                                       {isExpanded ? (
-                                        <ChevronUp className="w-4 h-4 text-blue-400" />
+                                        <ChevronUp className="w-4 h-4 text-blue-600" />
                                       ) : (
                                         <ChevronDown className="w-4 h-4" />
                                       )}
                                     </td>
-                                    <td className="p-3 font-mono font-bold text-white flex items-center gap-1.5">
-                                      <Receipt className="w-3.5 h-3.5 text-blue-400" />
+                                    <td className="p-3 font-mono font-bold text-blue-600 flex items-center gap-1.5">
+                                      <Receipt className="w-3.5 h-3.5 text-blue-500" />
                                       {tx.invoiceNumber}
                                     </td>
-                                    <td className="p-3 font-mono text-slate-400">
+                                    <td className="p-3 font-mono text-slate-500">
                                       {tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'}
                                     </td>
                                     <td className="p-3">
-                                      <div className="font-semibold text-slate-200">
+                                      <div className="font-bold text-slate-900">
                                         {tx.customerName || 'Walk-in Customer'}
                                       </div>
                                       {tx.customerPhone && (
@@ -796,31 +819,25 @@ export function CashierShiftDetailsModal({
                                     </td>
                                     <td className="p-3">
                                       <span
-                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                          tx.paymentMethod === 'cash'
-                                            ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
-                                            : tx.paymentMethod === 'card'
-                                            ? 'bg-blue-950 text-blue-300 border border-blue-500/30'
-                                            : 'bg-purple-950 text-purple-300 border border-purple-500/30'
-                                        }`}
+                                        className={`badge-${tx.paymentMethod || 'cash'} px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase`}
                                       >
                                         {tx.paymentMethod}
                                       </span>
                                     </td>
-                                    <td className="p-3 text-center font-mono font-semibold">
+                                    <td className="p-3 text-center font-mono font-bold text-slate-800">
                                       {items.length}
                                     </td>
-                                    <td className="p-3 text-right font-mono text-slate-300">
+                                    <td className="p-3 text-right font-mono text-slate-700 font-bold">
                                       {formatNpr(taxableAmt, { showCurrency: false })}
                                     </td>
-                                    <td className="p-3 text-right font-mono text-amber-400/90">
+                                    <td className="p-3 text-right font-mono text-slate-700 font-bold">
                                       {formatNpr(vatAmt, { showCurrency: false })}
                                     </td>
-                                    <td className="p-3 text-right font-mono font-bold text-white text-sm">
+                                    <td className="p-3 text-right font-mono font-black text-slate-900 text-sm">
                                       {formatNpr(totalAmt)}
                                     </td>
                                     <td className="p-3 text-center">
-                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                                      <span className="badge-synced px-2 py-0.5 rounded text-[10px] font-bold">
                                         SYNCED
                                       </span>
                                     </td>
@@ -828,30 +845,30 @@ export function CashierShiftDetailsModal({
 
                                   {/* Expanded Item Breakdown */}
                                   {isExpanded && (
-                                    <tr className="bg-slate-900/90 border-y border-slate-800">
+                                    <tr className="bg-slate-50 border-y border-slate-200">
                                       <td colSpan={10} className="p-4 sm:p-5">
-                                        <div className="bg-slate-950 rounded-2xl border border-slate-800 p-4 space-y-3">
-                                          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                                        <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-2xs">
+                                          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                                             <div className="flex items-center gap-2">
-                                              <ShoppingBag className="w-4 h-4 text-blue-400" />
-                                              <span className="font-bold text-xs text-white uppercase tracking-wider">
+                                              <ShoppingBag className="w-4 h-4 text-blue-600" />
+                                              <span className="font-black text-xs text-slate-900 uppercase tracking-wider">
                                                 Sold Items Breakdown ({items.length} Lines)
                                               </span>
                                             </div>
-                                            <div className="text-[11px] font-mono text-slate-400 flex items-center gap-3">
+                                            <div className="text-[11px] font-mono text-slate-500 flex items-center gap-3">
                                               {pBreakdown.discountAmount > 0 && (
-                                                <span className="text-emerald-400">
+                                                <span className="text-emerald-700 font-bold">
                                                   Discount: <strong>-NPR {Number(pBreakdown.discountAmount).toLocaleString('en-IN')}</strong>
                                                 </span>
                                               )}
-                                              <span>Cashier: <strong>{tx.cashierName || shift?.cashierName}</strong></span>
+                                              <span>Cashier: <strong className="text-slate-900">{tx.cashierName || shift?.cashierName}</strong></span>
                                             </div>
                                           </div>
 
                                           {/* Sub-table */}
                                           <div className="overflow-x-auto">
                                             <table className="w-full text-left text-xs">
-                                              <thead className="bg-slate-900/80 text-slate-400 font-mono text-[10px] uppercase">
+                                              <thead className="bg-slate-50 text-slate-600 font-mono text-[10px] uppercase font-bold border-b border-slate-100">
                                                 <tr>
                                                   <th className="p-2 w-10">#</th>
                                                   <th className="p-2">Item Description & Brand</th>
@@ -862,7 +879,7 @@ export function CashierShiftDetailsModal({
                                                   <th className="p-2 text-right">Line Total (NPR)</th>
                                                 </tr>
                                               </thead>
-                                              <tbody className="divide-y divide-slate-800/50">
+                                              <tbody className="divide-y divide-slate-100 text-slate-700">
                                                 {items.map((line: any, lIdx: number) => {
                                                   const uPrice = Number(line.unitPrice || line.price || 0);
                                                   const qty = Number(line.quantity || 1);
@@ -870,18 +887,18 @@ export function CashierShiftDetailsModal({
                                                   const serials = Array.isArray(line.serialNumbers) ? line.serialNumbers : [];
 
                                                   return (
-                                                    <tr key={lIdx} className="hover:bg-slate-900/40">
-                                                      <td className="p-2 font-mono text-slate-500">{lIdx + 1}</td>
-                                                      <td className="p-2 font-medium text-slate-200">{line.name}</td>
-                                                      <td className="p-2 font-mono text-slate-400 text-[11px]">{line.sku || '—'}</td>
-                                                      <td className="p-2 font-mono text-[10px] text-blue-400">
+                                                    <tr key={lIdx} className="hover:bg-slate-50/70">
+                                                      <td className="p-2 font-mono text-slate-400">{lIdx + 1}</td>
+                                                      <td className="p-2 font-bold text-slate-900">{line.name}</td>
+                                                      <td className="p-2 font-mono text-slate-500 text-[11px]">{line.sku || '—'}</td>
+                                                      <td className="p-2 font-mono text-[10px] text-blue-600 font-semibold">
                                                         {serials.length > 0 ? serials.join(', ') : '—'}
                                                       </td>
-                                                      <td className="p-2 text-right font-mono text-slate-300">
+                                                      <td className="p-2 text-right font-mono text-slate-600">
                                                         {formatNpr(uPrice, { showCurrency: false })}
                                                       </td>
-                                                      <td className="p-2 text-center font-mono font-bold text-white">{qty}</td>
-                                                      <td className="p-2 text-right font-mono font-bold text-emerald-400">
+                                                      <td className="p-2 text-center font-mono font-black text-slate-900">{qty}</td>
+                                                      <td className="p-2 text-right font-mono font-black text-emerald-800">
                                                         {formatNpr(lTotal)}
                                                       </td>
                                                     </tr>
@@ -909,40 +926,40 @@ export function CashierShiftDetailsModal({
               {activeTab === 'denominations' && (
                 <div className="space-y-6">
                   {/* BOD Beginning of Day Summary Card */}
-                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             BOD VERIFIED
                           </span>
-                          <h3 className="font-bold text-sm text-white">
+                          <h3 className="font-bold text-sm text-slate-900">
                             Beginning of Day (BOD) — Opening Float & Denominations
                           </h3>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          Counted by <strong>{shift?.cashierName}</strong> • Verified by{' '}
-                          <strong>{shift?.openedBySupervisorName || 'Store Supervisor'} (PIN Authenticated)</strong> •{' '}
+                        <p className="text-xs text-slate-600 mt-1">
+                          Counted by <strong className="text-slate-900">{shift?.cashierName}</strong> • Verified by{' '}
+                          <strong className="text-slate-900">{shift?.openedBySupervisorName || 'Store Supervisor'} (PIN Authenticated)</strong> •{' '}
                           {formatDate(shift?.openedAt)}
                         </p>
                       </div>
 
                       <div className="text-right font-mono">
-                        <div className="text-[10px] uppercase tracking-wider text-slate-400">Opening Float Total</div>
-                        <div className="text-xl font-bold text-emerald-400">{formatNpr(shift?.openingFloat || 0)}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Opening Float Total</div>
+                        <div className="text-xl font-bold text-emerald-700">{formatNpr(shift?.openingFloat || 0)}</div>
                       </div>
                     </div>
 
                     {/* Handover Check Telemetry */}
-                    <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs font-mono">
+                    <div className="p-3.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs font-mono shadow-xs">
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span className="text-slate-300">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span className="text-slate-700">
                           Handover Check vs Previous Shift: Standard Float Policy NPR {Number(shift?.standardFloat || 5000).toLocaleString('en-IN')}.
                         </span>
                       </div>
-                      <div className="text-slate-400">
-                        Handover Discrepancy: <strong className="text-emerald-400">NPR {Number(shift?.handoverVariance || 0).toFixed(2)}</strong>
+                      <div className="text-slate-600">
+                        Handover Discrepancy: <strong className="text-emerald-700 font-bold">NPR {Number(shift?.handoverVariance || 0).toFixed(2)}</strong>
                       </div>
                     </div>
 
@@ -952,12 +969,12 @@ export function CashierShiftDetailsModal({
                         const count = Number(shift?.openingDenominations?.[item.key] || 0);
                         const subtotal = count * item.value;
                         return (
-                          <div key={item.key} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
-                            <div className="text-[10px] text-slate-400 font-mono font-semibold">
+                          <div key={item.key} className="p-2.5 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
+                            <div className="text-[10px] text-slate-500 font-mono font-bold">
                               {item.isCoin ? 'Coins' : `NPR ${item.value}`}
                             </div>
-                            <div className="font-bold text-sm text-white mt-1">× {count}</div>
-                            <div className="text-[10px] text-emerald-400 font-mono mt-0.5 font-semibold">
+                            <div className="font-bold text-sm text-slate-900 mt-1">× {count}</div>
+                            <div className="text-[10px] text-emerald-700 font-mono mt-0.5 font-bold">
                               {formatNpr(subtotal, { showFraction: false })}
                             </div>
                           </div>
@@ -967,28 +984,28 @@ export function CashierShiftDetailsModal({
                   </div>
 
                   {/* EOD Closing Count & Recount History */}
-                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-500/30">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                             EOD AUDIT
                           </span>
-                          <h3 className="font-bold text-sm text-white">
+                          <h3 className="font-bold text-sm text-slate-900">
                             End of Day (EOD) — Closing Cash Denomination Breakdown
                           </h3>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-slate-600 mt-1">
                           Physical notes submitted at shift close.
                           {shift?.closedBySupervisorName && (
-                            <span> • Received and audited by <strong>{shift.closedBySupervisorName}</strong>.</span>
+                            <span> • Received and audited by <strong className="text-slate-900">{shift.closedBySupervisorName}</strong>.</span>
                           )}
                         </p>
                       </div>
 
                       <div className="text-right font-mono">
-                        <div className="text-[10px] uppercase tracking-wider text-slate-400">Closing Counted Cash</div>
-                        <div className="text-xl font-bold text-amber-400">
+                        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Closing Counted Cash</div>
+                        <div className="text-xl font-bold text-amber-700">
                           {shift?.closingCash !== null && shift?.closingCash !== undefined
                             ? formatNpr(shift.closingCash)
                             : 'Pending'}
@@ -1002,12 +1019,12 @@ export function CashierShiftDetailsModal({
                           const count = Number(shift.closingDenominations?.[item.key] || 0);
                           const subtotal = count * item.value;
                           return (
-                            <div key={item.key} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
-                              <div className="text-[10px] text-slate-400 font-mono font-semibold">
+                            <div key={item.key} className="p-2.5 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
+                              <div className="text-[10px] text-slate-500 font-mono font-bold">
                                 {item.isCoin ? 'Coins' : `NPR ${item.value}`}
                               </div>
-                              <div className="font-bold text-sm text-white mt-1">× {count}</div>
-                              <div className="text-[10px] text-amber-400 font-mono mt-0.5 font-semibold">
+                              <div className="font-bold text-sm text-slate-900 mt-1">× {count}</div>
+                              <div className="text-[10px] text-amber-700 font-mono mt-0.5 font-bold">
                                 {formatNpr(subtotal, { showFraction: false })}
                               </div>
                             </div>
@@ -1015,22 +1032,22 @@ export function CashierShiftDetailsModal({
                         })}
                       </div>
                     ) : (
-                      <div className="p-6 text-center text-slate-500 text-xs font-mono">
+                      <div className="p-6 text-center text-slate-500 text-xs font-mono bg-white rounded-xl border border-slate-200">
                         Closing denomination count has not yet been submitted. Cashier will perform blind count at EOD.
                       </div>
                     )}
                   </div>
 
                   {/* Non-Cash Tender Reconciliations Table */}
-                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                    <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-purple-400" />
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 shadow-sm">
+                    <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-purple-600" />
                       Non-Cash Tender Settlement & Merchant Audit (Slips vs System)
                     </h3>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto bg-white rounded-xl border border-slate-200 shadow-xs">
                       <table className="w-full text-left text-xs font-mono">
-                        <thead className="bg-slate-900/80 text-slate-400 text-[10px] uppercase">
+                        <thead className="bg-slate-100 text-slate-700 text-[10px] uppercase font-bold border-b border-slate-200">
                           <tr>
                             <th className="p-2.5">Tender Method</th>
                             <th className="p-2.5 text-right">System Amount (NPR)</th>
@@ -1040,7 +1057,7 @@ export function CashierShiftDetailsModal({
                             <th className="p-2.5 text-center">Reconciliation Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/50">
+                        <tbody className="divide-y divide-slate-200 text-slate-900 font-medium">
                           {[
                             { name: 'POS Card (Visa/MC)', key: 'card', system: report?.tenders?.card || 0 },
                             { name: 'Fonepay Dynamic QR', key: 'fonepay', system: report?.tenders?.fonepayQr || 0 },
@@ -1048,16 +1065,15 @@ export function CashierShiftDetailsModal({
                             { name: 'Khalti Wallet', key: 'khalti', system: report?.tenders?.khalti || 0 },
                           ].map((t) => {
                             const entered = t.system; // Matched by gateway
-                            const variance = entered - t.system;
                             return (
-                              <tr key={t.key} className="hover:bg-slate-900/40">
-                                <td className="p-2.5 font-bold text-white">{t.name}</td>
-                                <td className="p-2.5 text-right text-slate-300">{formatNpr(t.system, { showCurrency: false })}</td>
-                                <td className="p-2.5 text-right text-white font-bold">{formatNpr(entered, { showCurrency: false })}</td>
-                                <td className="p-2.5 text-right text-emerald-400">0.00</td>
-                                <td className="p-2.5 text-slate-400 text-[11px]">AUTO-GATEWAY-ACK</td>
+                              <tr key={t.key} className="hover:bg-slate-50">
+                                <td className="p-2.5 font-bold text-slate-900">{t.name}</td>
+                                <td className="p-2.5 text-right text-slate-700">{formatNpr(t.system, { showCurrency: false })}</td>
+                                <td className="p-2.5 text-right text-slate-900 font-bold">{formatNpr(entered, { showCurrency: false })}</td>
+                                <td className="p-2.5 text-right text-emerald-700 font-bold">0.00</td>
+                                <td className="p-2.5 text-slate-500 text-[11px]">AUTO-GATEWAY-ACK</td>
                                 <td className="p-2.5 text-center">
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                                     BALANCED
                                   </span>
                                 </td>
@@ -1075,24 +1091,24 @@ export function CashierShiftDetailsModal({
               {activeTab === 'report' && (
                 <div className="space-y-6">
                   {/* Fiscal Header & Summary Banner */}
-                  <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="dark-surface p-5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-950 text-blue-300 border border-blue-500/30">
+                        <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 !text-blue-300 border border-blue-400/40">
                           {shift?.status === 'OPEN' ? 'X-REPORT (MID-SHIFT)' : 'Z-REPORT (FINAL AUDITED EOD)'}
                         </span>
-                        <h2 className="text-base font-bold text-white">
+                        <h2 className="text-base font-bold !text-white">
                           Intel Computer Center — Retail Settlement & Sales Audit
                         </h2>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1 font-mono">
+                      <p className="text-xs !text-slate-300 mt-1 font-mono">
                         Fiscal Year 2081/82 • Dhangadhi Main Flagship • Register: {shift?.registerCode || 'REG-01'} • Cashier: {shift?.cashierName} ({shift?.cashierCode || 'EMP-104'})
                       </p>
                     </div>
 
                     <button
                       onClick={() => setIsPrintSlipOpen(true)}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-2 self-start md:self-center"
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-2 self-start md:self-center transition-all"
                     >
                       <Printer className="w-4 h-4" />
                       Print Official Receipt Slip
@@ -1102,81 +1118,81 @@ export function CashierShiftDetailsModal({
                   {/* 2-Column Grid: Tender Breakdown & Cash Drawer Reconciliation */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Tender Settlement */}
-                    <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                        <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                          <CreditCard className="w-4 h-4 text-purple-400" />
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 shadow-sm">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-purple-600" />
                           Tender Settlement Breakdown
                         </h3>
-                        <span className="text-xs text-slate-400 font-mono">
+                        <span className="text-xs text-slate-600 font-mono font-bold">
                           Total: {formatNpr(metrics?.grossSales || 0)}
                         </span>
                       </div>
 
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-mono">
-                          <span className="text-slate-300 flex items-center gap-1.5">
-                            <Banknote className="w-3.5 h-3.5 text-emerald-400" />
+                      <div className="space-y-2.5">
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between text-xs font-mono shadow-xs">
+                          <span className="text-slate-700 font-semibold flex items-center gap-1.5">
+                            <Banknote className="w-3.5 h-3.5 text-emerald-600" />
                             Cash Sales:
                           </span>
-                          <span className="text-white font-bold">{formatNpr(report?.tenders?.cash || 0)}</span>
+                          <span className="text-slate-900 font-bold">{formatNpr(report?.tenders?.cash || 0)}</span>
                         </div>
-                        <div className="flex justify-between text-xs font-mono">
-                          <span className="text-slate-300 flex items-center gap-1.5">
-                            <CreditCard className="w-3.5 h-3.5 text-blue-400" />
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between text-xs font-mono shadow-xs">
+                          <span className="text-slate-700 font-semibold flex items-center gap-1.5">
+                            <CreditCard className="w-3.5 h-3.5 text-blue-600" />
                             POS Card (Visa/Mastercard):
                           </span>
-                          <span className="text-white font-bold">{formatNpr(report?.tenders?.card || 0)}</span>
+                          <span className="text-slate-900 font-bold">{formatNpr(report?.tenders?.card || 0)}</span>
                         </div>
-                        <div className="flex justify-between text-xs font-mono">
-                          <span className="text-slate-300 flex items-center gap-1.5">
-                            <QrCode className="w-3.5 h-3.5 text-purple-400" />
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between text-xs font-mono shadow-xs">
+                          <span className="text-slate-700 font-semibold flex items-center gap-1.5">
+                            <QrCode className="w-3.5 h-3.5 text-purple-600" />
                             Fonepay Dynamic QR:
                           </span>
-                          <span className="text-white font-bold">{formatNpr(report?.tenders?.fonepayQr || 0)}</span>
+                          <span className="text-slate-900 font-bold">{formatNpr(report?.tenders?.fonepayQr || 0)}</span>
                         </div>
-                        <div className="flex justify-between text-xs font-mono">
-                          <span className="text-slate-300 flex items-center gap-1.5">
-                            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between text-xs font-mono shadow-xs">
+                          <span className="text-slate-700 font-semibold flex items-center gap-1.5">
+                            <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
                             eSewa / Khalti Wallets:
                           </span>
-                          <span className="text-white font-bold">
+                          <span className="text-slate-900 font-bold">
                             {formatNpr((Number(report?.tenders?.esewa || 0)) + (Number(report?.tenders?.khalti || 0)))}
                           </span>
                         </div>
                       </div>
 
                       {/* Tax Breakdown */}
-                      <div className="mt-4 pt-3 border-t border-slate-800 space-y-1.5 text-xs font-mono">
-                        <div className="flex justify-between text-slate-400">
+                      <div className="mt-4 pt-3 border-t border-slate-200 space-y-1.5 text-xs font-mono bg-white p-3 rounded-xl border border-slate-200">
+                        <div className="flex justify-between text-slate-600">
                           <span>Gross Turnover:</span>
-                          <span className="text-white">{formatNpr(metrics?.grossSales || 0)}</span>
+                          <span className="text-slate-900 font-bold">{formatNpr(metrics?.grossSales || 0)}</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className="flex justify-between text-slate-600">
                           <span>Taxable Sales:</span>
-                          <span className="text-white">{formatNpr(metrics?.taxableSales || 0)}</span>
+                          <span className="text-slate-900 font-bold">{formatNpr(metrics?.taxableSales || 0)}</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className="flex justify-between text-slate-700 font-semibold">
                           <span>13% Nepal VAT:</span>
-                          <span className="text-amber-400 font-bold">{formatNpr(metrics?.vatCollected || 0)}</span>
+                          <span className="text-slate-900 font-bold">{formatNpr(metrics?.vatCollected || 0)}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Cash Drawer Balancing Ledger */}
-                    <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                        <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                          <Banknote className="w-4 h-4 text-emerald-400" />
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 shadow-sm">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                          <Banknote className="w-4 h-4 text-emerald-600" />
                           Cash Drawer Reconciliation
                         </h3>
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
                             cashRec?.isBalanced
-                              ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined
-                              ? 'bg-rose-950 text-rose-300 border border-rose-500/30'
-                              : 'bg-slate-800 text-slate-300'
+                              ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                              : 'bg-slate-200 text-slate-700 border border-slate-300'
                           }`}
                         >
                           {cashRec?.isBalanced
@@ -1188,39 +1204,39 @@ export function CashierShiftDetailsModal({
                       </div>
 
                       <div className="space-y-2 text-xs font-mono">
-                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
-                          <span className="text-slate-400">Opening Cash Float:</span>
-                          <span className="text-white font-bold">{formatNpr(cashRec?.openingFloat || 0)}</span>
+                        <div className="flex justify-between p-2 rounded-lg bg-white border border-slate-200 shadow-xs">
+                          <span className="text-slate-600 font-medium">Opening Cash Float:</span>
+                          <span className="text-slate-900 font-bold">{formatNpr(cashRec?.openingFloat || 0)}</span>
                         </div>
 
-                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
-                          <span className="text-slate-400">(+) Cash Sales:</span>
-                          <span className="text-emerald-400 font-bold">+{formatNpr(cashRec?.cashSales || 0)}</span>
+                        <div className="flex justify-between p-2 rounded-lg bg-emerald-50/70 border border-emerald-200">
+                          <span className="text-emerald-900 font-medium">(+) Cash Sales:</span>
+                          <span className="text-emerald-700 font-bold">+{formatNpr(cashRec?.cashSales || 0)}</span>
                         </div>
 
-                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
-                          <span className="text-slate-400">(-) Cash Refunds:</span>
-                          <span className="text-rose-400 font-bold">-{formatNpr(cashRec?.cashRefunds || 0)}</span>
+                        <div className="flex justify-between p-2 rounded-lg bg-rose-50/70 border border-rose-200">
+                          <span className="text-rose-900 font-medium">(-) Cash Refunds:</span>
+                          <span className="text-rose-700 font-bold">-{formatNpr(cashRec?.cashRefunds || 0)}</span>
                         </div>
 
-                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
-                          <span className="text-slate-400">(-) Safe Drops to Vault:</span>
-                          <span className="text-purple-400 font-bold">-{formatNpr(cashRec?.totalSafeDrops || 0)}</span>
+                        <div className="flex justify-between p-2 rounded-lg bg-purple-50/70 border border-purple-200">
+                          <span className="text-purple-900 font-medium">(-) Safe Drops to Vault:</span>
+                          <span className="text-purple-700 font-bold">-{formatNpr(cashRec?.totalSafeDrops || 0)}</span>
                         </div>
 
-                        <div className="flex justify-between p-2 rounded-lg bg-slate-900/60">
-                          <span className="text-slate-400">(-) Paid-Outs / Petty Cash:</span>
-                          <span className="text-rose-400 font-bold">-{formatNpr(cashRec?.totalPaidOut || 0)}</span>
+                        <div className="flex justify-between p-2 rounded-lg bg-rose-50/70 border border-rose-200">
+                          <span className="text-rose-900 font-medium">(-) Paid-Outs / Petty Cash:</span>
+                          <span className="text-rose-700 font-bold">-{formatNpr(cashRec?.totalPaidOut || 0)}</span>
                         </div>
 
-                        <div className="flex justify-between p-2.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-sm">
-                          <span className="text-blue-300 font-semibold">(=) Expected Cash in Till:</span>
-                          <span className="text-white font-bold">{formatNpr(cashRec?.expectedCashInTill || 0)}</span>
+                        <div className="flex justify-between p-2.5 rounded-xl bg-blue-50 border-2 border-blue-400 text-sm shadow-xs">
+                          <span className="text-blue-950 font-bold">(=) Expected Cash in Till:</span>
+                          <span className="text-blue-900 font-bold">{formatNpr(cashRec?.expectedCashInTill || 0)}</span>
                         </div>
 
-                        <div className="flex justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm">
-                          <span className="text-slate-200 font-semibold">Counted Cash (EOD):</span>
-                          <span className="text-amber-400 font-bold">
+                        <div className="flex justify-between p-2.5 rounded-xl bg-white border-2 border-slate-300 text-sm shadow-xs">
+                          <span className="text-slate-900 font-bold">Counted Cash (EOD):</span>
+                          <span className="text-amber-800 font-bold">
                             {cashRec?.actualCountedCash !== null && cashRec?.actualCountedCash !== undefined
                               ? formatNpr(cashRec.actualCountedCash)
                               : 'Pending Blind Count'}
@@ -1229,16 +1245,16 @@ export function CashierShiftDetailsModal({
 
                         {cashRec?.varianceAmount !== null && cashRec?.varianceAmount !== undefined && (
                           <div
-                            className={`flex justify-between p-2.5 rounded-xl border text-sm ${
+                            className={`flex justify-between p-2.5 rounded-xl border text-sm font-bold shadow-xs ${
                               Math.abs(cashRec.varianceAmount) < 0.01
-                                ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                                ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
                                 : cashRec.varianceAmount < 0
-                                ? 'bg-rose-950/60 border-rose-500/40 text-rose-300'
-                                : 'bg-amber-950/60 border-amber-500/40 text-amber-300'
+                                ? 'bg-rose-50 border-rose-300 text-rose-800'
+                                : 'bg-amber-50 border-amber-300 text-amber-800'
                             }`}
                           >
-                            <span className="font-semibold">Cash Variance:</span>
-                            <span className="font-bold">
+                            <span>Cash Variance:</span>
+                            <span>
                               {cashRec.varianceAmount > 0
                                 ? `+NPR ${cashRec.varianceAmount.toFixed(2)}`
                                 : `-NPR ${Math.abs(cashRec.varianceAmount).toFixed(2)}`}
@@ -1256,48 +1272,48 @@ export function CashierShiftDetailsModal({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
                         Tamper-Evident Cryptographic Audit Trail
                       </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-600 mt-0.5">
                         SHA-256 chained transaction logs for internal control, supervisor PIN authentications, and cash drops.
                       </p>
                     </div>
-                    <span className="text-xs text-slate-400 font-mono">
+                    <span className="text-xs text-slate-600 font-mono font-bold bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
                       {data.cashOperations.length + data.auditLogs.length} Events Logged
                     </span>
                   </div>
 
                   <div className="space-y-3">
                     {/* Shift Opened Event */}
-                    <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-start gap-3">
-                      <div className="p-2 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 mt-0.5">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3 shadow-xs">
+                      <div className="p-2 rounded-xl bg-blue-100 text-blue-700 border border-blue-300 mt-0.5">
                         <Unlock className="w-4 h-4" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs text-white">Shift Initialized & Till Opened (BOD)</span>
-                          <span className="text-[11px] font-mono text-slate-400">{formatDate(shift?.openedAt)}</span>
+                          <span className="font-bold text-xs text-slate-900">Shift Initialized & Till Opened (BOD)</span>
+                          <span className="text-[11px] font-mono text-slate-500 font-semibold">{formatDate(shift?.openedAt)}</span>
                         </div>
-                        <p className="text-xs text-slate-300 mt-1">
-                          Cashier <strong>{shift?.cashierName}</strong> ({shift?.cashierCode || 'EMP-104'}) opened register{' '}
-                          <code className="text-blue-400">{shift?.registerCode}</code> with verified opening float of{' '}
-                          <strong>{formatNpr(shift?.openingFloat || 0)}</strong>. Verified by <strong>{shift?.openedBySupervisorName || 'Store Supervisor'}</strong>.
+                        <p className="text-xs text-slate-700 mt-1">
+                          Cashier <strong className="text-slate-900">{shift?.cashierName}</strong> ({shift?.cashierCode || 'EMP-104'}) opened register{' '}
+                          <code className="bg-slate-200 text-blue-800 px-1.5 py-0.5 rounded font-mono font-bold">{shift?.registerCode}</code> with verified opening float of{' '}
+                          <strong className="text-slate-900">{formatNpr(shift?.openingFloat || 0)}</strong>. Verified by <strong className="text-slate-900">{shift?.openedBySupervisorName || 'Store Supervisor'}</strong>.
                         </p>
                       </div>
                     </div>
 
                     {/* Cash Drawer Movements */}
                     {data.cashOperations.map((op, oIdx) => (
-                      <div key={op.id || oIdx} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-start gap-3">
+                      <div key={op.id || oIdx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3 shadow-xs">
                         <div
                           className={`p-2 rounded-xl border mt-0.5 ${
                             op.type === 'CASH_IN' || op.type === 'PAID_IN'
-                              ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                               : op.type === 'SAFE_DROP'
-                              ? 'bg-purple-600/20 text-purple-400 border-purple-500/30'
-                              : 'bg-rose-600/20 text-rose-400 border-rose-500/30'
+                              ? 'bg-purple-100 text-purple-800 border-purple-300'
+                              : 'bg-rose-100 text-rose-800 border-rose-300'
                           }`}
                         >
                           {op.type === 'CASH_IN' || op.type === 'PAID_IN' ? (
@@ -1308,14 +1324,14 @@ export function CashierShiftDetailsModal({
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-xs text-white uppercase tracking-wide">
+                            <span className="font-bold text-xs text-slate-900 uppercase tracking-wide">
                               {op.type.replace('_', ' ')}: {formatNpr(op.amount)}
                             </span>
-                            <span className="text-[11px] font-mono text-slate-400">{formatDate(op.createdAt)}</span>
+                            <span className="text-[11px] font-mono text-slate-500 font-semibold">{formatDate(op.createdAt)}</span>
                           </div>
-                          <p className="text-xs text-slate-300 mt-1">
-                            Reason: <span className="text-slate-200 font-medium">{op.reason}</span> • Performed by:{' '}
-                            <strong>{op.performedByName || op.authorizedByName || 'Supervisor'}</strong>
+                          <p className="text-xs text-slate-700 mt-1">
+                            Reason: <span className="text-slate-900 font-semibold">{op.reason}</span> • Performed by:{' '}
+                            <strong className="text-slate-900">{op.performedByName || op.authorizedByName || 'Supervisor'}</strong>
                           </p>
                         </div>
                       </div>
@@ -1323,16 +1339,16 @@ export function CashierShiftDetailsModal({
 
                     {/* Cryptographic Hash Chained Audit Logs */}
                     {data.auditLogs.map((log, lIdx) => (
-                      <div key={log.id || lIdx} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-start gap-3">
-                        <div className="p-2 rounded-xl bg-amber-600/20 text-amber-400 border border-amber-500/30 mt-0.5">
+                      <div key={log.id || lIdx} className="p-4 rounded-2xl bg-white border border-slate-200 flex items-start gap-3 shadow-xs">
+                        <div className="p-2 rounded-xl bg-amber-100 text-amber-800 border border-amber-300 mt-0.5">
                           <ShieldCheck className="w-4 h-4" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-xs text-amber-300 uppercase font-mono">
+                            <span className="font-bold text-xs text-amber-800 uppercase font-mono bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                               {log.action}
                             </span>
-                            <span className="text-[11px] font-mono text-slate-400">{formatDate(log.createdAt)}</span>
+                            <span className="text-[11px] font-mono text-slate-500 font-semibold">{formatDate(log.createdAt)}</span>
                           </div>
                           {log.metadata && typeof log.metadata === 'object' && (
                             <div className="mt-2 space-y-2">
@@ -1341,31 +1357,31 @@ export function CashierShiftDetailsModal({
                                 const m = log.metadata;
                                 if (log.action === 'POS.SHIFT_BLIND_SUBMITTED' || log.action === 'SHIFT_BLIND_SUBMITTED') {
                                   return (
-                                    <p className="text-xs text-slate-200">
-                                      Blind count submitted with total cash of <strong className="text-amber-400">{formatNpr(m.totalSubmittedCash || 0)}</strong>
-                                      {m.envelopeNumber ? <span> in deposit envelope <code className="text-blue-400 font-mono">{m.envelopeNumber}</code></span> : ''}.
+                                    <p className="text-xs text-slate-800">
+                                      Blind count submitted with total cash of <strong className="text-slate-900">{formatNpr(m.totalSubmittedCash || 0)}</strong>
+                                      {m.envelopeNumber ? <span> in deposit envelope <code className="bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded font-mono font-bold border border-blue-200">{m.envelopeNumber}</code></span> : ''}.
                                     </p>
                                   );
                                 }
                                 if (log.action === 'POS.SHIFT_RECOUNT' || log.action === 'SHIFT_RECOUNT') {
                                   return (
-                                    <p className="text-xs text-slate-200">
-                                      Drawer recount attempt #{m.attemptNumber || 2} recorded with counted cash <strong className="text-amber-400">{formatNpr(m.countedCash || 0)}</strong>
+                                    <p className="text-xs text-slate-800">
+                                      Drawer recount attempt #{m.attemptNumber || 2} recorded with counted cash <strong className="text-slate-900">{formatNpr(m.countedCash || 0)}</strong>
                                       {m.reason ? <span> — Reason: &quot;{m.reason}&quot;</span> : ''}.
                                     </p>
                                   );
                                 }
                                 if (log.action === 'POS.VARIANCE_APPROVED' || log.action === 'VARIANCE_APPROVED') {
                                   return (
-                                    <p className="text-xs text-slate-200">
-                                      Cash discrepancy authorized by <strong className="text-white">{m.approvedBy || m.supervisorName || 'Supervisor'}</strong>
+                                    <p className="text-xs text-slate-800">
+                                      Cash discrepancy authorized by <strong className="text-slate-900">{m.approvedBy || m.supervisorName || 'Supervisor'}</strong>
                                       {m.reason ? <span> — Reason: &quot;{m.reason}&quot;</span> : ''}.
                                     </p>
                                   );
                                 }
                                 if (m.description || m.note || m.reason) {
                                   return (
-                                    <p className="text-xs text-slate-300">
+                                    <p className="text-xs text-slate-700">
                                       {String(m.description || m.note || m.reason)}
                                     </p>
                                   );
@@ -1408,18 +1424,18 @@ export function CashierShiftDetailsModal({
                                     return (
                                       <span
                                         key={key}
-                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono"
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-[11px] font-mono text-slate-800"
                                       >
                                         <span className="text-slate-500 font-medium">{label}:</span>
-                                        <span className="text-slate-200 font-semibold">{formattedVal}</span>
+                                        <span className="text-slate-900 font-bold">{formattedVal}</span>
                                       </span>
                                     );
                                   })}
                               </div>
 
                               {log.metadata.hash && (
-                                <div className="text-[10px] text-blue-400/80 font-mono flex items-center gap-1.5 pt-0.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                <div className="text-[10px] text-blue-700 font-mono flex items-center gap-1.5 pt-0.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                                   <span>SHA-256 Hash: {String(log.metadata.hash).slice(0, 32)}...</span>
                                 </div>
                               )}
@@ -1436,15 +1452,18 @@ export function CashierShiftDetailsModal({
         </div>
 
         {/* ================= MODAL FOOTER ================= */}
-        <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
-          <div className="text-xs text-slate-400 font-mono">
-            Intel Computer Center POS & Accounting • Nepal Retail Cash-Control v2.4
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs text-slate-600 font-mono font-bold">
+              Intel Computer Center POS & Accounting • Nepal Retail Cash-Control v2.4
+            </span>
           </div>
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all"
+            className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all cursor-pointer shadow-sm"
           >
-            Close
+            Close Shift Inspector
           </button>
         </div>
       </div>

@@ -515,6 +515,80 @@
   color: #0f172a !important;
 }
 
+/* Preserve true white text & icons inside dark-surface headers and modals */
+.accounting-portal .dark-surface,
+.accounting-portal .dark-surface h1,
+.accounting-portal .dark-surface h2,
+.accounting-portal .dark-surface h3,
+.accounting-portal .dark-surface h4,
+.accounting-portal .dark-surface span,
+.accounting-portal .dark-surface p,
+.accounting-portal .dark-surface code,
+.accounting-portal .dark-surface svg,
+.accounting-portal .text-force-white,
+.pos-portal .dark-surface,
+.pos-portal .dark-surface h1,
+.pos-portal .dark-surface h2,
+.pos-portal .dark-surface h3,
+.pos-portal .dark-surface h4,
+.pos-portal .dark-surface span,
+.pos-portal .dark-surface p,
+.pos-portal .dark-surface code,
+.pos-portal .dark-surface svg,
+.pos-portal .text-force-white {
+  color: #ffffff !important;
+}
+
+.accounting-portal .dark-surface .text-slate-300,
+.pos-portal .dark-surface .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+.accounting-portal .dark-surface .text-slate-400,
+.pos-portal .dark-surface .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.accounting-portal .dark-surface .text-slate-500,
+.pos-portal .dark-surface .text-slate-500 {
+  color: #64748b !important;
+}
+
+.accounting-portal .dark-surface .text-blue-300,
+.accounting-portal .dark-surface .text-blue-400,
+.pos-portal .dark-surface .text-blue-300,
+.pos-portal .dark-surface .text-blue-400 {
+  color: #93c5fd !important;
+}
+
+.accounting-portal .dark-surface .text-purple-300,
+.accounting-portal .dark-surface .text-purple-400,
+.pos-portal .dark-surface .text-purple-300,
+.pos-portal .dark-surface .text-purple-400 {
+  color: #d8b4fe !important;
+}
+
+.accounting-portal .dark-surface .text-emerald-300,
+.accounting-portal .dark-surface .text-emerald-400,
+.pos-portal .dark-surface .text-emerald-300,
+.pos-portal .dark-surface .text-emerald-400 {
+  color: #6ee7b7 !important;
+}
+
+.accounting-portal .dark-surface .text-amber-300,
+.accounting-portal .dark-surface .text-amber-400,
+.pos-portal .dark-surface .text-amber-300,
+.pos-portal .dark-surface .text-amber-400 {
+  color: #fcd34d !important;
+}
+
+.accounting-portal .dark-surface .text-rose-300,
+.accounting-portal .dark-surface .text-rose-400,
+.pos-portal .dark-surface .text-rose-300,
+.pos-portal .dark-surface .text-rose-400 {
+  color: #fda4af !important;
+}
+
 .accounting-portal .text-slate-200,
 .pos-portal .text-slate-200 {
   color: #1e293b !important;
@@ -530,7 +604,43 @@
   color: #64748b !important;
 }
 
-/* All green, emerald, teal, and cyan text in portals turned to crisp black */
+/* High-contrast status and payment method badges for light theme */
+.accounting-portal .badge-cash,
+.pos-portal .badge-cash {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.accounting-portal .badge-card,
+.pos-portal .badge-card {
+  background-color: #eff6ff !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.accounting-portal .badge-split,
+.pos-portal .badge-split {
+  background-color: #faf5ff !important;
+  color: #6b21a8 !important;
+  border: 1px solid #e9d5ff !important;
+}
+
+.accounting-portal .badge-qr,
+.pos-portal .badge-qr {
+  background-color: #ecfeff !important;
+  color: #0e7490 !important;
+  border: 1px solid #a5f3fc !important;
+}
+
+.accounting-portal .badge-synced,
+.pos-portal .badge-synced {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+/* All green, emerald, teal, and cyan text in portals turned to crisp readable colors */
 .accounting-portal [class*="text-emerald-"],
 .accounting-portal [class*="text-green-"],
 .accounting-portal [class*="text-teal-"],
