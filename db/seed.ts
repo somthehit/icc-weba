@@ -57,6 +57,7 @@ import {
   INITIAL_ORDERS,
   SAMPLE_REVIEWS,
 } from '@/lib/data/initial-data';
+import { generate16DigitBarcode } from '@/lib/barcode/barcode16';
 import { SUDURPASHCHIM_CONFIG } from '@/config/regional';
 import { DEFAULT_PAGE_META, DEFAULT_SEO_SETTINGS } from '@/lib/seo/defaults';
 import { SEED_ATTRIBUTES, SEED_FILTER_TAGS } from './seed-facets';
@@ -394,7 +395,7 @@ async function seed() {
     const categoryIdBySlug = new Map(insertedCategories.map((c) => [c.slug, c.id]));
 
     // ---- products ---------------------------------------------------------
-    const productValues = INITIAL_PRODUCTS.map((p) => {
+    const productValues = INITIAL_PRODUCTS.map((p, i) => {
       const brandId = brandIdByName.get(p.brand);
       const categoryId = categoryIdBySlug.get(p.category);
       if (!brandId) throw new Error(`No brand for product ${p.id} (brand="${p.brand}")`);
@@ -402,6 +403,7 @@ async function seed() {
       const offer = p.offer;
       return {
         sku: p.sku ?? p.slug.toUpperCase().slice(0, 60),
+        barcode: generate16DigitBarcode(i + 1),
         name: trunc(p.name, 200)!,
         slug: p.slug,
         brandId,

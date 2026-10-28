@@ -68,6 +68,12 @@ import LoyaltyRedemptionModal, { LoyaltyProfile } from './LoyaltyRedemptionModal
 import { formatNpr, formatNepaliNumber } from '@/lib/nepal/money';
 import { posIndexedDb, CatalogProduct } from '@/lib/pos/indexedDbCatalog';
 import { catalogSearchIndex } from '@/lib/pos/searchIndex';
+import ProductBarcodeLabelModal from './ProductBarcodeLabelModal';
+import {
+  format16DigitBarcode,
+  generate16DigitBarcode,
+  generate16DigitBarcodeSvg,
+} from '@/lib/barcode/barcode16';
 
 export type SidebarTab = 'dashboard' | 'sales' | 'products' | 'customers' | 'reports' | 'settings';
 
@@ -143,6 +149,7 @@ interface ProductTileProps {
   cartQty?: number;
   onAdd: (product: ProductItem) => void;
   onInfo: (product: ProductItem) => void;
+  onPrintLabel?: (product: ProductItem) => void;
 }
 
 const ProductTile = React.memo(function ProductTile({
@@ -151,6 +158,7 @@ const ProductTile = React.memo(function ProductTile({
   cartQty = 0,
   onAdd,
   onInfo,
+  onPrintLabel,
 }: ProductTileProps) {
   const isOutOfStock = product.stockQuantity <= 0;
   const isLowStock = !isOutOfStock && product.stockQuantity <= (product.lowStockThreshold || 3);
@@ -270,21 +278,41 @@ const ProductTile = React.memo(function ProductTile({
         </div>
       </div>
 
-      {/* Info button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onInfo(product);
-        }}
-        className={`absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition p-1 rounded-lg ${
-          theme === 'dark'
-            ? 'bg-slate-800 text-slate-400 hover:text-white'
-            : 'bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200'
-        }`}
-        title="Product details"
-      >
-        <Info className="h-3 w-3" />
-      </button>
+      {/* Quick Action buttons (Print Label & Details) */}
+      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition z-10">
+        {onPrintLabel && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrintLabel(product);
+            }}
+            className={`p-1 rounded-lg ${
+              theme === 'dark'
+                ? 'bg-slate-800 text-slate-300 hover:text-emerald-400'
+                : 'bg-white text-slate-600 hover:text-emerald-700 border border-slate-200 shadow-2xs'
+            }`}
+            title="Print 16-Digit Barcode Label"
+          >
+            <Printer className="h-3 w-3" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfo(product);
+          }}
+          className={`p-1 rounded-lg ${
+            theme === 'dark'
+              ? 'bg-slate-800 text-slate-400 hover:text-white'
+              : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 shadow-2xs'
+          }`}
+          title="Product details"
+        >
+          <Info className="h-3 w-3" />
+        </button>
+      </div>
     </div>
   );
 });
@@ -558,8 +586,9 @@ export default function CounterPosTerminal() {
   const [returnSearchLoading, setReturnSearchLoading] = useState(false);
   const [returnSearchError, setReturnSearchError] = useState('');
 
-  // Product detail popup
+  // Product detail popup & Barcode label printing
   const [detailProduct, setDetailProduct] = useState<ProductItem | null>(null);
+  const [barcodeLabelProduct, setBarcodeLabelProduct] = useState<ProductItem | null>(null);
 
   // Line Void & Cart Void authorization modal
   const [voidTarget, setVoidTarget] = useState<LineVoidTarget | null>(null);
@@ -1795,6 +1824,7 @@ export default function CounterPosTerminal() {
                     cartQty={inCartItem?.quantity || 0}
                     onAdd={addToCart}
                     onInfo={(prod) => setDetailProduct(prod)}
+                    onPrintLabel={(prod) => setBarcodeLabelProduct(prod)}
                   />
                 );
               })
@@ -1890,22 +1920,69 @@ export default function CounterPosTerminal() {
                     </div>
                   )}
                 </div>
-                {detailProduct.barcode && (
-                  <div className={`rounded-xl p-3 ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
-                    <span className="text-[10px] font-bold uppercase text-slate-500">Barcode</span>
-                    <p className="font-mono text-xs font-bold mt-0.5">{detailProduct.barcode}</p>
-                  </div>
-                )}
-                <button
-                  onClick={() => {
-                    addToCart(detailProduct);
-                    setDetailProduct(null);
-                  }}
-                  disabled={detailProduct.stockQuantity === 0}
-                  className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition disabled:opacity-40"
-                >
-                  {detailProduct.stockQuantity === 0 ? 'Out of Stock' : '+ Add to Cart'}
-                </button>
+                {/* 16-Digit Real Barcode Card */}
+                {(() => {
+                  const barcode16 =
+                    detailProduct.barcode && /^\d{16}$/.test(detailProduct.barcode.trim())
+                      ? detailProduct.barcode.trim()
+                      : generate16DigitBarcode(detailProduct.id || detailProduct.sku);
+                  const formattedCode = format16DigitBarcode(barcode16);
+
+                  return (
+                    <div
+                      className={`rounded-xl p-3 border transition ${
+                        theme === 'dark'
+                          ? 'bg-slate-900 border-slate-800'
+                          : 'bg-slate-50 border-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                          <Barcode className="h-3.5 w-3.5 text-emerald-500" />
+                          Barcode (16-Digit)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setBarcodeLabelProduct(detailProduct)}
+                          className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800 transition"
+                        >
+                          <Printer className="h-3 w-3" /> Print Label
+                        </button>
+                      </div>
+                      <p className="font-mono text-xs font-black text-slate-900 dark:text-slate-100 tracking-wider">
+                        {formattedCode}
+                      </p>
+                      <div
+                        className="mt-2 py-1 px-2 bg-white rounded-lg border border-slate-200 flex justify-center overflow-hidden"
+                        dangerouslySetInnerHTML={{
+                          __html: generate16DigitBarcodeSvg(barcode16, 32, 200),
+                        }}
+                      />
+                    </div>
+                  );
+                })()}
+
+                {/* Bottom Actions: Print Label + Add to Cart */}
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setBarcodeLabelProduct(detailProduct)}
+                    className="flex-1 py-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <Printer className="h-4 w-4 text-emerald-600" />
+                    <span>Print Label</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      addToCart(detailProduct);
+                      setDetailProduct(null);
+                    }}
+                    disabled={detailProduct.stockQuantity === 0}
+                    className="flex-[2] py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition disabled:opacity-40 shadow-sm shadow-emerald-500/20"
+                  >
+                    {detailProduct.stockQuantity === 0 ? 'Out of Stock' : '+ Add to Cart'}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -3748,6 +3825,13 @@ export default function CounterPosTerminal() {
           setOfferDiscountNpr(data.offerDiscountNpr);
         }}
         onClose={() => setIsLoyaltyModalOpen(false)}
+      />
+
+      {/* 13. Product Barcode Label Thermal Printing Modal */}
+      <ProductBarcodeLabelModal
+        product={barcodeLabelProduct}
+        isOpen={!!barcodeLabelProduct}
+        onClose={() => setBarcodeLabelProduct(null)}
       />
     </div>
   );

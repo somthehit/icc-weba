@@ -14,9 +14,16 @@ import {
   AlertTriangle,
   X,
   Filter,
+  Printer,
 } from 'lucide-react';
 import { ProductItem } from './CounterPosTerminal';
 import { formatNepaliNumber } from '@/lib/nepal/money';
+import ProductBarcodeLabelModal from './ProductBarcodeLabelModal';
+import {
+  format16DigitBarcode,
+  generate16DigitBarcode,
+  generate16DigitBarcodeSvg,
+} from '@/lib/barcode/barcode16';
 
 interface CashierProductsViewProps {
   products: ProductItem[];
@@ -35,6 +42,7 @@ export default function CashierProductsView({
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'IN_STOCK' | 'LOW_STOCK'>('ALL');
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [barcodeLabelProduct, setBarcodeLabelProduct] = useState<ProductItem | null>(null);
 
   // Extract unique categories
   const categories = useMemo(() => {
@@ -200,6 +208,19 @@ export default function CashierProductsView({
                       <div className="text-3xl select-none group-hover:scale-110 transition">💻</div>
                     )}
 
+                    {/* Quick Print Label Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBarcodeLabelProduct(prod);
+                      }}
+                      className="absolute top-2 left-2 p-1.5 rounded-xl bg-white/95 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 shadow-sm border border-slate-200 transition z-10"
+                      title="Print 16-Digit Barcode Label"
+                    >
+                      <Printer className="h-3.5 w-3.5" />
+                    </button>
+
                     {/* Stock Pill */}
                     <span
                       className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase shadow-xs ${
@@ -293,11 +314,29 @@ export default function CashierProductsView({
                   {selectedProduct.categoryName || 'Standard'}
                 </span>
               </div>
-              <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-600 font-semibold">Barcode</span>
-                <span className="font-mono font-bold text-slate-900">
-                  {selectedProduct.barcode || 'N/A'}
-                </span>
+              <div className="py-2 border-b border-slate-100">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-600 font-semibold flex items-center gap-1">
+                    <Barcode className="h-3.5 w-3.5 text-emerald-600" />
+                    16-Digit Barcode
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBarcodeLabelProduct(selectedProduct);
+                    }}
+                    className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200"
+                  >
+                    <Printer className="h-3 w-3" /> Print Label
+                  </button>
+                </div>
+                <div className="font-mono font-bold text-slate-900 text-xs">
+                  {format16DigitBarcode(
+                    selectedProduct.barcode && /^\d{16}$/.test(selectedProduct.barcode.trim())
+                      ? selectedProduct.barcode.trim()
+                      : generate16DigitBarcode(selectedProduct.id || selectedProduct.sku)
+                  )}
+                </div>
               </div>
               <div className="flex justify-between py-2 border-b border-slate-100">
                 <span className="text-slate-600 font-semibold">Available Stock</span>
@@ -333,6 +372,16 @@ export default function CashierProductsView({
               >
                 Close
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setBarcodeLabelProduct(selectedProduct);
+                }}
+                className="flex-1 py-2.5 rounded-2xl border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition flex items-center justify-center gap-1.5"
+              >
+                <Printer className="h-4 w-4 text-emerald-700" />
+                <span>Print Label</span>
+              </button>
               {selectedProduct.stockQuantity > 0 && (
                 <button
                   type="button"
@@ -340,7 +389,7 @@ export default function CashierProductsView({
                     handleAddAndProceed(selectedProduct);
                     setSelectedProduct(null);
                   }}
-                  className="flex-1 py-2.5 rounded-2xl bg-[#00c569] hover:bg-emerald-600 text-white text-xs font-black shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
+                  className="flex-[1.5] py-2.5 rounded-2xl bg-[#00c569] hover:bg-emerald-600 text-white text-xs font-black shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
                 >
                   <ShoppingBag className="h-4 w-4" />
                   <span>Add to Sale (F1)</span>
@@ -350,6 +399,13 @@ export default function CashierProductsView({
           </div>
         </div>
       )}
+
+      {/* 5. Barcode Label Thermal Printing Modal */}
+      <ProductBarcodeLabelModal
+        product={barcodeLabelProduct}
+        isOpen={!!barcodeLabelProduct}
+        onClose={() => setBarcodeLabelProduct(null)}
+      />
     </div>
   );
 }

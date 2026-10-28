@@ -4,6 +4,7 @@ import { brands, categories, products, productImages } from '@/db/schema';
 import { eq, or, ilike, sql, and, asc, inArray } from 'drizzle-orm';
 import { PosProfiler } from '@/lib/pos/perf';
 import { posCache } from '@/lib/redis/client';
+import { generate16DigitBarcode } from '@/lib/barcode/barcode16';
 
 export const dynamic = 'force-dynamic';
 
@@ -139,10 +140,13 @@ export async function GET(request: NextRequest) {
       const comparePrice = r.compareAtPrice ? Number(r.compareAtPrice) : price;
       const stock = r.stockQuantity ?? 0;
       const threshold = r.lowStockThreshold || 5;
+      const finalBarcode = (r.barcode && /^\d{16}$/.test(r.barcode.trim()))
+        ? r.barcode.trim()
+        : generate16DigitBarcode(r.id || r.sku);
       const itemObj = {
         id: r.id,
         sku: r.sku,
-        barcode: r.barcode || r.sku,
+        barcode: finalBarcode,
         name: r.name,
         slug: r.slug,
         price,
