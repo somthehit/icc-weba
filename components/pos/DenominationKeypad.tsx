@@ -112,27 +112,27 @@ export function DenominationGrid({
 
   return (
     <div className="space-y-4">
-      {/* Running Total & Status Bar with Protected Dark Surface */}
-      <div className="dark-surface p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+      {/* Running Total & Status Bar with Clean White Surface */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs text-slate-900">
         <div>
-          <div className="text-[11px] font-mono !text-slate-300 uppercase tracking-wider flex items-center gap-1.5 font-bold">
-            <Banknote className="w-4 h-4 text-emerald-400" />
+          <div className="text-[11px] font-mono text-slate-500 uppercase tracking-wider flex items-center gap-1.5 font-bold">
+            <Banknote className="w-4 h-4 text-emerald-600" />
             Live Physical Cash Count
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono !text-white tracking-tight mt-1">
+          <div className="text-2xl sm:text-3xl font-black font-mono text-slate-900 tracking-tight mt-1">
             {formatNpr(grandTotal)}
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
           {targetFloat !== undefined && (
-            <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 flex items-center gap-2 shadow-sm">
-              <span className="text-slate-400">Target Float:</span>
-              <strong className="!text-white font-bold">{formatNpr(targetFloat)}</strong>
+            <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-2 shadow-2xs">
+              <span className="text-slate-500">Target Float:</span>
+              <strong className="text-slate-900 font-bold">{formatNpr(targetFloat)}</strong>
               {diffFromTarget !== null && Math.abs(diffFromTarget) > 0.01 && (
                 <span
                   className={`font-bold ${
-                    diffFromTarget > 0 ? 'text-amber-400' : 'text-rose-400'
+                    diffFromTarget > 0 ? 'text-amber-700' : 'text-rose-700'
                   }`}
                 >
                   ({diffFromTarget > 0 ? `+${diffFromTarget}` : diffFromTarget})
@@ -142,17 +142,17 @@ export function DenominationGrid({
           )}
 
           {expectedTotal !== null && (
-            <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 flex items-center gap-2 shadow-sm">
-              <span className="text-slate-400">Expected:</span>
-              <strong className="!text-white font-bold">{formatNpr(expectedTotal)}</strong>
+            <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-2 shadow-2xs">
+              <span className="text-slate-500">Expected:</span>
+              <strong className="text-slate-900 font-bold">{formatNpr(expectedTotal)}</strong>
               {diffFromExpected !== null && (
                 <span
                   className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                     Math.abs(diffFromExpected) < 0.01
-                      ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
                       : diffFromExpected < 0
-                      ? 'bg-rose-950 text-rose-300 border border-rose-500/30'
-                      : 'bg-amber-950 text-amber-300 border border-amber-500/30'
+                      ? 'bg-rose-50 text-rose-800 border border-rose-300'
+                      : 'bg-amber-50 text-amber-800 border border-amber-300'
                   }`}
                 >
                   {Math.abs(diffFromExpected) < 0.01
@@ -178,7 +178,7 @@ export function DenominationGrid({
               key={item.key}
               className={`p-3.5 rounded-2xl border-2 transition-all ${
                 qty > 0
-                  ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20 shadow-sm'
+                  ? 'bg-slate-50/90 border-slate-400 ring-2 ring-slate-300/50 shadow-xs'
                   : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 shadow-2xs'
               }`}
             >
@@ -190,7 +190,7 @@ export function DenominationGrid({
                         ? 'bg-amber-100 text-amber-900 border border-amber-300'
                         : item.value >= 500
                         ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                        : 'bg-blue-100 text-blue-900 border border-blue-300'
+                        : 'bg-slate-100 text-slate-800 border border-slate-300'
                     }`}
                   >
                     {item.isCoin ? <Coins className="w-4 h-4 text-amber-700" /> : item.value}
@@ -229,14 +229,14 @@ export function DenominationGrid({
                     placeholder="0"
                     onChange={(e) => handleQtyChange(item.key, parseInt(e.target.value, 10) || 0)}
                     onKeyDown={(e) => handleKeyDown(e, idx)}
-                    className="w-16 h-8 text-center bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-slate-900 font-mono font-black text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-16 h-8 text-center bg-white border border-slate-300 focus:border-slate-500 rounded-xl text-slate-900 font-mono font-black text-sm focus:outline-none focus:ring-2 focus:ring-slate-400/20 shadow-2xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
 
                   {!readOnly && (
                     <button
                       type="button"
                       onClick={() => handleIncrement(item.key)}
-                      className="w-8 h-8 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 flex items-center justify-center transition-all border border-blue-300 active:scale-95 font-bold cursor-pointer"
+                      className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center transition-all border border-slate-300 active:scale-95 font-bold cursor-pointer"
                       title="Increase quantity"
                     >
                       <Plus className="w-3.5 h-3.5" />

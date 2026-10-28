@@ -91,18 +91,18 @@ export function CashDrawerMovementModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col text-slate-900">
-        {/* Header with protected dark-surface */}
-        <div className="dark-surface px-6 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex items-center justify-between">
+        {/* Header with clean white theme */}
+        <div className="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between text-slate-900">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-300 border border-blue-400/30 flex items-center justify-center font-bold shadow-sm shrink-0">
-              <Banknote className="w-5 h-5 text-blue-300" />
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center font-bold shadow-2xs shrink-0">
+              <Banknote className="w-5 h-5 text-slate-700" />
             </div>
             <div>
-              <h2 className="text-base font-black !text-white tracking-tight">
+              <h2 className="text-base font-black text-slate-900 tracking-tight">
                 Cash Drawer Movement
               </h2>
-              <p className="text-xs !text-slate-300 font-mono mt-0.5">
-                Shift: <code className="text-blue-300 font-bold bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-500/40">{shiftNumber}</code>
+              <p className="text-xs text-slate-500 font-mono mt-0.5">
+                Shift: <code className="text-slate-800 font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{shiftNumber}</code>
               </p>
             </div>
           </div>
@@ -110,7 +110,7 @@ export function CashDrawerMovementModal({
           <button
             onClick={onClose}
             type="button"
-            className="dark-surface-btn dark-surface-btn-danger p-2 rounded-xl border transition-all cursor-pointer shadow-sm hover:shadow"
+            className="p-2 rounded-xl bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 shadow-2xs transition-all cursor-pointer"
             title="Close modal"
           >
             <X className="w-4 h-4" />
@@ -149,7 +149,7 @@ export function CashDrawerMovementModal({
                   <div className="flex items-center justify-between mb-1.5">
                     <item.icon className={`w-4 h-4 ${item.iconColor}`} />
                     {movementType === item.type && (
-                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span className="w-2 h-2 rounded-full bg-slate-900" />
                     )}
                   </div>
                   <div className="text-xs font-black leading-tight text-slate-900">{item.label}</div>
@@ -164,7 +164,7 @@ export function CashDrawerMovementModal({
             <div className="flex items-center justify-between">
               <label className="text-xs font-black uppercase tracking-wider text-slate-700">Cash Amount (NPR)</label>
               {amount && Number(amount) > 0 && (
-                <span className="text-xs font-mono font-bold text-blue-600">
+                <span className="text-xs font-mono font-black text-slate-900">
                   Total: NPR {Number(amount).toLocaleString('en-IN')}
                 </span>
               )}
@@ -180,7 +180,7 @@ export function CashDrawerMovementModal({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="e.g. 5000"
-                className="w-full pl-14 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-base text-slate-900 font-mono font-black placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+                className="w-full pl-14 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-base text-slate-900 font-mono font-black placeholder-slate-400 focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-300 shadow-2xs"
               />
             </div>
 
@@ -195,7 +195,7 @@ export function CashDrawerMovementModal({
                     const current = Number(amount) || 0;
                     setAmount(String(current + preset));
                   }}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 font-mono font-bold text-[11px] border border-slate-200 transition-all cursor-pointer shadow-2xs"
+                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-mono font-bold text-[11px] border border-slate-200 transition-all cursor-pointer shadow-2xs"
                 >
                   +{preset.toLocaleString('en-IN')}
                 </button>
@@ -220,14 +220,14 @@ export function CashDrawerMovementModal({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g. Excess cash drop to main safe (till limit exceeded) or Store water supplies voucher"
-              className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs font-medium"
+              className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-300 shadow-2xs font-medium"
             />
           </div>
 
           {/* Supervisor PIN */}
-          <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2">
-            <div className="flex items-center gap-2 text-blue-900 font-black text-xs uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4 text-blue-600" />
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-slate-700" />
               Supervisor Authorization PIN
             </div>
             <div className="relative">
@@ -238,7 +238,7 @@ export function CashDrawerMovementModal({
                 value={supervisorPin}
                 onChange={(e) => setSupervisorPin(e.target.value)}
                 placeholder="Enter Supervisor PIN (e.g. 1234 or 9999)"
-                className="w-full pl-9 pr-3 py-2.5 bg-white border border-blue-300 rounded-xl text-xs text-slate-900 font-mono font-bold placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+                className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-mono font-bold placeholder-slate-400 focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-300 shadow-2xs"
               />
             </div>
           </div>
@@ -255,9 +255,9 @@ export function CashDrawerMovementModal({
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md shadow-blue-600/30 flex items-center gap-2 disabled:opacity-50 transition active:scale-[0.99] cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-300 font-black text-xs shadow-xs flex items-center gap-2 disabled:opacity-50 transition active:scale-[0.99] cursor-pointer"
             >
-              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
               Record Movement
             </button>
           </div>

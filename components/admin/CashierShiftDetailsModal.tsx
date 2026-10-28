@@ -251,40 +251,40 @@ export function CashierShiftDetailsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
       <div className="relative w-full max-w-6xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-900">
-        {/* ================= HEADER WITH PROTECTED DARK SURFACE ================= */}
-        <div className="dark-surface px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 space-y-3.5">
+        {/* ================= CLEAN WHITE MODAL HEADER ================= */}
+        <div className="px-5 sm:px-6 py-4 bg-white border-b border-slate-200 space-y-3.5 text-slate-900">
           {/* Top Bar: Scope Confirmation Badge on Left & Quick Actions Toolbar on Right */}
-          <div className="flex items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
             {/* Left: Scope Confirmation Badge */}
             <div className="flex items-center gap-2 min-w-0">
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-400/30 flex items-center gap-1.5 shadow-xs shrink-0">
-                <User className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1.5 shadow-2xs shrink-0">
+                <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 Single Cashier Shift Audit
               </span>
-              <span className="text-[11px] text-slate-400 font-mono hidden md:inline truncate">
+              <span className="text-[11px] text-slate-500 font-mono hidden md:inline truncate">
                 (Individual cashier register session — not aggregated store-wide EOD)
               </span>
             </div>
 
-            {/* Right: Actions Toolbar - Guaranteed Single Row with No Wrapping */}
+            {/* Right: Actions Toolbar - Clean White Button Aesthetic */}
             <div className="flex items-center gap-2 shrink-0">
               {shift?.status === 'OPEN' && (
                 <>
                   <button
                     onClick={() => setIsCashMoveModalOpen(true)}
-                    className="dark-surface-btn px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
                     title="Perform Safe Drop, Paid-In, or Paid-Out"
                   >
-                    <ArrowUpRight className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <ArrowUpRight className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                     <span>Cash Movement</span>
                   </button>
 
                   <button
                     onClick={() => setIsEodWizardOpen(true)}
-                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 !text-white text-xs font-black shadow-md shadow-blue-600/30 transition-all flex items-center gap-1.5 cursor-pointer border border-blue-400/40"
+                    className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-300 text-xs font-black shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                     title="Close Register and perform End-of-Day reconciliation"
                   >
-                    <Lock className="w-3.5 h-3.5 !text-white shrink-0" />
+                    <Lock className="w-3.5 h-3.5 text-slate-700 shrink-0" />
                     <span>Close Register (EOD)</span>
                   </button>
                 </>
@@ -292,27 +292,27 @@ export function CashierShiftDetailsModal({
 
               <button
                 onClick={() => setIsPrintSlipOpen(true)}
-                className="dark-surface-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
                 title="Print Nepal Retail Shift X/Z Report"
               >
-                <Printer className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <Printer className="w-3.5 h-3.5 text-slate-600 shrink-0" />
                 <span>Print Slip</span>
               </button>
 
-              <div className="w-px h-5 bg-slate-700/80 mx-0.5 shrink-0" />
+              <div className="w-px h-5 bg-slate-200 mx-0.5 shrink-0" />
 
               <button
                 onClick={fetchShiftDetails}
                 disabled={loading}
-                className="dark-surface-btn p-2 rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                className="p-2 rounded-xl bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
                 title="Refresh shift data"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'text-slate-300'}`} />
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600' : 'text-slate-600'}`} />
               </button>
 
               <button
                 onClick={onClose}
-                className="dark-surface-btn dark-surface-btn-danger p-2 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="p-2 rounded-xl bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 shadow-2xs transition-all cursor-pointer"
                 title="Close modal"
               >
                 <X className="w-4 h-4" />
@@ -323,28 +323,28 @@ export function CashierShiftDetailsModal({
           {/* Bottom Row: Cashier Profile & Live Shift Details */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-base shadow-lg shadow-blue-500/30 border border-blue-400/40 shrink-0">
+              <div className="w-11 h-11 rounded-2xl bg-white text-slate-800 border-2 border-slate-200 shadow-xs flex items-center justify-center font-black text-base shrink-0">
                 {shift?.cashierName ? shift.cashierName.slice(0, 2).toUpperCase() : 'POS'}
               </div>
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl font-black !text-white tracking-tight">
+                  <h1 className="text-xl font-black text-slate-900 tracking-tight">
                     {shift?.cashierName || 'Cashier Shift Details'}
                   </h1>
-                  <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-slate-300 bg-slate-800 border border-slate-700">
+                  <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-slate-700 bg-slate-100 border border-slate-200">
                     {shift?.cashierCode || 'EMP-104'}
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-blue-950/90 text-blue-300 border border-blue-500/40">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-slate-100 text-slate-800 border border-slate-200">
                     {shift?.shiftNumber || `SH-${shiftId}`}
                   </span>
-                  <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-purple-300 bg-purple-950/70 border border-purple-500/30">
+                  <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold text-purple-700 bg-purple-50 border border-purple-200">
                     {shift?.registerCode || 'REG-01'}
                   </span>
 
                   {/* Status Badges */}
                   {isZeroSales && (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                       No Sales (Zero-Activity)
                     </span>
@@ -354,15 +354,15 @@ export function CashierShiftDetailsModal({
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase flex items-center gap-1.5 ${
                         shift.status === 'OPEN'
-                          ? 'bg-amber-950 text-amber-300 border border-amber-500/40'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-300'
                           : shift.status === 'SUBMITTED'
-                          ? 'bg-indigo-950 text-indigo-300 border border-indigo-500/40'
-                          : 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
+                          ? 'bg-indigo-50 text-indigo-800 border border-indigo-300'
+                          : 'bg-emerald-50 text-emerald-800 border border-emerald-300'
                       }`}
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          shift.status === 'OPEN' ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
+                          shift.status === 'OPEN' ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'
                         }`}
                       />
                       {shift.status === 'CLOSED' ? 'CLOSED & AUDITED' : shift.status}
@@ -371,29 +371,29 @@ export function CashierShiftDetailsModal({
                 </div>
 
                 {/* Metadata row with AD/BS toggle */}
-                <div className="flex items-center gap-2.5 text-xs text-slate-300 mt-1 flex-wrap font-mono">
+                <div className="flex items-center gap-2.5 text-xs text-slate-600 mt-1 flex-wrap font-mono">
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                    Opened: <span className="text-white font-medium">{formatDate(shift?.openedAt)}</span>
+                    <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    Opened: <span className="text-slate-900 font-bold">{formatDate(shift?.openedAt)}</span>
                   </span>
-                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-300">•</span>
                   <span>
                     {shift?.closedAt ? (
-                      <>Closed: <span className="text-white font-medium">{formatDate(shift?.closedAt)}</span></>
+                      <>Closed: <span className="text-slate-900 font-bold">{formatDate(shift?.closedAt)}</span></>
                     ) : (
-                      <span className="text-emerald-400 font-semibold">Status: Live Shift</span>
+                      <span className="text-emerald-700 font-bold">Status: Live Shift</span>
                     )}
                   </span>
-                  <span className="text-slate-600">•</span>
-                  <span className="text-slate-300">
-                    Duration: <span className="text-amber-300 font-bold">{getDuration(shift?.openedAt, shift?.closedAt)}</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-slate-600">
+                    Duration: <span className="text-amber-700 font-black">{getDuration(shift?.openedAt, shift?.closedAt)}</span>
                   </span>
 
                   {/* AD/BS Toggle */}
                   <button
                     type="button"
                     onClick={() => setDateMode((prev) => (prev === 'AD' ? 'BS' : 'AD'))}
-                    className="dark-surface-btn px-2 py-0.5 rounded text-blue-300 font-bold text-[10px] transition-all ml-1 cursor-pointer"
+                    className="px-2 py-0.5 rounded bg-white hover:bg-slate-50 text-slate-700 font-bold text-[10px] border border-slate-200 transition-all ml-1 cursor-pointer shadow-2xs"
                     title="Toggle between Gregorian AD and Nepali Bikram Sambat BS"
                   >
                     {dateMode === 'AD' ? 'Switch to BS (वि.सं.)' : 'Switch to AD'}
@@ -590,18 +590,18 @@ export function CashierShiftDetailsModal({
                 </div>
               </div>
 
-              {/* TABS SELECTOR (4 Complete Tabs) */}
+              {/* TABS SELECTOR (Clean White Segmented Controls) */}
               <div className="flex items-center justify-between border-b border-slate-200 pb-3 gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200">
                   <button
                     onClick={() => setActiveTab('transactions')}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'transactions'
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                        ? 'bg-white text-slate-900 shadow-sm border border-slate-200/90 font-black'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
-                    <Receipt className="w-3.5 h-3.5" />
+                    <Receipt className="w-3.5 h-3.5 text-slate-700" />
                     Line-by-Line Transactions ({data.transactions.length})
                   </button>
 
@@ -609,11 +609,11 @@ export function CashierShiftDetailsModal({
                     onClick={() => setActiveTab('denominations')}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'denominations'
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                        ? 'bg-white text-slate-900 shadow-sm border border-slate-200/90 font-black'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
-                    <Banknote className="w-3.5 h-3.5" />
+                    <Banknote className="w-3.5 h-3.5 text-slate-700" />
                     BOD & EOD Denominations
                   </button>
 
@@ -621,11 +621,11 @@ export function CashierShiftDetailsModal({
                     onClick={() => setActiveTab('report')}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'report'
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                        ? 'bg-white text-slate-900 shadow-sm border border-slate-200/90 font-black'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
-                    <FileText className="w-3.5 h-3.5" />
+                    <FileText className="w-3.5 h-3.5 text-slate-700" />
                     Full Shift Report (X/Z)
                   </button>
 
@@ -633,11 +633,11 @@ export function CashierShiftDetailsModal({
                     onClick={() => setActiveTab('logs')}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       activeTab === 'logs'
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                        ? 'bg-white text-slate-900 shadow-sm border border-slate-200/90 font-black'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
-                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
                     Audit Trail & Logs ({data.auditLogs.length + data.cashOperations.length})
                   </button>
                 </div>

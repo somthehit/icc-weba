@@ -221,20 +221,20 @@ export function ShiftClosingWizardModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-900">
         {/* Header with Steps Stepper */}
-        <div className="dark-surface px-6 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="px-6 py-4 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-slate-900">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30">
+              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">
                 EOD GATEWAY
               </span>
-              <h2 className="text-lg font-black !text-white tracking-tight">
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">
                 Close Register & Reconcile Tenders
               </h2>
             </div>
-            <p className="text-xs !text-slate-300 font-mono mt-0.5">
-              Shift: <code className="text-blue-300 font-bold bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-500/40">{shift.shiftNumber}</code> • Terminal:{' '}
-              <span className="text-purple-300 font-bold">{shift.registerCode}</span> • Cashier:{' '}
-              <span className="!text-white font-medium">{shift.cashierName}</span>
+            <p className="text-xs text-slate-500 font-mono mt-0.5">
+              Shift: <code className="text-slate-800 font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{shift.shiftNumber}</code> • Terminal:{' '}
+              <span className="text-slate-700 font-bold">{shift.registerCode}</span> • Cashier:{' '}
+              <span className="text-slate-900 font-semibold">{shift.cashierName}</span>
             </p>
           </div>
 
@@ -253,13 +253,19 @@ export function ShiftClosingWizardModal({
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
                   currentStep === st.num
-                    ? 'bg-blue-600 !text-white shadow-md shadow-blue-600/30 border border-blue-400/40'
+                    ? 'bg-white text-slate-900 shadow-sm border-2 border-slate-400 font-black'
                     : currentStep > st.num
-                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-900/60'
-                    : 'bg-slate-900/90 text-slate-400 border border-slate-800 hover:text-slate-200'
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                    : 'bg-slate-100 text-slate-500 border border-slate-200 hover:text-slate-800 hover:bg-slate-200/70'
                 }`}
               >
-                <span className="w-4 h-4 rounded-full bg-black/40 flex items-center justify-center text-[10px]">{st.num}</span>
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                  currentStep === st.num
+                    ? 'bg-slate-900 text-white font-bold'
+                    : currentStep > st.num
+                    ? 'bg-emerald-600 text-white font-bold'
+                    : 'bg-slate-300 text-slate-700 font-bold'
+                }`}>{st.num}</span>
                 <span className="hidden md:inline">{st.label}</span>
               </div>
             ))}
@@ -267,7 +273,7 @@ export function ShiftClosingWizardModal({
             <button
               onClick={onClose}
               type="button"
-              className="dark-surface-btn dark-surface-btn-danger p-2 rounded-xl border transition-all cursor-pointer shadow-sm hover:shadow ml-1"
+              className="p-2 rounded-xl bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 shadow-2xs transition-all cursor-pointer ml-1"
               title="Close modal"
             >
               <X className="w-4 h-4" />
@@ -599,7 +605,7 @@ export function ShiftClosingWizardModal({
                         type="button"
                         onClick={handleRecount}
                         disabled={loading}
-                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 cursor-pointer"
+                        className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-300 font-black text-xs shadow-xs cursor-pointer"
                       >
                         Submit Recount Attempt #{recountAttempt + 1}
                       </button>
@@ -696,22 +702,22 @@ export function ShiftClosingWizardModal({
               <button
                 type="button"
                 onClick={() => setCurrentStep((prev) => (prev + 1) as any)}
-                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md shadow-blue-600/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-300 font-black text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 Continue to Step {currentStep + 1}
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 text-slate-700" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleFinalSubmit}
                 disabled={loading}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md shadow-emerald-600/30 flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-emerald-800 border-2 border-emerald-400 font-black text-xs shadow-xs flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-emerald-700" />
                 ) : (
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                 )}
                 Finalize EOD & Close Register
               </button>

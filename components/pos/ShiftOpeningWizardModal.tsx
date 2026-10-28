@@ -135,17 +135,17 @@ export function ShiftOpeningWizardModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] text-slate-900">
-        {/* Header with protected dark-surface */}
-        <div className="dark-surface px-6 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex items-center justify-between">
+        {/* Header with clean white surface */}
+        <div className="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between text-slate-900">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center font-bold shadow-sm shrink-0">
-              <Banknote className="w-5 h-5 text-emerald-400" />
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center font-bold shadow-2xs shrink-0">
+              <Banknote className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h2 className="text-lg font-black !text-white tracking-tight">
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">
                 Beginning of Day (BOD) — Open Register Shift
               </h2>
-              <p className="text-xs !text-slate-300 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Count opening float denominations, verify drawer handover, and authenticate with Supervisor PIN.
               </p>
             </div>
@@ -154,7 +154,7 @@ export function ShiftOpeningWizardModal({
           <button
             onClick={onClose}
             type="button"
-            className="dark-surface-btn dark-surface-btn-danger p-2 rounded-xl border transition-all cursor-pointer shadow-sm hover:shadow"
+            className="p-2 rounded-xl bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 shadow-2xs transition-all cursor-pointer"
             title="Close modal"
           >
             <X className="w-4 h-4" />
@@ -301,9 +301,9 @@ export function ShiftOpeningWizardModal({
               />
             </div>
 
-            <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2.5 shadow-2xs">
-              <div className="flex items-center gap-2 text-blue-900 font-black text-xs uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4 text-blue-600" />
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5 shadow-2xs">
+              <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 Maker-Checker: Supervisor Verification PIN
               </div>
               <p className="text-[11px] text-slate-600 font-medium">
@@ -317,7 +317,7 @@ export function ShiftOpeningWizardModal({
                   value={supervisorPin}
                   onChange={(e) => setSupervisorPin(e.target.value)}
                   placeholder="Enter Supervisor PIN (e.g. 1234 or 9999)"
-                  className="w-full pl-9 pr-3 py-2 bg-white border border-blue-300 rounded-xl text-xs text-slate-900 font-mono font-bold placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-mono font-bold placeholder-slate-400 focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-400/20 shadow-2xs"
                 />
               </div>
             </div>
@@ -341,12 +341,12 @@ export function ShiftOpeningWizardModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md shadow-emerald-600/30 flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-emerald-800 border-2 border-emerald-400 font-black text-xs shadow-xs flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-emerald-700" />
                 ) : (
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                 )}
                 Confirm Float & Open Shift
               </button>
