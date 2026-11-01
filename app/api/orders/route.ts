@@ -288,14 +288,15 @@ export const POST = withAuth(async (request, { user }) => {
 
       const totals = quoteTotals(quote);
 
-      // The order number embeds the row id, which only exists once the row does,
-      // so it is inserted under a throwaway value and renamed in the same
-      // transaction. `ICE-<year>-<four random digits>` was the old scheme; with a
-      // unique index on the column it starts failing after a few dozen orders.
-      const [inserted] = await tx
+      const now = new Date();
+      // Generate unique order number (e.g. ICE-2026-A1B2C3D4) which fits comfortably within varchar(30)
+      const orderSuffix = randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+      const orderNumber = `ICE-${now.getFullYear()}-${orderSuffix}`;
+
+      const [order] = await tx
         .insert(orders)
         .values({
-          orderNumber: `TMP-${randomUUID().replace(/-/g, '').slice(0, 20)}`,
+          orderNumber,
           userId: user.userId,
           status: 'pending',
           paymentStatus: 'pending',
@@ -306,19 +307,11 @@ export const POST = withAuth(async (request, { user }) => {
           discountAmount: totals.discountAmount,
           totalAmount: totals.totalAmount,
           couponId: quote.couponId,
-          shippingAddressId,
-          shippingAddressSnapshot: addressSnapshot,
-          deliveryZoneId,
-          customerNote,
+          shippingAddressId: shippingAddressId ?? null,
+          shippingAddressSnapshot: addressSnapshot ?? null,
+          deliveryZoneId: deliveryZoneId ?? null,
+          customerNote: customerNote ?? null,
         })
-        .returning({ id: orders.id, createdAt: orders.createdAt });
-
-      const [order] = await tx
-        .update(orders)
-        .set({
-          orderNumber: `ICE-${inserted.createdAt.getFullYear()}-${String(inserted.id).padStart(5, '0')}`,
-        })
-        .where(eq(orders.id, inserted.id))
         .returning();
 
       const orderedItems = await tx
@@ -381,6 +374,7 @@ export const POST = withAuth(async (request, { user }) => {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error('Error creating order:', error);
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to create order';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 });
