@@ -17,6 +17,7 @@ import {
 export const CartDrawer: React.FC = () => {
   const {
     cart,
+    cartError,
     isCartDrawerOpen,
     setIsCartDrawerOpen,
     removeFromCart,
@@ -49,6 +50,13 @@ export const CartDrawer: React.FC = () => {
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Error notification if cart action failed */}
+        {cartError && (
+          <div className="bg-red-50 border-b border-red-200 px-4 py-2.5 text-xs text-red-700 flex items-center justify-between">
+            <span>{cartError}</span>
+          </div>
+        )}
 
         {/* Free Shipping Progress Meter */}
         <div className="bg-blue-50 border-b border-blue-100 p-3 text-xs text-[#0056b3] space-y-1.5">
@@ -99,7 +107,7 @@ export const CartDrawer: React.FC = () => {
             cart.map((item) => (
               <div key={item.product.id} className="py-3 flex gap-3 items-center">
                 <img
-                  src={item.product.images[0]}
+                  src={item.product.images?.[0] || 'https://picsum.photos/seed/placeholder/200/200'}
                   alt={item.product.name}
                   className="w-16 h-16 object-contain rounded-xl border border-gray-100 bg-gray-50 p-1 flex-shrink-0"
                 />
@@ -110,7 +118,7 @@ export const CartDrawer: React.FC = () => {
                     <span className="text-green-700 font-semibold">• In Stock</span>
                   </div>
                   <div className="text-xs font-bold text-[#0056b3] mt-0.5">
-                    NPR {item.product.sellingPrice.toLocaleString()}
+                    NPR {(item.product.sellingPrice ?? 0).toLocaleString()}
                   </div>
 
                   {/* Quantity Control */}
@@ -142,7 +150,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
 
                 <div className="text-right font-black text-xs text-[#1a1a1a]">
-                  NPR {(item.product.sellingPrice * item.quantity).toLocaleString()}
+                  NPR {((item.product.sellingPrice ?? 0) * item.quantity).toLocaleString()}
                 </div>
               </div>
             ))

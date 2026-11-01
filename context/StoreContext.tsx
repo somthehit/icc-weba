@@ -91,8 +91,8 @@ interface StoreContextType {
   /** Why the last cart change failed. */
   cartError: string | null;
   /** The delivery zone the checkout has chosen, which the quote is priced for. */
-  deliveryZoneId: number | null;
-  setDeliveryZoneId: (id: number | null) => void;
+  deliveryZoneId: string | number | null;
+  setDeliveryZoneId: (id: string | number | null) => void;
   wishlist: string[];
   compareList: string[];
   orders: Order[];
@@ -206,8 +206,8 @@ interface StoreContextType {
    * same transaction as the stock decrement, so what is charged is what is quoted.
    */
   placeOrder: (details: {
-    shippingAddressId?: number;
-    deliveryZoneId?: number;
+    shippingAddressId?: string | number;
+    deliveryZoneId?: string | number;
     paymentMethod: PaymentMethod;
     customerNote?: string;
   }) => Promise<{ ok: true; order: Order } | { ok: false; error: string }>;
@@ -297,7 +297,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isQuoting, setIsQuoting] = useState<boolean>(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
-  const [deliveryZoneId, setDeliveryZoneId] = useState<number | null>(null);
+  const [deliveryZoneId, setDeliveryZoneId] = useState<string | number | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [compareList, setCompareList] = useState<string[]>([]);
   /** Raw order rows from the API; `orders` below is the UI shape derived from them. */
@@ -951,9 +951,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const quoteLines = useMemo(() => {
     const lines =
       serverCart !== null
-        ? serverCart.map((row) => ({ productId: Number(row.productId), quantity: row.quantity }))
-        : localCart.map((item) => ({ productId: Number(item.product.id), quantity: item.quantity }));
-    return lines.filter((line) => Number.isInteger(line.productId) && line.productId > 0);
+        ? serverCart.map((row) => ({ productId: String(row.productId ?? ''), quantity: row.quantity }))
+        : localCart.map((item) => ({ productId: String(item.product.id), quantity: item.quantity }));
+    return lines.filter((line) => line.productId && line.productId !== 'undefined' && line.quantity > 0);
   }, [serverCart, localCart]);
 
   const refreshServerCart = useCallback(async () => {
@@ -990,16 +990,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
 
-      const held = new Set((existing.data.items ?? []).map((row) => Number(row.productId)));
+      const held = new Set((existing.data.items ?? []).map((row) => String(row.productId)));
       // POST /api/cart *adds* to a line rather than replacing it, so pushing a
       // guest line the server already holds would double the quantity.
       const toPush = localCart.filter((item) => {
-        const productId = Number(item.product.id);
-        return Number.isInteger(productId) && productId > 0 && !held.has(productId);
+        const productId = String(item.product.id);
+        return productId && productId !== 'undefined' && !held.has(productId);
       });
 
       for (const item of toPush) {
-        const pushed = await addCartLine(Number(item.product.id), item.quantity);
+        const pushed = await addCartLine(String(item.product.id), item.quantity);
         if (cancelled) return;
         if (!pushed.ok) {
           setCartError(pushed.error);
@@ -1149,7 +1149,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (serverCart === null) {
       setLocalCart((prev) => {
-        const index = prev.findIndex((item) => item.product.id === product.id);
+        const index = prev.findIndex((item) => String(item.product.id) === String(product.id));
         if (index === -1) return [...prev, { product, quantity }];
         const updated = [...prev];
         updated[index] = { ...updated[index], quantity: updated[index].quantity + quantity };
@@ -1158,7 +1158,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
-    const result = await addCartLine(Number(product.id), quantity);
+    const result = await addCartLine(String(product.id), quantity);
     if (!result.ok) {
       setCartError(result.error);
       return;
@@ -1170,14 +1170,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCartError(null);
 
     if (serverCart === null) {
-      setLocalCart((prev) => prev.filter((item) => item.product.id !== productId));
+      setLocalCart((prev) => prev.filter((item) => String(item.product.id) !== String(productId)));
       return;
     }
 
-    const row = serverCart.find((item) => String(item.productId) === productId);
+    const row = serverCart.find((item) => String(item.productId) === String(productId));
     if (!row) return;
 
-    const result = await deleteCartLine(row.id);
+    const result = await deleteCartLine(String(row.id));
     if (!result.ok) {
       setCartError(result.error);
       return;
@@ -1194,17 +1194,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (serverCart === null) {
       setLocalCart((prev) =>
-        prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item)),
+        prev.map((item) => (String(item.product.id) === String(productId) ? { ...item, quantity } : item)),
       );
       return;
     }
 
-    const row = serverCart.find((item) => String(item.productId) === productId);
+    const row = serverCart.find((item) => String(item.productId) === String(productId));
     if (!row) return;
 
     // The API clamps to what is in stock and to 99 a line, so the re-read below is
     // what settles the quantity actually shown.
-    const result = await setCartLineQuantity(row.id, quantity);
+    const result = await setCartLineQuantity(String(row.id), quantity);
     if (!result.ok) {
       setCartError(result.error);
       return;
@@ -1228,7 +1228,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const rows = serverCart;
     setServerCart([]);
     for (const row of rows) {
-      const result = await deleteCartLine(row.id);
+      const result = await deleteCartLine(String(row.id));
       if (!result.ok) {
         setCartError(result.error);
         await refreshServerCart();
@@ -1353,8 +1353,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Order actions
   const placeOrder = async (details: {
-    shippingAddressId?: number;
-    deliveryZoneId?: number;
+    shippingAddressId?: string | number;
+    deliveryZoneId?: string | number;
     paymentMethod: PaymentMethod;
     customerNote?: string;
   }): Promise<{ ok: true; order: Order } | { ok: false; error: string }> => {

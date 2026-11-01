@@ -131,7 +131,7 @@ export const AccountView: React.FC = () => {
   const [addressFormErrors, setAddressFormErrors] = useState<Record<string, string>>({});
 
   // Delete confirmation
-  const [deletingAddressId, setDeletingAddressId] = useState<number | null>(null);
+  const [deletingAddressId, setDeletingAddressId] = useState<number | string | null>(null);
 
   // Fetch addresses from the dedicated API endpoint
   const loadAddresses = useCallback(async () => {

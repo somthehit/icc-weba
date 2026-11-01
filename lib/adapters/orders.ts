@@ -115,9 +115,9 @@ export interface DbAddressSnapshot {
 }
 
 export interface DbOrderRow {
-  id: number;
+  id: number | string;
   orderNumber: string;
-  userId?: number | null;
+  userId?: number | string | null;
   status: string;
   subtotal: string | number;
   vatAmount?: string | number | null;
@@ -127,9 +127,9 @@ export interface DbOrderRow {
   paymentMethod: string;
   paymentStatus: string;
   customerNote?: string | null;
-  shippingAddressId?: number | null;
+  shippingAddressId?: number | string | null;
   shippingAddressSnapshot?: DbAddressSnapshot | null;
-  deliveryZoneId?: number | null;
+  deliveryZoneId?: number | string | null;
   createdAt?: Date | string | null;
   updatedAt?: Date | string | null;
   /** Present on the staff list, which joins the customer. */
@@ -257,6 +257,6 @@ export function toUiOrder(
  * `Order.id` carries the human order number (`ICE-2026-00042`) because that is
  * what the customer quotes, so the database id is tracked alongside it.
  */
-export function orderRowIds(rows: DbOrderRow[]): Map<string, number> {
+export function orderRowIds(rows: DbOrderRow[]): Map<string, number | string> {
   return new Map(rows.map((row) => [row.orderNumber, row.id]));
 }

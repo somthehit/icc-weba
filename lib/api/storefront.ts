@@ -68,10 +68,10 @@ export async function request<T>(url: string, init?: RequestInit): Promise<ApiRe
  * either direction.
  */
 export interface ServerCartRow {
-  id: number;
+  id: string;
   quantity: number;
-  productId: number | null;
-  variantId: number | null;
+  productId: string | null;
+  variantId: string | null;
   priceAtAdd: string | number;
   productName: string | null;
   productSlug: string | null;
@@ -83,24 +83,24 @@ export interface ServerCartRow {
 }
 
 export const fetchCart = () =>
-  request<{ cart: { id: number } | null; items: ServerCartRow[] }>('/api/cart');
+  request<{ cart: { id: string } | null; items: ServerCartRow[] }>('/api/cart');
 
 /** Adds to the existing line's quantity rather than replacing it. */
-export const addCartLine = (productId: number, quantity = 1, variantId?: number) =>
-  request<{ success: true; cartId: number }>('/api/cart', {
+export const addCartLine = (productId: string | number, quantity = 1, variantId?: string | number) =>
+  request<{ success: true; cartId: string }>('/api/cart', {
     method: 'POST',
-    body: JSON.stringify({ productId, quantity, variantId }),
+    body: JSON.stringify({ productId: String(productId), quantity, variantId: variantId ? String(variantId) : undefined }),
   });
 
 /** Quantity 0 removes the line. */
-export const setCartLineQuantity = (cartItemId: number, quantity: number) =>
+export const setCartLineQuantity = (cartItemId: string | number, quantity: number) =>
   request<{ success: true }>('/api/cart', {
     method: 'PUT',
-    body: JSON.stringify({ cartItemId, quantity }),
+    body: JSON.stringify({ cartItemId: String(cartItemId), quantity }),
   });
 
-export const deleteCartLine = (cartItemId: number) =>
-  request<{ success: true }>(`/api/cart?cartItemId=${cartItemId}`, { method: 'DELETE' });
+export const deleteCartLine = (cartItemId: string | number) =>
+  request<{ success: true }>(`/api/cart?cartItemId=${encodeURIComponent(String(cartItemId))}`, { method: 'DELETE' });
 
 /* ------------------------------------------------------------------- quote */
 
@@ -119,8 +119,8 @@ interface RawQuote {
   couponCode: string | null;
   couponDescription: string | null;
   items: Array<{
-    productId: number;
-    variantId: number | null;
+    productId: string | number;
+    variantId: string | number | null;
     name: string;
     sku: string;
     quantity: number;
@@ -140,9 +140,9 @@ export interface QuoteRequest {
   /** Price the signed-in customer's saved cart. */
   fromCart?: boolean;
   /** Or price an explicit basket, for a guest cart held in the browser. */
-  items?: Array<{ productId: number; variantId?: number; quantity: number }>;
+  items?: Array<{ productId: string | number; variantId?: string | number; quantity: number }>;
   couponCode?: string;
-  deliveryZoneId?: number;
+  deliveryZoneId?: string | number;
 }
 
 /**
@@ -205,14 +205,14 @@ export const createAddress = (input: Partial<AddressInput>) =>
     body: JSON.stringify(input),
   });
 
-export const updateAddress = (id: number, changes: Partial<AddressInput>) =>
+export const updateAddress = (id: number | string, changes: Partial<AddressInput>) =>
   request<{ success: true; address: SavedAddress }>('/api/addresses', {
     method: 'PUT',
     body: JSON.stringify({ id, ...changes }),
   });
 
-export const deleteAddress = (id: number) =>
-  request<{ success: true }>(`/api/addresses?id=${id}`, { method: 'DELETE' });
+export const deleteAddress = (id: number | string) =>
+  request<{ success: true }>(`/api/addresses?id=${encodeURIComponent(String(id))}`, { method: 'DELETE' });
 
 /* ----------------------------------------------------------- delivery zones */
 
@@ -288,9 +288,9 @@ export async function fetchEnabledPaymentMethods(): Promise<ApiResult<PaymentMet
 
 export interface PlaceOrderRequest {
   fromCart?: boolean;
-  items?: Array<{ productId: number; variantId?: number; quantity: number }>;
-  shippingAddressId?: number;
-  deliveryZoneId?: number;
+  items?: Array<{ productId: string | number; variantId?: string | number; quantity: number }>;
+  shippingAddressId?: string | number;
+  deliveryZoneId?: string | number;
   paymentMethod: PaymentMethod;
   couponCode?: string;
   customerNote?: string;

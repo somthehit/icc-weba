@@ -100,7 +100,7 @@ export interface CartItem {
    * in and the cart lives in the database; absent for a guest cart, which is
    * still held in localStorage until they sign in.
    */
-  cartItemId?: number;
+  cartItemId?: string | number;
 }
 
 export interface CategoryItem {
@@ -241,8 +241,8 @@ export interface Coupon {
  * 250` arithmetic did.
  */
 export interface CartQuoteLine {
-  productId: number;
-  variantId: number | null;
+  productId: string | number;
+  variantId: string | number | null;
   name: string;
   sku: string;
   quantity: number;
@@ -272,7 +272,7 @@ export interface CartQuote {
 
 /** A row from the customer's address book. */
 export interface SavedAddress {
-  id: number;
+  id: number | string;
   label: string | null;
   fullName: string;
   phone: string;
@@ -303,7 +303,7 @@ export type AddressInput = Omit<SavedAddress, 'id'>;
  * one actually charged is looked up again when the order is priced.
  */
 export interface DeliveryZoneOption {
-  id: number;
+  id: number | string;
   name: string;
   /** `province_enum` values this zone covers. */
   provinces: string[];
